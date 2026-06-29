@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
+import Login from "./components/Login";
 import Modal from "./components/Modal";
 import Navbar from "./components/Navbar";
 import Project from "./components/Project";
@@ -17,6 +18,7 @@ function App() {
         <Navbar
           setProjectModal={setProjectModal}
           setSignInModal={setSignInModal}
+          setLoginModal={setLoginModal}
         />
         {showModal && (
           <Modal>
@@ -25,14 +27,20 @@ function App() {
         )}
         {showSignInModal && (
           <Modal>
-            <SignIn onClose={() => setSignInModal(false)} />
-            {/* <ProjectSelector onClose={() => setSignInModal(false)} /> */}
+            <SignIn
+              setLoginModal={setLoginModal}
+              onClose={() => setSignInModal(false)}
+            />
           </Modal>
         )}
-        {/* {showLoginModal && (
+        {showLoginModal && (
           <Modal>
+            <Login
+              setSignInModal={setSignInModal}
+              onClose={() => setLoginModal(false)}
+            />
           </Modal>
-        )} */}
+        )}
         <Routes>
           <Route path="/project" element={<Project />} />
         </Routes>

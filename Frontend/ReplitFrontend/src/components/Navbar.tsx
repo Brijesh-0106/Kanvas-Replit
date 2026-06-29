@@ -2,9 +2,11 @@ import "../App.css";
 export default function Navbar({
   setProjectModal,
   setSignInModal,
+  setLoginModal,
 }: {
   setProjectModal: (arg: boolean) => void;
   setSignInModal: (arg: boolean) => void;
+  setLoginModal: (arg: boolean) => void;
 }) {
   return (
     <>
@@ -15,7 +17,7 @@ export default function Navbar({
         <div className="rightSideNav flex gap-4">
           <button
             className="border border-gray-300 text-md cursor-pointer hover:text-white text-gray-300 px-3 py-2 rounded-xl font-medium transition-all"
-            onClick={() => setSignInModal(true)}
+            onClick={() => setLoginModal(true)}
           >
             Login
           </button>
