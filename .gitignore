@@ -1,0 +1,6 @@
+# Ignore node_modules in any package
+**/node_modules/
+**/.env
+/Backend/dist
+**/package-lock.json
+**/package.json
