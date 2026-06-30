@@ -4,7 +4,7 @@ import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
 import cors from "cors";
 import 'dotenv/config';
 import express from "express";
-import { PrismaClient } from "./generated/prisma/client";
+import { PrismaClient } from "./generated/prisma/client.js";
 const prisma = new PrismaClient()
 const app = express();
 
@@ -104,13 +104,13 @@ app.get("/assign/:projectId", (req, res) => {
     return
 })
 // ============================================================== LOGIN
-app.get("/login", async (req, res) => {
+app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     console.log(email, password, "email and password")
     try {
         const user = await prisma.user.findFirst({
             where: {
-                email: email, Password: password
+                email: email, password
             }
         })
         if (user) {
@@ -131,7 +131,7 @@ app.get("/login", async (req, res) => {
     }
 })
 // ==================================================================== SIGNIN
-app.get("/signIn", async (req, res) => {
+app.post("/signIn", async (req, res) => {
     const { email, password } = req.body;
     console.log(email, password, "email and password")
     try {
@@ -146,7 +146,7 @@ app.get("/signIn", async (req, res) => {
             })
             return
         } else {
-            await prisma.user.create({ data: { email, Password: password, projects: [] } })
+            await prisma.user.create({ data: { email, password, projects: [] } })
             res.status(201).json({
                 msg: "Account created successfully"
             })
