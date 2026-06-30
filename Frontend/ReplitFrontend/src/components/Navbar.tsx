@@ -10,19 +10,19 @@ export default function Navbar({
 }) {
   return (
     <>
-      <div className="bg-gray-900 px-4 w-screen h-16 flex items-center justify-between">
+      <div className="bg-black px-8 w-screen h-16 flex items-center justify-between">
         <div className="leftSideNav">
-          <h1 className="text-gray-300 text-xl">ClaudeCode</h1>
+          <h1 className="text-gray-300 text-xl">Kanvas</h1>
         </div>
         <div className="rightSideNav flex gap-4">
           <button
-            className="border border-gray-300 text-md cursor-pointer hover:text-white text-gray-300 px-3 py-2 rounded-xl font-medium transition-all"
+            className="border border-black outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2 rounded-xl font-medium transition-all"
             onClick={() => setLoginModal(true)}
           >
             Login
           </button>
           <button
-            className="border border-red-800 hover:border-red-700 hover:text-red-700 text-md cursor-pointer text-red-800 px-3 py-2 rounded-xl font-medium transition-all"
+            className="text-gray-200 bg-amber-600 hover:bg-amber-700 cursor-pointer px-3 py-2 rounded-md transition-all"
             onClick={() => setSignInModal(true)}
           >
             Create Account

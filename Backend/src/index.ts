@@ -2,9 +2,10 @@ import { AutoScalingClient, DescribeAutoScalingInstancesCommand, SetDesiredCapac
 import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
 
 import cors from "cors";
-import 'dotenv/config'; // ← simplest way
+import 'dotenv/config';
 import express from "express";
-
+import { PrismaClient } from "./generated/prisma/client";
+const prisma = new PrismaClient()
 const app = express();
 
 app.use(cors());
@@ -70,10 +71,10 @@ const refreshedInstances = async () => {
 // refreshedInstances()
 
 
-setInterval(() => {
-    console.log(refreshedInstances(), "refershed instance with"
-        + " describeautoscallingInstance at max returns 50");
-}, 10000);
+// setInterval(() => {
+//     console.log(refreshedInstances(), "refershed instance with"
+//         + " describeautoscallingInstance at max returns 50");
+// }, 10000);
 
 
 app.get("/setDesiredCapacityTo1", (req, res) => {
@@ -101,6 +102,61 @@ app.get("/assign/:projectId", (req, res) => {
     increaseDesiredCapacity(ALL_MACHINES.length + 1)
     res.json(machine)
     return
+})
+// ============================================================== LOGIN
+app.get("/login", async (req, res) => {
+    const { email, password } = req.body;
+    console.log(email, password, "email and password")
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email: email, Password: password
+            }
+        })
+        if (user) {
+            res.status(200).json({
+                msg: "Login Successfully"
+            })
+            return
+        } else {
+            res.status(405).json({
+                msg: "Incorrect email or password"
+            })
+            return
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ err })
+        return
+    }
+})
+// ==================================================================== SIGNIN
+app.get("/signIn", async (req, res) => {
+    const { email, password } = req.body;
+    console.log(email, password, "email and password")
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email: email
+            }
+        })
+        if (user) {
+            res.status(405).json({
+                msg: "Account already exist, Please login"
+            })
+            return
+        } else {
+            await prisma.user.create({ data: { email, Password: password, projects: [] } })
+            res.status(201).json({
+                msg: "Account created successfully"
+            })
+            return
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ err })
+        return
+    }
 })
 
 
