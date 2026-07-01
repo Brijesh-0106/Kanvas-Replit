@@ -1,16 +1,65 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import GoogleSignIn from "./GoogleSignIn";
+export type alertType = "success" | "error" | "warning" | "info";
 
 export default function Login({
+  setShowAlert,
+  setAlertMsg,
+  setAlertType,
+  setProjectModal,
   setSignInModal,
   onClose,
 }: {
+  setShowAlert: (value: boolean) => void;
+  setAlertMsg: (value: string) => void;
+  setAlertType: (value: alertType) => void;
+  setProjectModal: (value: boolean) => void;
   setSignInModal: (value: boolean) => void;
   onClose: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const nav = useNavigate();
+  const [errorGoogle, setErrorGoogle] = useState("");
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
+  const handleGoogleError = (error: string) => {
+    setErrorGoogle(error);
+  };
+
+  const handleGoogleSuccess = (user: Record<string, unknown>) => {
+    console.log("Signed in successfully:", user);
+     onClose();
+    setProjectModal(true);
+  };
+
+  const loginViaEmail = async () => {
+    const unfilteredRes = await fetch("http://localhost:9092/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    console.log(unfilteredRes, "login unfilteredRes from backend");
+    if (unfilteredRes.status == 200) {
+      const res = await unfilteredRes.json();
+      localStorage.setItem("token", res.token);
+      console.log(res, "login res from backend");
+      onClose();
+      setProjectModal(true);
+    }
+  };
+
+  const handleCustomButtonClick = () => {
+    const googleButton =
+      googleButtonRef.current?.querySelector('div[role="button"]');
+    console.log(googleButton);
+    if (googleButton) {
+      (googleButton as HTMLElement).click();
+    }
+  };
   const changeModal = () => {
     onClose();
     setSignInModal(true);
@@ -37,7 +86,11 @@ export default function Login({
       </div>
 
       {/* Google */}
-      <button className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-3">
+      {errorGoogle && <div className="error-message">{errorGoogle}</div>}
+      <button
+        onClick={handleCustomButtonClick}
+        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-3"
+      >
         <svg width="18" height="18" viewBox="0 0 18 18">
           <path
             fill="#4285F4"
@@ -58,6 +111,12 @@ export default function Login({
         </svg>
         Continue with Google
       </button>
+      <div ref={googleButtonRef} style={{ display: "none" }}>
+        <GoogleSignIn
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+        />
+      </div>
 
       {/* GitHub */}
       <button className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-5">
@@ -101,7 +160,10 @@ export default function Login({
       </div>
 
       {/* Submit */}
-      <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all">
+      <button
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all"
+        onClick={loginViaEmail}
+      >
         Log in
       </button>
 

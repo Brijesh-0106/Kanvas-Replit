@@ -42,7 +42,17 @@ export default function ProjectSelectorModal({
     console.log(projectId, "projectId");
     const res = await fetch(
       `http://localhost:9092/assign/${projectId}?type=${selected}`,
+      {
+        headers: {
+          token: localStorage.getItem("token") ?? "",
+        },
+      },
     );
+    if (res.status === 403) {
+      alert("You are not authorized to assign a project. Please sign in.");
+      onClose();
+      return;
+    }
     console.log(res, "res from backend");
     const machine = await res.json();
     console.log(machine, "machine from backend");

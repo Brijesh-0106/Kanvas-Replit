@@ -1,16 +1,83 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import GoogleSignIn from "./GoogleSignIn";
+export type alertType = "success" | "error" | "warning" | "info";
 
 export default function SignIn({
+  setShowAlert,
+  setAlertMsg,
+  setAlertType,
   setLoginModal,
+  setProjectModal,
   onClose,
 }: {
+  setShowAlert: (value: boolean) => void;
+  setAlertMsg: (value: string) => void;
+  setAlertType: (value: alertType) => void;
   setLoginModal: (value: boolean) => void;
+  setProjectModal: (value: boolean) => void;
   onClose: () => void;
 }) {
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const nav = useNavigate();
+  const [errorGoogle, setErrorGoogle] = useState("");
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  const handleGoogleError = (error: string) => {
+    setErrorGoogle(error);
+  };
+
+  const handleGoogleSuccess = (user: Record<string, unknown>) => {
+    console.log("Signed in successfully:", user);
+    onClose();
+    setProjectModal(true);
+  };
+
+  const signinViaEmail = async () => {
+    const unfilteredRes = await fetch("http://localhost:9092/signin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    console.log(unfilteredRes, "signin unfilteredRes from backend");
+    if (unfilteredRes.status !== 200 && unfilteredRes.status !== 201) {
+      setAlertType("error");
+      if (unfilteredRes.status === 405) {
+        setAlertMsg("Email already exists, Please login!");
+      } else {
+        setAlertMsg("Error signing in, Please try again!");
+      }
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+      return;
+    } else {
+      setAlertType("success");
+      setAlertMsg("Signed in successfully!");
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+    }
+    const res = await unfilteredRes.json();
+    console.log(res, "signin res from backend");
+    changeModal();
+  };
+
+  const handleCustomButtonClick = () => {
+    const googleButton =
+      googleButtonRef.current?.querySelector('div[role="button"]');
+    console.log(googleButton);
+    if (googleButton) {
+      (googleButton as HTMLElement).click();
+    }
+  };
 
   const changeModal = () => {
     onClose();
@@ -40,7 +107,11 @@ export default function SignIn({
       {!showEmail ? (
         <>
           {/* Google */}
-          <button className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-3">
+          {errorGoogle && <div className="error-message">{errorGoogle}</div>}
+          <button
+            onClick={handleCustomButtonClick}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-3"
+          >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path
                 fill="#4285F4"
@@ -61,6 +132,12 @@ export default function SignIn({
             </svg>
             Continue with Google
           </button>
+          <div ref={googleButtonRef} style={{ display: "none" }}>
+            <GoogleSignIn
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+            />
+          </div>
 
           {/* Email */}
           <button
@@ -134,7 +211,10 @@ export default function SignIn({
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all mt-1">
+            <button
+              onClick={signinViaEmail}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all mt-1"
+            >
               Create account
             </button>
           </div>
