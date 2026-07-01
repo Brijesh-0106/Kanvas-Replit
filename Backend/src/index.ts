@@ -114,13 +114,13 @@ const refreshedInstances = async () => {
     })
     console.log(ALL_MACHINES, " ---- ALL_MACHINES After")
 }
-// refreshedInstances()
+refreshedInstances()
 
 
-// setInterval(() => {
-//     console.log(refreshedInstances(), "refershed instance with"
-//         + " describeautoscallingInstance at max returns 50");
-// }, 10000);
+setInterval(() => {
+    console.log(refreshedInstances(), "refershed instance with"
+        + " describeautoscallingInstance at max returns 50");
+}, 10000);
 
 
 app.get("/setDesiredCapacityTo1", (req, res) => {
@@ -140,13 +140,16 @@ app.get("/assign/:projectId", middleAuth, async (req, res) => {
             id: req.userId as unknown as string
         }
     })
+    console.log(user, "user")
     if (user?.projects!.length! > 2) {
+        console.log("Project Limit exceed")
         res.status(405).json({
             msg: "You have already assigned 2 projects, Please remove one project to assign new project"
         })
         return
     }
     let machine;
+    console.log(ALL_MACHINES, "ALL_MACHINES")
     for (let i = 0; i < ALL_MACHINES.length; i++) {
         if (!ALL_MACHINES[i]!.isUsed) {
             machine = ALL_MACHINES[i];
@@ -156,7 +159,9 @@ app.get("/assign/:projectId", middleAuth, async (req, res) => {
             break;
         }
     }
-    increaseDesiredCapacity(ALL_MACHINES.length + 1)
+    const unAssignedProjects = ALL_MACHINES.filter((machine) => !machine.isUsed)
+    increaseDesiredCapacity(ALL_MACHINES.length + (1 - unAssignedProjects.length))
+    console.log(machine, "machine")
     res.json(machine)
     return
 })

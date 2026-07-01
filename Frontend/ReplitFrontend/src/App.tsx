@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Alert } from "./components/Alert";
+import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Modal from "./components/Modal";
-import Navbar from "./components/Navbar";
 import Project from "./components/Project";
 import ProjectSelector from "./components/ProjectSelector";
 import SignIn from "./components/SignIn";
@@ -20,11 +20,11 @@ function App() {
   return (
     <>
       <div className="bg-black h-screen w-screen">
-        <Navbar
+        {/* <Navbar
           setProjectModal={setProjectModal}
           setSignInModal={setSignInModal}
           setLoginModal={setLoginModal}
-        />
+        /> */}
         {showModal && (
           <Modal>
             <ProjectSelector onClose={() => setProjectModal(false)} />
@@ -57,6 +57,8 @@ function App() {
         {showAlert && <Alert type={alertType} title={alertMsg} />}
         <Routes>
           <Route path="/project" element={<Project />} />
+          <Route path="/" element={<Landing  setProjectModal={setProjectModal} 
+              setLoginModal={setLoginModal}  setSignInModal={setSignInModal} />} />
         </Routes>
       </div>
     </>
