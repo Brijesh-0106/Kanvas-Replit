@@ -31,6 +31,7 @@ export default function ProjectSelectorModal({
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [projName, setProjName] = useState("");
 
   //   ++++++++++++++++++++++++++++++++++++++++++ LANUCH PROJECT ++++++++++++++++++++++++++++++++++++++++++
   const handleLaunch = async () => {
@@ -41,7 +42,7 @@ export default function ProjectSelectorModal({
       "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
     console.log(projectId, "projectId");
     const res = await fetch(
-      `http://localhost:9092/assign/${projectId}?type=${selected}`,
+      `http://localhost:9092/assign/${projectId}/${projName}?type=${selected}`,
       {
         headers: {
           token: localStorage.getItem("token") ?? "",
@@ -74,6 +75,7 @@ export default function ProjectSelectorModal({
     //     onClick={(e) => e.stopPropagation()}
     //   > */}
       {/* Header */}
+
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-white text-lg font-semibold">Intialize Project</h2>
         <button
@@ -84,9 +86,22 @@ export default function ProjectSelectorModal({
         </button>
       </div>
       <p className="text-gray-400 text-sm mb-5">
-        Select a project type to get started
+        Select a project type and project name
       </p>
+      <div className="mb-5">
+        <label className="text-gray-400 text-xs mb-1.5 block">
+          Project Name
+        </label>
+        <input
+          type="text"
+          value={projName}
+          onChange={(e) => setProjName(e.target.value)}
+          placeholder="TODO App..."
+          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+        />
+      </div>
 
+      <label className="text-gray-400 text-xs mb-1.5 block">Project Type</label>
       {/* Options */}
       <div className="flex flex-col gap-3">
         {projectTypes.map((project) => (

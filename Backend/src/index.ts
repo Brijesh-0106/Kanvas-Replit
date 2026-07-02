@@ -64,6 +64,7 @@ type machine = {
     id: string,
     publicDnsName: string,
     assignedProjectId?: string
+    assignedProjectName?: string
 }
 
 const ALL_MACHINES: machine[] = []
@@ -123,16 +124,30 @@ setInterval(() => {
 }, 10000);
 
 
+// ===================================== DEV API
 app.get("/setDesiredCapacityTo1", (req, res) => {
     increaseDesiredCapacity(1)
     res.json({ message: "Desired capacity set to 1" })
 })
-
 // ============================================================== Assign project on project Select
-app.get("/assign/:projectId", middleAuth, async (req, res) => {
-    const { projectId } = req.params;
+app.get("/fetchProjects", middleAuth, async (req, res) => {
+    const user = await prisma.user.findFirst({
+        where: {
+            id: req.userId as unknown as string
+        },
+    })
+    console.log(user, "user")
+    const userProjects = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
+    console.log(userProjects, "userProjects")
+    res.json(userProjects)
+})
+// ============================================================== Assign project on project Select
+app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
+    const { projectId, projName } = req.params;
+    console.log(req.query, "query")
     const { type } = req.query
     console.log(type, "type")
+    console.log(projName, "name")
     console.log(projectId, "projectID")
     // JWT TO GET USERID OR EMAIL
     const user = await prisma.user.findFirst({
@@ -155,10 +170,22 @@ app.get("/assign/:projectId", middleAuth, async (req, res) => {
             machine = ALL_MACHINES[i];
             ALL_MACHINES[i]!.isUsed = true;
             ALL_MACHINES[i]!.assignedAt = new Date();
+            ALL_MACHINES[i]!.assignedProjectName = projName as unknown as string
             ALL_MACHINES[i]!.assignedProjectId = projectId as unknown as string;
             break;
         }
     }
+    const updatedUser = await prisma.user.update({
+        where: {
+            id: req.userId as unknown as string
+        },
+        data: {
+            projects: {
+                push: machine?.id as unknown as string
+            }
+        }
+    })
+    console.log(updatedUser, "updatedUser")
     const unAssignedProjects = ALL_MACHINES.filter((machine) => !machine.isUsed)
     increaseDesiredCapacity(ALL_MACHINES.length + (1 - unAssignedProjects.length))
     console.log(machine, "machine")

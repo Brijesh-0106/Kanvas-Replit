@@ -30,8 +30,9 @@ export default function Login({
 
   const handleGoogleSuccess = (user: Record<string, unknown>) => {
     console.log("Signed in successfully:", user);
-     onClose();
-    setProjectModal(true);
+    onClose();
+    nav("/dashboard");
+    // setProjectModal(true);
   };
 
   const loginViaEmail = async () => {
@@ -47,8 +48,9 @@ export default function Login({
       const res = await unfilteredRes.json();
       localStorage.setItem("token", res.token);
       console.log(res, "login res from backend");
-      onClose();
-      setProjectModal(true);
+      nav("/dashboard");
+      // onClose();
+      // setProjectModal(true);
     }
   };
 

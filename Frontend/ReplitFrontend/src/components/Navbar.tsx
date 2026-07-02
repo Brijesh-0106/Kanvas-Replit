@@ -10,7 +10,7 @@ export default function Navbar({
 }) {
   return (
     <>
-      <div className="bg-black px-8 w-screen h-16 flex items-center justify-between">
+      <div className="bg-black px-8 w-screen h-16 flex items-center justify-between border-gray-400 border-b">
         <div className="leftSideNav">
           <h1 className="text-gray-300 text-xl">Kanvas</h1>
         </div>

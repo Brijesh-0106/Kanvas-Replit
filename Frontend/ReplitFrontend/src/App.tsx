@@ -7,6 +7,7 @@ import Modal from "./components/Modal";
 import Project from "./components/Project";
 import ProjectSelector from "./components/ProjectSelector";
 import SignIn from "./components/SignIn";
+import DashboardPage from "./components/DashboardPage";
 export type alertType = "success" | "error" | "warning" | "info";
 
 function App() {
@@ -58,6 +59,8 @@ function App() {
         <Routes>
           <Route path="/project" element={<Project />} />
           <Route path="/" element={<Landing  setProjectModal={setProjectModal} 
+              setLoginModal={setLoginModal}  setSignInModal={setSignInModal} />} />
+          <Route path="/dashboard" element={<DashboardPage  setProjectModal={setProjectModal} 
               setLoginModal={setLoginModal}  setSignInModal={setSignInModal} />} />
         </Routes>
       </div>
