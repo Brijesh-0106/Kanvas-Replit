@@ -64,6 +64,7 @@ type machine = {
     id: string,
     publicDnsName: string,
     assignedProjectId?: string
+    assignedProjectType?: String
     assignedProjectName?: string
 }
 
@@ -145,8 +146,8 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
 app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
     const { projectId, projName } = req.params;
     console.log(req.query, "query")
-    const { type } = req.query
-    console.log(type, "type")
+    const { proType } = req.query
+    console.log(proType, "type")
     console.log(projName, "name")
     console.log(projectId, "projectID")
     // JWT TO GET USERID OR EMAIL
@@ -169,6 +170,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
         if (!ALL_MACHINES[i]!.isUsed) {
             machine = ALL_MACHINES[i];
             ALL_MACHINES[i]!.isUsed = true;
+            ALL_MACHINES[i]!.assignedProjectType = proType as unknown as string;
             ALL_MACHINES[i]!.assignedAt = new Date();
             ALL_MACHINES[i]!.assignedProjectName = projName as unknown as string
             ALL_MACHINES[i]!.assignedProjectId = projectId as unknown as string;

@@ -48,8 +48,8 @@ export default function Login({
       const res = await unfilteredRes.json();
       localStorage.setItem("token", res.token);
       console.log(res, "login res from backend");
+      onClose();
       nav("/dashboard");
-      // onClose();
       // setProjectModal(true);
     }
   };

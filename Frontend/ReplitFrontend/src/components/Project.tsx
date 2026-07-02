@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "../app.css";
 export default function Project() {
   const uri = useLocation();
@@ -32,7 +32,9 @@ export default function Project() {
           {/* Topbar — fixed 36px */}
           <div className="text-white h-[36px] border-gray-400 border-b bg-gray-900 flex items-center px-4 flex-shrink-0">
             <div className="leftSideNav">
-              <h1 className="text-gray-300">Kanvas</h1>
+              <Link to="/dashboard">
+                <h1 className="text-gray-300">Kanvas</h1>
+              </Link>
             </div>
             <div className="rightSideNav flex gap-4">
               <button className="border border-red-800 hover:border-red-600 hover:text-red-600 text-md cursor-pointer text-red-800 px-3 py-2.5 rounded-xl font-medium transition-all">
