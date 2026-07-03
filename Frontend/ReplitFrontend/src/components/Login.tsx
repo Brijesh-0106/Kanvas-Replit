@@ -44,13 +44,22 @@ export default function Login({
       body: JSON.stringify({ email, password }),
     });
     console.log(unfilteredRes, "login unfilteredRes from backend");
+    const res = await unfilteredRes.json();
     if (unfilteredRes.status == 200) {
-      const res = await unfilteredRes.json();
       localStorage.setItem("token", res.token);
       console.log(res, "login res from backend");
       onClose();
       nav("/dashboard");
       // setProjectModal(true);
+    } else if (unfilteredRes.status == 405) {
+      setAlertType("error");
+      setAlertMsg(res.msg);
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+      setEmail("");
+      setPassword("");
     }
   };
 

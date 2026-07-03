@@ -63,7 +63,7 @@ export default function Navbar({
             <>
               <button
                 onClick={() => setProjectModal(true)}
-                className="border border-[#252527] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2  rounded-xl font-medium transition-all"
+                className="border border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2  rounded-xl font-medium transition-all"
               >
                 New Project
               </button>

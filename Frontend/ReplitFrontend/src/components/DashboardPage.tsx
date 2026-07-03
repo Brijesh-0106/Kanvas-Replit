@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { FaFolderOpen, FaNodeJs, FaPython, FaReact } from "react-icons/fa";
+import {
+  FaFolderOpen,
+  FaNodeJs,
+  FaPython,
+  FaReact,
+  FaTrash,
+} from "react-icons/fa";
 import { GoProjectSymlink } from "react-icons/go";
+export type alertType = "success" | "error" | "warning" | "info";
 
 import Navbar from "./Navbar";
 const icons = [
@@ -28,15 +35,23 @@ type machine = {
   assignedProjectName?: string;
 };
 function DashboardPage({
+  setShowAlert,
+  setAlertMsg,
+  setAlertType,
   setProjectModal,
   setLoginModal,
   setSignInModal,
 }: {
+  setShowAlert: (value: boolean) => void;
+  setAlertMsg: (value: string) => void;
+  setAlertType: (value: alertType) => void;
   setProjectModal: (value: boolean) => void;
   setLoginModal: (value: boolean) => void;
   setSignInModal: (value: boolean) => void;
 }) {
   const [projects, setProjects] = useState<machine[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
   async function fetchUserProjects() {
     const res = await fetch("http://localhost:9092/fetchProjects", {
       headers: {
@@ -44,19 +59,62 @@ function DashboardPage({
       },
     });
     const projs = await res.json();
-    console.log(projs, "user's projects");
-    setProjects(projs);
-    // if(projects.length > 0) {
-
-    // }
+    if (res.status === 200) {
+      console.log(projs, "user's projects");
+      setProjects(projs);
+    } else {
+      setProjects([]);
+    }
+    setLoaded(true);
   }
+
+  async function deleteProject(project: machine) {
+    setLoaded(false);
+    console.log(project, "project");
+    const res = await fetch("http://localhost:9092/deleteProject", {
+      method: "POST",
+      headers: {
+        token: localStorage.getItem("token") ?? "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(project),
+    });
+    const data = await res.json();
+    if (res.status == 200) {
+      setShowAlert(true);
+      setAlertMsg(data.msg);
+      setAlertType("success");
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+    }
+    fetchUserProjects();
+  }
+
   useEffect(() => {
     fetchUserProjects();
   }, []);
   return (
     <>
+      {/* Loader — shown until iframe fires onLoad */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-gray-950 flex flex-col items-center justify-center gap-4 z-10">
+          {/* Spinner */}
+          <div className="w-10 h-10 border-2 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
+
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-xs">K</span>
+            </div>
+            <span className="text-white font-medium text-sm">Kanvas</span>
+          </div>
+
+          <p className="text-gray-400 text-sm">Setting up your workspace...</p>
+        </div>
+      )}
       <div className="flex h-screen w-screen flex-col">
-        <div className="flex flex-shrink-0">
+        <div className="flex shrink-0">
           <Navbar
             setProjectModal={setProjectModal}
             setSignInModal={setSignInModal}
@@ -72,9 +130,15 @@ function DashboardPage({
               <div className="flex gap-10">
                 {projects.map((elem) => {
                   return (
-                    <div className="border border-gray-400 w-56 h-56 rounded-xl">
+                    <div className="relative group border border-gray-400 w-56 h-56 rounded-xl">
+                      <button
+                        onClick={() => deleteProject(elem)}
+                        className="absolute top-2 right-2 invisible group-hover:visible bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                      >
+                        <FaTrash className="text-gray-400 group-hover:text-white text-sm" />
+                      </button>
                       <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
-                        {elem.assignedProjectType == "Node.js" && (
+                        {elem.assignedProjectType == "Node" && (
                           <>
                             <span className="text-7xl">{icons[0].icon}</span>
                             <span className=" text-lg font-bold text-[#c3c2b7]">
