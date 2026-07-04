@@ -21,10 +21,41 @@ export default function Project() {
 
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">K</span>
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  background: "#f97316",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                  <rect
+                    x="8"
+                    y="1"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="white"
+                    opacity="0.5"
+                  />
+                  <rect
+                    x="1"
+                    y="8"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="white"
+                    opacity="0.5"
+                  />
+                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                </svg>
               </div>
-              <span className="text-white font-medium text-sm">Kanvas</span>
+              <span className="text-[#c3c2b7] font-bold text-lg">Kanvas</span>
             </div>
 
             <p className="text-gray-400 text-sm">
@@ -36,9 +67,43 @@ export default function Project() {
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
           <div className="text-[#c3c2b7] h-14 px-8 border-gray-400 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
-            <div className="leftSideNav">
+            <div className="leftSideNav flex gap-1 items-center">
               {/* <Link to="/dashboard"> */}
-              <h1 className="text-[#c3c2b7] text-xl">Kanvas</h1>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: "#f97316",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                  <rect
+                    x="8"
+                    y="1"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="white"
+                    opacity="0.5"
+                  />
+                  <rect
+                    x="1"
+                    y="8"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="white"
+                    opacity="0.5"
+                  />
+                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                </svg>
+              </div>
+              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
               {/* </Link> */}
             </div>
             <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">

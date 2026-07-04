@@ -109,10 +109,41 @@ function DashboardPage({
 
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xs">K</span>
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                background: "#f97316",
+                borderRadius: 6,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                <rect
+                  x="8"
+                  y="1"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  fill="white"
+                  opacity="0.5"
+                />
+                <rect
+                  x="1"
+                  y="8"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  fill="white"
+                  opacity="0.5"
+                />
+                <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+              </svg>
             </div>
-            <span className="text-white font-medium text-sm">Kanvas</span>
+            <span className="text-[#c3c2b7] font-bold text-lg">Kanvas</span>
           </div>
 
           {/* <p className="text-gray-400 text-sm">Setting up your workspace...</p> */}

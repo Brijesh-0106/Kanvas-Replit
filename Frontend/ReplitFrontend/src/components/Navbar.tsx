@@ -67,12 +67,12 @@ export default function Navbar({
           </div>
           {(token == "" || token == undefined) && (
             <Link to="/">
-              <h1 className="text-[#c3c2b7] text-xl">Kanvas</h1>
+              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
             </Link>
           )}
           {!(token == "" || token == undefined) && (
             <Link to="/dashboard">
-              <h1 className="text-[#c3c2b7] text-xl">Kanvas</h1>
+              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
             </Link>
           )}
         </div>
