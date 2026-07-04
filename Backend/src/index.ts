@@ -99,11 +99,11 @@ const refreshedInstances = async () => {
     })
     const instanceData = await ec2Client.send(descInstCmd)
     // ****************** AI HELPED *************************
+    // SUPPOSE HEALTH CHECK FAILED OF INSTANCE SO INSTANCE TERMINATED ITSELF 
+    // => SO NEED TO REMOVE IT FROM ALL_MACHINES
     const activeInstanceIds = instanceData.Reservations?.map(
         (r) => r.Instances![0]?.InstanceId!
     ) ?? []
-    console.log(activeInstanceIds, "activeInstanceIds")
-    console.log(ALL_MACHINES, "ref bf All Mac")
     for (let i = ALL_MACHINES.length - 1; i >= 0; i--) {
         if (!activeInstanceIds.includes(ALL_MACHINES[i]!.id)) {
             console.log(`Removing terminated instance: ${ALL_MACHINES[i]!.id}`)
@@ -111,7 +111,6 @@ const refreshedInstances = async () => {
         }
     }
     // ****************** END *************************
-    // console.log(ALL_MACHINES, " ---- ALL_MACHINES Before")
     const existingInstanceIds = ALL_MACHINES.map((machine) => machine.id) ?? []
     instanceData.Reservations?.map((reservation) => {
         if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {

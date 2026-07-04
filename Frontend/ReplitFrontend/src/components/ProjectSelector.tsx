@@ -95,7 +95,7 @@ export default function ProjectSelectorModal({
         </h2>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-[#c3c2b7] transition-colors text-xl leading-none"
+          className="text-gray-400 cursor-pointer hover:text-[#c3c2b7] transition-colors text-xl leading-none"
         >
           ✕
         </button>
@@ -123,7 +123,7 @@ export default function ProjectSelectorModal({
           <button
             key={project.value}
             onClick={() => setSelected(project.value)}
-            className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-150
+            className={`flex items-center gap-4 p-4 cursor-pointer rounded-xl border text-left transition-all duration-150
                 ${
                   selected === project.value
                     ? "border-amber-700 bg-amber-700/10"
@@ -154,7 +154,7 @@ export default function ProjectSelectorModal({
       <div className="flex gap-3 mt-5">
         <button
           onClick={onClose}
-          className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-400 text-sm hover:border-gray-500 hover:text-[#c3c2b7] transition-all"
+          className="flex-1 py-2.5 rounded-xl cursor-pointer border border-gray-700 text-gray-400 text-sm hover:border-gray-500 hover:text-[#c3c2b7] transition-all"
         >
           Cancel
         </button>

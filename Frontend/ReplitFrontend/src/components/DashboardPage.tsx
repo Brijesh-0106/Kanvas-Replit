@@ -133,7 +133,7 @@ function DashboardPage({
               <h1 className="text-3xl text-[#c3c2b7] mb-7 flex items-center gap-4">
                 <GoProjectSymlink /> Projects
               </h1>
-              <div className="flex gap-10">
+              <div className="flex flex-wrap gap-8">
                 {projects.map((elem, index) => {
                   return (
                     <div
