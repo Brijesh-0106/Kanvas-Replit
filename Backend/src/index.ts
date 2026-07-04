@@ -94,13 +94,25 @@ const refreshedInstances = async () => {
     const data = await autoScalingClient.send(describecommand)
     const vsCodeInstances = data.AutoScalingInstances?.filter((instance) => instance.AutoScalingGroupName == process.env.AUTO_SCALING_GROUP_NAME)
     const instanceIds = vsCodeInstances?.map((instance) => instance.InstanceId)
-    console.log(instanceIds, "instanceIds")
     const descInstCmd = new DescribeInstancesCommand({
         InstanceIds: instanceIds as unknown as string[]
     })
     const instanceData = await ec2Client.send(descInstCmd)
+    // ****************** AI HELPED *************************
+    const activeInstanceIds = instanceData.Reservations?.map(
+        (r) => r.Instances![0]?.InstanceId!
+    ) ?? []
+    console.log(activeInstanceIds, "activeInstanceIds")
+    console.log(ALL_MACHINES, "ref bf All Mac")
+    for (let i = ALL_MACHINES.length - 1; i >= 0; i--) {
+        if (!activeInstanceIds.includes(ALL_MACHINES[i]!.id)) {
+            console.log(`Removing terminated instance: ${ALL_MACHINES[i]!.id}`)
+            ALL_MACHINES.splice(i, 1)
+        }
+    }
+    // ****************** END *************************
     // console.log(ALL_MACHINES, " ---- ALL_MACHINES Before")
-    const existingInstanceIds = ALL_MACHINES.map((machine) => machine.id)
+    const existingInstanceIds = ALL_MACHINES.map((machine) => machine.id) ?? []
     instanceData.Reservations?.map((reservation) => {
         if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {
         } else {
@@ -110,6 +122,8 @@ const refreshedInstances = async () => {
                 id: reservation.Instances![0]?.InstanceId!,
                 ip: reservation.Instances![0]?.PrivateIpAddress!,
             })
+            console.log(instanceIds, "instanceIds")
+            console.log(ALL_MACHINES, "ref All Mac")
         }
     })
     // console.log(ALL_MACHINES, " ---- ALL_MACHINES After")
@@ -117,9 +131,8 @@ const refreshedInstances = async () => {
 refreshedInstances()
 
 
-setInterval(() => {
-    console.log(refreshedInstances(), "refershed instance with"
-        + " describeautoscallingInstance at max returns 50");
+setInterval(async () => {
+    await refreshedInstances()
 }, 10000);
 
 
@@ -154,8 +167,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
 app.post("/deleteProject", middleAuth, async (req, res) => {
     try {
         console.log("**************** DELETE ENDPOINT **************")
-        const { machine } = req.body
-        console.log(machine, "machine")
+        const machine = req.body
         const foundUser = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
@@ -172,7 +184,14 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
                 }
             }
         })
-        console.log(user, "user")
+        console.log(ALL_MACHINES, "BF - All_mac")
+
+        const remInd = ALL_MACHINES.findIndex((elem) => elem.id == machine.id)
+        console.log(remInd, "remInd")
+        if (remInd > -1) {
+            ALL_MACHINES.splice(remInd, 1)
+        }
+        console.log(ALL_MACHINES, "AF - All_mac")
         const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
             InstanceId: machine.id,
             ShouldDecrementDesiredCapacity: true
@@ -190,11 +209,9 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
 // ============================================================== ASSIGN PROJECT
 app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
     try {
+        console.log("******************* ASSIGN METHOD ***************")
         const { projectId, projName } = req.params;
-        console.log(req.query, "query")
         const { proType } = req.query
-        console.log(proType, "type")
-        console.log(projName, "name")
         console.log(projectId, "projectID")
         // JWT TO GET USERID OR EMAIL
         const user = await prisma.user.findFirst({
@@ -203,7 +220,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
             }
         })
         console.log(user, "user")
-        if (user?.projects!.length! > 2) {
+        if (user?.projects!.length! >= 2) {
             console.log("Project Limit exceed")
             res.status(405).json({
                 msg: "You have already assigned 2 projects, Please remove one project to assign new project"
@@ -234,8 +251,8 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
             }
         })
         console.log(updatedUser, "updatedUser")
-        const unAssignedProjects = ALL_MACHINES.filter((machine) => !machine.isUsed)
-        increaseDesiredCapacity(ALL_MACHINES.length + (1 - unAssignedProjects.length))
+        const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
+        increaseDesiredCapacity(assignedProjects.length + 1)
         console.log(machine, "machine")
         res.json(machine)
         return

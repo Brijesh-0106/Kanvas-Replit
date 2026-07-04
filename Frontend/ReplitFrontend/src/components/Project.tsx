@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { IoHome } from "react-icons/io5";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../app.css";
+
 export default function Project() {
   const uri = useLocation();
+  const nav = useNavigate();
+  console.log(localStorage.getItem(uri.search.split("=")[1]), "check");
+  //http: ${localStorage.getItem(uri.search.split("=")[1])}:8080/?folder=/tmp/project
 
   const [loaded, setLoaded] = useState(false);
   return (
@@ -30,26 +35,23 @@ export default function Project() {
         {/* {loaded && ( */}
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
-          <div className="text-white h-[36px] border-gray-400 border-b bg-gray-900 flex items-center px-4 flex-shrink-0">
+          <div className="text-[#c3c2b7] h-14 px-8 border-gray-400 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
             <div className="leftSideNav">
-              <Link to="/dashboard">
-                <h1 className="text-gray-300">Kanvas</h1>
-              </Link>
+              {/* <Link to="/dashboard"> */}
+              <h1 className="text-[#c3c2b7] text-xl">Kanvas</h1>
+              {/* </Link> */}
             </div>
-            <div className="rightSideNav flex gap-4">
-              <button className="border border-red-800 hover:border-red-600 hover:text-red-600 text-md cursor-pointer text-red-800 px-3 py-2.5 rounded-xl font-medium transition-all">
-                Logout
-              </button>
+            <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">
+              <IoHome onClick={() => nav("/dashboard")} />
             </div>
           </div>
 
           {/* Below topbar — takes remaining height */}
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden p-10 bg-[#1f1f1e]">
             {/* Left sidebar — fixed 36px wide */}
-            <div className="w-[36px] bg-gray-900 flex-shrink-0 h-full border-gray-400 border-r"></div>
 
             {/* iframe — fills rest */}
-            <div className="flex-1 h-full">
+            <div className="w-full h-full">
               <iframe
                 width="100%"
                 height="100%"

@@ -9,6 +9,7 @@ import {
 import { GoProjectSymlink } from "react-icons/go";
 export type alertType = "success" | "error" | "warning" | "info";
 
+import { Link } from "react-router-dom";
 import Navbar from "./Navbar";
 const icons = [
   {
@@ -51,11 +52,14 @@ function DashboardPage({
 }) {
   const [projects, setProjects] = useState<machine[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("");
 
   async function fetchUserProjects() {
+    setLoaded(false);
+    setLoadingMsg("Fetching projects...");
     const res = await fetch("http://localhost:9092/fetchProjects", {
       headers: {
-        token: localStorage.getItem("token") ?? "",
+        token: (localStorage.getItem("token") as string) ?? "",
       },
     });
     const projs = await res.json();
@@ -70,11 +74,12 @@ function DashboardPage({
 
   async function deleteProject(project: machine) {
     setLoaded(false);
+    setLoadingMsg("Deleting project...");
     console.log(project, "project");
     const res = await fetch("http://localhost:9092/deleteProject", {
       method: "POST",
       headers: {
-        token: localStorage.getItem("token") ?? "",
+        token: (localStorage.getItem("token") as string) ?? "",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(project),
@@ -110,7 +115,8 @@ function DashboardPage({
             <span className="text-white font-medium text-sm">Kanvas</span>
           </div>
 
-          <p className="text-gray-400 text-sm">Setting up your workspace...</p>
+          {/* <p className="text-gray-400 text-sm">Setting up your workspace...</p> */}
+          <p className="text-gray-400 text-sm">{loadingMsg}</p>
         </div>
       )}
       <div className="flex h-screen w-screen flex-col">
@@ -128,9 +134,12 @@ function DashboardPage({
                 <GoProjectSymlink /> Projects
               </h1>
               <div className="flex gap-10">
-                {projects.map((elem) => {
+                {projects.map((elem, index) => {
                   return (
-                    <div className="relative group border border-gray-400 w-56 h-56 rounded-xl">
+                    <div
+                      key={index}
+                      className="relative group border border-gray-400 w-56 h-56 rounded-xl"
+                    >
                       <button
                         onClick={() => deleteProject(elem)}
                         className="absolute top-2 right-2 invisible group-hover:visible bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
@@ -166,8 +175,8 @@ function DashboardPage({
                       <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
                         <div>{elem.assignedProjectName}</div>
 
-                        <a
-                          href={`/project?projectId=${elem.assignedProjectId}`}
+                        <Link
+                          to={`/project?projectId=${elem.assignedProjectId}`}
                           className="text-blue-500 flex ml-auto items-center max-md:text-sm text-base"
                         >
                           Open
@@ -183,7 +192,7 @@ function DashboardPage({
                           >
                             <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
                           </svg>
-                        </a>
+                        </Link>
                       </div>
                       {/* <div>{elem.}</div> TYPE */}
                     </div>
