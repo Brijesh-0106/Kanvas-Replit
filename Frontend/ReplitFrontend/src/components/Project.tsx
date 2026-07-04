@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoHome } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../app.css";
@@ -8,6 +8,25 @@ export default function Project() {
   const nav = useNavigate();
   console.log(localStorage.getItem(uri.search.split("=")[1]), "check");
   //http: ${localStorage.getItem(uri.search.split("=")[1])}:8080/?folder=/tmp/project
+
+  useEffect(() => {
+    const heartBeat = setInterval(() => {
+      console.log("heartbeat", heartBeat);
+      fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/heartBeat/${uri.search.split("=")[1]}`,
+        {
+          headers: {
+            token: (localStorage.getItem("token") as string) ?? "",
+          },
+        },
+      );
+    }, 1000 * 60);
+    return () => clearInterval(heartBeat);
+  }, []);
+
+  function navDashboard() {
+    nav("/dashboard");
+  }
 
   const [loaded, setLoaded] = useState(false);
   return (
@@ -107,7 +126,7 @@ export default function Project() {
               {/* </Link> */}
             </div>
             <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">
-              <IoHome onClick={() => nav("/dashboard")} />
+              <IoHome onClick={navDashboard} />
             </div>
           </div>
 

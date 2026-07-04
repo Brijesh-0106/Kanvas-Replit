@@ -15,15 +15,18 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({ onSuccess, onError }) => {
       }
 
       // Send the token to your backend
-      const response = await fetch(`http://localhost:9092/v0/api/google`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/v0/api/google`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: credentialResponse.credential,
+          }),
         },
-        body: JSON.stringify({
-          token: credentialResponse.credential,
-        }),
-      });
+      );
 
       if (response.status !== 200) {
         throw new Error("Failed to sign in with Google");

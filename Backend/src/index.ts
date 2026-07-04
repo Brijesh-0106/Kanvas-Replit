@@ -57,13 +57,14 @@ interface GoogleTokenPayload {
 
 type machine = {
     isUsed: Boolean,
-    assignedAt?: Date,
+    assignedAt?: Date | undefined,
     ip: string,
     id: string,
     publicDnsName: string,
     assignedProjectId?: string
     assignedProjectType?: String
     assignedProjectName?: string
+    lastHeartBeat?: number
 }
 
 const ALL_MACHINES: machine[] = []
@@ -114,6 +115,7 @@ const refreshedInstances = async () => {
     const existingInstanceIds = ALL_MACHINES.map((machine) => machine.id) ?? []
     instanceData.Reservations?.map((reservation) => {
         if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {
+
         } else {
             ALL_MACHINES.push({
                 isUsed: false,
@@ -125,7 +127,6 @@ const refreshedInstances = async () => {
             console.log(ALL_MACHINES, "ref All Mac")
         }
     })
-    // console.log(ALL_MACHINES, " ---- ALL_MACHINES After")
 }
 refreshedInstances()
 
@@ -133,6 +134,28 @@ refreshedInstances()
 setInterval(async () => {
     await refreshedInstances()
 }, 10000);
+
+
+
+setInterval(async () => {
+    for (const machine of ALL_MACHINES) {
+        if (!machine.isUsed) return;
+        if (machine.lastHeartBeat === undefined) return;
+        const lastPingTime: any = Date.now() - (machine!.lastHeartBeat as unknown as number)
+        if (lastPingTime > (process.env.GRACE_PERIOD as unknown as number ?? 0)) {
+            console.log("**************** DEAD MACHINE INTERVAL **************")
+            machine.assignedProjectId = "";
+            machine.isUsed = false
+            const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
+                InstanceId: machine.id,
+                ShouldDecrementDesiredCapacity: true
+            })
+            const deleteRes = await autoScalingClient.send(termiInstancecommand)
+            console.log(deleteRes, "res of terminated Machine")
+        }
+    }
+
+}, 60 * 1000);
 
 
 // ===================================== DEV API
@@ -144,8 +167,32 @@ app.get("/setDesiredCapacityTo1", (req, res) => {
 app.get("/verifyToken", middleAuth, (req, res) => {
     res.status(200).json({ message: "Token is valid" })
 })
+// ===================================== HEARTBEAT
+app.get("/heartBeat/:projectId", middleAuth, (req: Request, res: Response) => {
+    console.log("**************** HEARTBEAT ENDPOINT **************")
+    const { projectId } = req.params
+    try {
+        console.log(projectId, "project Id")
+        for (let i = 0; i < ALL_MACHINES.length; i++) {
+            if (ALL_MACHINES[i]?.assignedProjectId == projectId) {
+                console.log(ALL_MACHINES[i], "found machine");
+                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
+                break;
+            }
+        }
+        res.json({})
+        return
+    } catch (error) {
+        console.error('HEARTBEAT error:', error);
+        res.status(401).json({ error: 'Internal server Error' });
+    }
+})
+app.get("/verifyToken", middleAuth, (req, res) => {
+    res.status(200).json({ message: "Token is valid" })
+})
 // ============================================================== ALL PROJECTS FOR USER
 app.get("/fetchProjects", middleAuth, async (req, res) => {
+    console.log("**************** FETCH PROJECTS ENDPOINT **************")
     try {
         const user = await prisma.user.findFirst({
             where: {

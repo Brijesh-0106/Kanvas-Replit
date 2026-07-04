@@ -45,7 +45,7 @@ export default function ProjectSelectorModal({
       "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
     console.log(projectId, "projectId");
     const res = await fetch(
-      `http://localhost:9092/assign/${projectId}/${projName}?proType=${selected}`,
+      `${import.meta.env.VITE_BACKEND_URL}/assign/${projectId}/${projName}?proType=${selected}`,
       {
         headers: {
           token: localStorage.getItem("token") ?? "",

@@ -57,11 +57,14 @@ function DashboardPage({
   async function fetchUserProjects() {
     setLoaded(false);
     setLoadingMsg("Fetching projects...");
-    const res = await fetch("http://localhost:9092/fetchProjects", {
-      headers: {
-        token: (localStorage.getItem("token") as string) ?? "",
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/fetchProjects`,
+      {
+        headers: {
+          token: (localStorage.getItem("token") as string) ?? "",
+        },
       },
-    });
+    );
     const projs = await res.json();
     if (res.status === 200) {
       console.log(projs, "user's projects");
@@ -76,14 +79,17 @@ function DashboardPage({
     setLoaded(false);
     setLoadingMsg("Deleting project...");
     console.log(project, "project");
-    const res = await fetch("http://localhost:9092/deleteProject", {
-      method: "POST",
-      headers: {
-        token: (localStorage.getItem("token") as string) ?? "",
-        "Content-Type": "application/json",
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/deleteProject`,
+      {
+        method: "POST",
+        headers: {
+          token: (localStorage.getItem("token") as string) ?? "",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(project),
       },
-      body: JSON.stringify(project),
-    });
+    );
     const data = await res.json();
     if (res.status == 200) {
       setShowAlert(true);
@@ -204,7 +210,12 @@ function DashboardPage({
                         )}
                       </div>
                       <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
-                        <div>{elem.assignedProjectName}</div>
+                        <div>
+                          <p>{elem.assignedProjectName}</p>
+                          <p className="text-[10px] text-gray-400">
+                            {elem.assignedAt?.toString().split("T")[0]}{" "}
+                          </p>
+                        </div>
 
                         <Link
                           to={`/project?projectId=${elem.assignedProjectId}`}

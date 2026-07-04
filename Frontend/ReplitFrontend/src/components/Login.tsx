@@ -36,13 +36,16 @@ export default function Login({
   };
 
   const loginViaEmail = async () => {
-    const unfilteredRes = await fetch("http://localhost:9092/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const unfilteredRes = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       },
-      body: JSON.stringify({ email, password }),
-    });
+    );
     console.log(unfilteredRes, "login unfilteredRes from backend");
     const res = await unfilteredRes.json();
     if (unfilteredRes.status == 200) {
@@ -87,9 +90,47 @@ export default function Login({
       </div>
       {/* ++++++++++++++++++ Close ++++++++++++++++++++++ */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+        {/* <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
           <span className="text-white font-bold text-lg">K</span>
+        </div> */}
+        <div className="flex gap-1 mb-4">
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              background: "#f97316",
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+              <rect
+                x="8"
+                y="1"
+                width="5"
+                height="5"
+                rx="1"
+                fill="white"
+                opacity="0.5"
+              />
+              <rect
+                x="1"
+                y="8"
+                width="5"
+                height="5"
+                rx="1"
+                fill="white"
+                opacity="0.5"
+              />
+              <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+            </svg>
+          </div>
+          <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
         </div>
+
         <h2 className="text-white text-2xl font-bold">Welcome back</h2>
         <p className="text-gray-400 text-sm mt-1">
           Log in to your Kanvas account
