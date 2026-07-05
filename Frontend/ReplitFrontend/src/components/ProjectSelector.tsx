@@ -53,6 +53,7 @@ export default function ProjectSelectorModal({
       },
     );
     console.log(res, "res from backend");
+    const machine = await res.json();
     if (res.status === 403) {
       setAlertMsg(
         "You are not authorized to assign a project. Please sign in.",
@@ -66,9 +67,7 @@ export default function ProjectSelectorModal({
       return;
     }
     if (res.status === 405) {
-      setAlertMsg(
-        "Free plan limit reached. Either delete a project or upgrade to premium.",
-      );
+      setAlertMsg(machine.message);
       setAlertType("error");
       setShowAlert(true);
       setTimeout(() => {
@@ -77,8 +76,7 @@ export default function ProjectSelectorModal({
       onClose();
       return;
     }
-    console.log(res, "res from backend");
-    const machine = await res.json();
+
     console.log(machine, "machine from backend");
     onClose();
     // window.location.href = `http://${machine.publicDnsName}:8080`;

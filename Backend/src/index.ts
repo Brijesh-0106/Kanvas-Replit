@@ -123,7 +123,9 @@ const refreshedInstances = async () => {
                 id: reservation.Instances![0]?.InstanceId!,
                 ip: reservation.Instances![0]?.PrivateIpAddress!,
             })
+            console.log("\n\n")
             console.log(instanceIds, "instanceIds")
+            console.log("\n\n")
             console.log(ALL_MACHINES, "ref All Mac")
         }
     })
@@ -159,6 +161,11 @@ setInterval(async () => {
 
 
 // ===================================== DEV API
+app.get("/test", (req, res) => {
+    console.log("**************** TEST ENDPOINT **************")
+    res.json({ message: "Healthy" })
+})
+// ===================================== DEV API
 app.get("/setDesiredCapacityTo1", (req, res) => {
     increaseDesiredCapacity(1)
     res.json({ message: "Desired capacity set to 1" })
@@ -172,10 +179,8 @@ app.get("/heartBeat/:projectId", middleAuth, (req: Request, res: Response) => {
     console.log("**************** HEARTBEAT ENDPOINT **************")
     const { projectId } = req.params
     try {
-        console.log(projectId, "project Id")
         for (let i = 0; i < ALL_MACHINES.length; i++) {
             if (ALL_MACHINES[i]?.assignedProjectId == projectId) {
-                console.log(ALL_MACHINES[i], "found machine");
                 ALL_MACHINES[i]!.lastHeartBeat = Date.now()
                 break;
             }
@@ -199,9 +204,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
                 id: req.userId as unknown as string
             },
         })
-        console.log(user, "user")
         const userProjects = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
-        console.log(userProjects, "userProjects")
         res.status(200).json(userProjects)
         return
     } catch (error) {
@@ -230,20 +233,15 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
                 }
             }
         })
-        console.log(ALL_MACHINES, "BF - All_mac")
-
         const remInd = ALL_MACHINES.findIndex((elem) => elem.id == machine.id)
-        console.log(remInd, "remInd")
         if (remInd > -1) {
             ALL_MACHINES.splice(remInd, 1)
         }
-        console.log(ALL_MACHINES, "AF - All_mac")
         const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
             InstanceId: machine.id,
             ShouldDecrementDesiredCapacity: true
         })
         const deleteRes = await autoScalingClient.send(termiInstancecommand)
-        console.log(deleteRes, "res of terminated Machine")
         res.status(200).json({ msg: "Project Deleted Successfully" })
         return
     } catch (error) {
@@ -258,18 +256,15 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
         console.log("******************* ASSIGN METHOD ***************")
         const { projectId, projName } = req.params;
         const { proType } = req.query
-        console.log(projectId, "projectID")
         // JWT TO GET USERID OR EMAIL
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
             }
         })
-        console.log(user, "user")
         if (user?.projects!.length! >= 2) {
-            console.log("Project Limit exceed")
             res.status(405).json({
-                msg: "You have already assigned 2 projects, Please remove one project to assign new project"
+                message: "Free plan limit reached. Either delete a project or upgrade to premium.",
             })
             return
         }
@@ -278,6 +273,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
         for (let i = 0; i < ALL_MACHINES.length; i++) {
             if (!ALL_MACHINES[i]!.isUsed) {
                 machine = ALL_MACHINES[i];
+                console.log(machine, "machine")
                 ALL_MACHINES[i]!.isUsed = true;
                 ALL_MACHINES[i]!.assignedProjectType = proType as unknown as string;
                 ALL_MACHINES[i]!.assignedAt = new Date();
@@ -286,7 +282,12 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 break;
             }
         }
-        const updatedUser = await prisma.user.update({
+        if (machine === undefined) {
+            res.status(405).json({
+                message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
+            })
+        }
+        await prisma.user.update({
             where: {
                 id: req.userId as unknown as string
             },
@@ -296,10 +297,8 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 }
             }
         })
-        console.log(updatedUser, "updatedUser")
         const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
-        increaseDesiredCapacity(assignedProjects.length + 1)
-        console.log(machine, "machine")
+        increaseDesiredCapacity(assignedProjects.length + 2)
         res.json(machine)
         return
     } catch (error) {
@@ -324,7 +323,6 @@ app.post("/v0/api/google", async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Invalid token' });
         }
         const { email, name, picture, sub: googleId } = payload;
-        console.log("Google auth picture:", picture);
         let User = await prisma.user.findFirst({ where: { email } });
         const user = {
             id: googleId,
@@ -355,16 +353,13 @@ app.post("/v0/api/google", async (req: Request, res: Response) => {
 // ============================================================== LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
-    console.log(email, password, "email and password")
     try {
         const user = await prisma.user.findFirst({
             where: {
                 email: email, password
             }
         })
-        console.log(user, "user")
         if (user) {
-            console.log(process.env.SECRET_KEY, "process.env.SECRET_KEY")
             let token = jwt.sign(user.id.toString(), process.env.SECRET_KEY as string);
             res.status(200).json({
                 msg: "Login Successfully",
@@ -387,7 +382,6 @@ app.post("/login", async (req, res) => {
 // ==================================================================== SIGNIN
 app.post("/signIn", async (req, res) => {
     const { email, password } = req.body;
-    console.log(email, password, "email and password")
     try {
         const user = await prisma.user.findFirst({
             where: {
@@ -413,22 +407,6 @@ app.post("/signIn", async (req, res) => {
     }
 })
 
-
-
-
 app.listen(process.env.PORT || 9092, () => {
     console.log("App is running at " + (process.env.PORT || 9092))
 })
-
-
-
-
-// ********************* USE LATER ***************************
-
-// autoScalingClient.send(setDesiredCapCommand).then((res) => {
-//     console.log("Desired capacity command ran sucessfully.")
-//     console.log(res, "res")
-// }).catch((err) => {
-//     console.log(err, "err")
-// })
-// const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({})
