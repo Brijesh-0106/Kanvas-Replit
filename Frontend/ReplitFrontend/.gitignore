@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+copy-og-image.ps1
+copy-og-image.js

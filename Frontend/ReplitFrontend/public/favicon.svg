@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Rounded Orange Background -->
+  <rect width="32" height="32" rx="8" fill="#f97316"/>
+  <!-- 4-Grid Logo Elements -->
+  <g transform="translate(6, 6)">
+    <!-- Top Left -->
+    <rect x="0" y="0" width="8" height="8" rx="2.5" fill="#ffffff"/>
+    <!-- Top Right (translucent) -->
+    <rect x="12" y="0" width="8" height="8" rx="2.5" fill="#ffffff" fill-opacity="0.5"/>
+    <!-- Bottom Left (translucent) -->
+    <rect x="0" y="12" width="8" height="8" rx="2.5" fill="#ffffff" fill-opacity="0.5"/>
+    <!-- Bottom Right -->
+    <rect x="12" y="12" width="8" height="8" rx="2.5" fill="#ffffff"/>
+  </g>
+</svg>
