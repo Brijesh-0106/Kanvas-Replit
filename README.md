@@ -8,7 +8,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-39827F?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-🔗 **Live Application URL**: [https://kanvas.usecerebro.co.in](http://kanvas.usecerebro.co.in)
+🔗 **Live Application URL**: [http://kanvas.usecerebro.co.in](http://kanvas.usecerebro.co.in)
 
 **Kanvas** is a cloud-based development environment platform (similar to Replit, Gitpod, or GitHub Codespaces) designed to provision, lifecycle-manage, and host full VS Code development environments on-demand in the cloud. It allows developers to start coding in seconds from any browser with zero local configuration.
 
