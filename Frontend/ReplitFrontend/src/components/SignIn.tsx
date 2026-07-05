@@ -33,6 +33,7 @@ export default function SignIn({
   const handleGoogleSuccess = (user: Record<string, unknown>) => {
     console.log("Signed in successfully:", user);
     onClose();
+    nav("/dashboard");
     setProjectModal(true);
   };
 
