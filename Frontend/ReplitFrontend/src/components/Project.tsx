@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { IoHome } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../app.css";
+import "../App.css";
 
 export default function Project() {
   const uri = useLocation();

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../app.css";
+import "../App.css";
 export type alertType = "success" | "error" | "warning" | "info";
 
 const projectTypes = [
