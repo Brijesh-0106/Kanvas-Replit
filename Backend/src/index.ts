@@ -290,6 +290,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
             res.status(405).json({
                 message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
             })
+            return
         }
         await prisma.user.update({
             where: {
