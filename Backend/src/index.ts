@@ -117,12 +117,16 @@ const refreshedInstances = async () => {
         if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {
 
         } else {
-            ALL_MACHINES.push({
-                isUsed: false,
-                publicDnsName: reservation.Instances![0]?.PublicDnsName!,
-                id: reservation.Instances![0]?.InstanceId!,
-                ip: reservation.Instances![0]?.PrivateIpAddress!,
-            })
+            if (reservation.Instances![0]?.State?.Name == 'pending') {
+
+            } else {
+                ALL_MACHINES.push({
+                    isUsed: false,
+                    publicDnsName: reservation.Instances![0]?.PublicDnsName!,
+                    id: reservation.Instances![0]?.InstanceId!,
+                    ip: reservation.Instances![0]?.PrivateIpAddress!,
+                })
+            }
             console.log("\n\n")
             console.log(instanceIds, "instanceIds")
             console.log("\n\n")
