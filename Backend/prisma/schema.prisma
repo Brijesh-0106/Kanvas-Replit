@@ -19,3 +19,14 @@ model User {
   password String
   projects String[] @default([])
 }
+
+model Project {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  projectId     String?
+  projectName   String?
+  projectType   String?
+  ip            String
+  publicDnsName String
+  assignedAt    DateTime?
+  userId        String?
+}

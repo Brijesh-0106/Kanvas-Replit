@@ -13,7 +13,7 @@ const app = express();
 declare global {
     namespace Express {
         interface Request {
-            userId?: String;
+            userId?: string;
         }
     }
 }
@@ -61,10 +61,11 @@ type machine = {
     ip: string,
     id: string,
     publicDnsName: string,
-    assignedProjectId?: string
-    assignedProjectType?: String
-    assignedProjectName?: string
+    projectId?: string
+    projectType?: string
+    projectName?: string
     lastHeartBeat?: number
+    userId?: string
 }
 
 const ALL_MACHINES: machine[] = []
@@ -150,8 +151,20 @@ setInterval(async () => {
         const lastPingTime: any = Date.now() - (machine!.lastHeartBeat as unknown as number)
         if (lastPingTime > (process.env.GRACE_PERIOD as unknown as number ?? 0)) {
             console.log("**************** DEAD MACHINE INTERVAL **************")
-            machine.assignedProjectId = "";
+            prisma.project.create({
+                data: {
+                    ip: machine.ip,
+                    projectId: machine.projectId!,
+                    projectName: machine.projectName!,
+                    projectType: machine.projectType!,
+                    publicDnsName: machine.publicDnsName,
+                    userId: machine.userId!,
+                    ...(machine.assignedAt && { assignedAt: machine.assignedAt })
+                }
+            })
+            machine.projectId = "";
             machine.isUsed = false
+            machine.userId = ""
             const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
                 InstanceId: machine.id,
                 ShouldDecrementDesiredCapacity: true
@@ -184,7 +197,7 @@ app.get("/heartBeat/:projectId", middleAuth, (req: Request, res: Response) => {
     const { projectId } = req.params
     try {
         for (let i = 0; i < ALL_MACHINES.length; i++) {
-            if (ALL_MACHINES[i]?.assignedProjectId == projectId) {
+            if (ALL_MACHINES[i]?.projectId == projectId) {
                 ALL_MACHINES[i]!.lastHeartBeat = Date.now()
                 break;
             }
@@ -208,7 +221,14 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
                 id: req.userId as unknown as string
             },
         })
-        const userProjects = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
+        const staleProject = await prisma.project.findMany({
+            where: {
+                userId: req.userId as unknown as string
+            }
+        })
+        console.log(staleProject, "staleProject")
+        let userProjects: any = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
+        userProjects = [...userProjects, staleProject]
         res.status(200).json(userProjects)
         return
     } catch (error) {
@@ -279,10 +299,11 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 machine = ALL_MACHINES[i];
                 console.log(machine, "machine")
                 ALL_MACHINES[i]!.isUsed = true;
-                ALL_MACHINES[i]!.assignedProjectType = proType as unknown as string;
+                ALL_MACHINES[i]!.projectType = proType as unknown as string;
                 ALL_MACHINES[i]!.assignedAt = new Date();
-                ALL_MACHINES[i]!.assignedProjectName = projName as unknown as string
-                ALL_MACHINES[i]!.assignedProjectId = projectId as unknown as string;
+                ALL_MACHINES[i]!.userId = req.userId!;
+                ALL_MACHINES[i]!.projectName = projName as unknown as string
+                ALL_MACHINES[i]!.projectId = projectId as unknown as string;
                 break;
             }
         }
