@@ -221,14 +221,15 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
                 id: req.userId as unknown as string
             },
         })
-        const staleProject = await prisma.project.findMany({
+        const staleProjects = await prisma.project.findMany({
             where: {
                 userId: req.userId as unknown as string
             }
         })
-        console.log(staleProject, "staleProject")
-        let userProjects: any = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
-        userProjects = [...userProjects, staleProject]
+        console.log(staleProjects, "staleProject")
+        let userProjects: any[] = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
+        userProjects = userProjects.concat(staleProjects)
+        userProjects = [...userProjects]
         res.status(200).json(userProjects)
         return
     } catch (error) {
