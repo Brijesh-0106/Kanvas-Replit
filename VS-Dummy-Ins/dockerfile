@@ -1,6 +1,21 @@
 FROM node:20.20.0-alpine
 WORKDIR /app
 
+RUN apk add --no-cache zip unzip
+
+ARG AUTO_SCALING_GROUP_NAME
+ARG ACC_KEY_ID
+ARG SECRET_ACC_KEY
+ARG PORT
+ARG BUCKET_NAME
+
+
+ENV AUTO_SCALING_GROUP_NAME=$AUTO_SCALING_GROUP_NAME
+ENV ACC_KEY_ID=$ACC_KEY_ID
+ENV SECRET_ACC_KEY=$SECRET_ACC_KEY
+ENV PORT=$PORT
+ENV BUCKET_NAME=$BUCKET_NAME
+
 
 COPY ./package.json ./package.json
 COPY ./package-lock.json ./package-lock.json
@@ -9,4 +24,5 @@ RUN npm install
 
 COPY . .
 EXPOSE 3001
+RUN npm run build  
 CMD ["npm","run","start"]

@@ -9,7 +9,7 @@ import {
 import { GoProjectSymlink } from "react-icons/go";
 export type alertType = "success" | "error" | "warning" | "info";
 
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 const icons = [
   {
@@ -29,11 +29,12 @@ type machine = {
   isUsed: Boolean;
   assignedAt?: Date;
   ip: string;
-  id: string;
+  instanceId: string;
   publicDnsName: string;
-  assignedProjectId?: string;
-  assignedProjectType?: String;
-  assignedProjectName?: string;
+  projectId?: string;
+  projectType?: String;
+  projectName?: string;
+  s3Key?: string;
 };
 function DashboardPage({
   setShowAlert,
@@ -50,6 +51,60 @@ function DashboardPage({
   setLoginModal: (value: boolean) => void;
   setSignInModal: (value: boolean) => void;
 }) {
+  const nav = useNavigate();
+
+  async function openProject(elem: machine) {
+    if (!elem) {
+      return;
+    }
+    if (!elem.projectId) {
+      return;
+    }
+    if (elem.s3Key) {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/assign-stale`,
+        {
+          method: "POST",
+          headers: {
+            token: localStorage.getItem("token") ?? "",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(elem),
+        },
+      );
+      console.log(res, "res from backend");
+      const machine = await res.json();
+      if (res.status === 403) {
+        setAlertMsg(
+          "You are not authorized to assign a project. Please sign in.",
+        );
+        setAlertType("error");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 2500);
+        // onClose();
+        return;
+      }
+      if (res.status === 405) {
+        setAlertMsg(machine.message);
+        setAlertType("error");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 2500);
+        // onClose();
+        return;
+      }
+      console.log(machine, "machine from backend");
+      localStorage.setItem(elem.projectId!, machine.publicDnsName);
+      nav(`/project?projectId=${elem.projectId!}`);
+    } else {
+      nav(`/project?projectId=${elem.projectId}`);
+    }
+    // to={`/project?projectId=${elem.projectId}`}
+    // machine.userId!
+  }
   const [projects, setProjects] = useState<machine[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
@@ -173,71 +228,73 @@ function DashboardPage({
               <div className="flex flex-wrap gap-8">
                 {projects.map((elem, index) => {
                   return (
-                    <div
-                      key={index}
-                      className="relative group border border-gray-400 w-56 h-56 rounded-xl"
-                    >
-                      <button
-                        onClick={() => deleteProject(elem)}
-                        className="absolute top-2 right-2 invisible group-hover:visible bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                    elem.isUsed && (
+                      <div
+                        key={index}
+                        className="relative group border border-gray-400 w-56 h-56 rounded-xl"
                       >
-                        <FaTrash className="text-gray-400 group-hover:text-white text-sm" />
-                      </button>
-                      <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
-                        {elem.assignedProjectType == "Node" && (
-                          <>
-                            <span className="text-7xl">{icons[0].icon}</span>
-                            <span className=" text-lg font-bold text-[#c3c2b7]">
-                              {icons[0].label}
-                            </span>
-                          </>
-                        )}
-                        {elem.assignedProjectType == "React" && (
-                          <>
-                            <span className="text-7xl">{icons[1].icon}</span>
-                            <span className=" text-lg font-bold text-[#c3c2b7]">
-                              {icons[1].label}
-                            </span>
-                          </>
-                        )}
-                        {elem.assignedProjectType == "Python" && (
-                          <>
-                            <span className="text-7xl">{icons[2].icon}</span>
-                            <span className=" text-lg font-bold text-[#c3c2b7]">
-                              {icons[2].label}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
-                        <div>
-                          <p>{elem.assignedProjectName}</p>
-                          <p className="text-[10px] text-gray-400">
-                            {elem.assignedAt?.toString().split("T")[0]}{" "}
-                          </p>
-                        </div>
-
-                        <Link
-                          to={`/project?projectId=${elem.assignedProjectId}`}
-                          className="text-blue-500 flex ml-auto items-center max-md:text-sm text-base"
+                        <button
+                          onClick={() => deleteProject(elem)}
+                          className="absolute top-2 right-2 invisible group-hover:visible bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
                         >
-                          Open
-                          <svg
-                            stroke="currentColor"
-                            fill="currentColor"
-                            stroke-width="0"
-                            viewBox="0 0 24 24"
-                            color="text-blue-500"
-                            height="16"
-                            width="16"
-                            xmlns="http://www.w3.org/2000/svg"
+                          <FaTrash className="text-gray-400 group-hover:text-white text-sm" />
+                        </button>
+                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                          {elem.projectType == "Node" && (
+                            <>
+                              <span className="text-7xl">{icons[0].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[0].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "React" && (
+                            <>
+                              <span className="text-7xl">{icons[1].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[1].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Python" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[2].label}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
+                          <div>
+                            <p>{elem.projectName}</p>
+                            <p className="text-[10px] text-gray-400">
+                              {elem.assignedAt?.toString().split("T")[0]}{" "}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => openProject(elem)}
+                            className="text-blue-500 flex ml-auto items-center max-md:text-sm text-base"
                           >
-                            <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
-                          </svg>
-                        </Link>
+                            Open
+                            <svg
+                              stroke="currentColor"
+                              fill="currentColor"
+                              stroke-width="0"
+                              viewBox="0 0 24 24"
+                              color="text-blue-500"
+                              height="16"
+                              width="16"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
+                            </svg>
+                          </button>
+                        </div>
+                        {/* <div>{elem.}</div> TYPE */}
                       </div>
-                      {/* <div>{elem.}</div> TYPE */}
-                    </div>
+                    )
                   );
                 })}
               </div>

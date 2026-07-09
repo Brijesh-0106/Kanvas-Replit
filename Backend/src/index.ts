@@ -59,7 +59,7 @@ type machine = {
     isUsed: Boolean,
     assignedAt?: Date | undefined,
     ip: string,
-    id: string,
+    instanceId: string,
     publicDnsName: string,
     projectId?: string
     projectType?: string
@@ -107,13 +107,13 @@ const refreshedInstances = async () => {
         (r) => r.Instances![0]?.InstanceId!
     ) ?? []
     for (let i = ALL_MACHINES.length - 1; i >= 0; i--) {
-        if (!activeInstanceIds.includes(ALL_MACHINES[i]!.id)) {
-            console.log(`Removing terminated instance: ${ALL_MACHINES[i]!.id}`)
+        if (!activeInstanceIds.includes(ALL_MACHINES[i]!.instanceId)) {
+            console.log(`Removing terminated instance: ${ALL_MACHINES[i]!.instanceId}`)
             ALL_MACHINES.splice(i, 1)
         }
     }
     // ****************** END *************************
-    const existingInstanceIds = ALL_MACHINES.map((machine) => machine.id) ?? []
+    const existingInstanceIds = ALL_MACHINES.map((machine) => machine.instanceId) ?? []
     instanceData.Reservations?.map((reservation) => {
         if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {
 
@@ -124,7 +124,7 @@ const refreshedInstances = async () => {
                 ALL_MACHINES.push({
                     isUsed: false,
                     publicDnsName: reservation.Instances![0]?.PublicDnsName!,
-                    id: reservation.Instances![0]?.InstanceId!,
+                    instanceId: reservation.Instances![0]?.InstanceId!,
                     ip: reservation.Instances![0]?.PrivateIpAddress!,
                 })
             }
@@ -148,25 +148,53 @@ setInterval(async () => {
     for (const machine of ALL_MACHINES) {
         if (!machine.isUsed) return;
         if (machine.lastHeartBeat === undefined) return;
+        console.log("stale")
         const lastPingTime: any = Date.now() - (machine!.lastHeartBeat as unknown as number)
         if (lastPingTime > (process.env.GRACE_PERIOD as unknown as number ?? 0)) {
             console.log("**************** DEAD MACHINE INTERVAL **************")
-            prisma.project.create({
+            await prisma.project.create({
                 data: {
                     ip: machine.ip,
                     projectId: machine.projectId!,
                     projectName: machine.projectName!,
                     projectType: machine.projectType!,
+                    instanceId: machine.instanceId,
+                    isUsed: true,
                     publicDnsName: machine.publicDnsName,
                     userId: machine.userId!,
+                    s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
                     ...(machine.assignedAt && { assignedAt: machine.assignedAt })
                 }
             })
-            machine.projectId = "";
-            machine.isUsed = false
-            machine.userId = ""
+            fetch(`http://${machine.publicDnsName}:3001/store-project`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId: machine.userId, projectId: machine.projectId })
+            })
+            const foundUser = await prisma.user.findFirst({
+                where: {
+                    id: machine.userId! as unknown as string
+                }
+            })
+            const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
+            const user = await prisma.user.update({
+                where: {
+                    id: machine.userId! as unknown as string
+                },
+                data: {
+                    projects: {
+                        set: remainingProjects
+                    }
+                }
+            })
+            const remInd = ALL_MACHINES.findIndex((elem) => elem.instanceId == machine.instanceId)
+            if (remInd > -1) {
+                ALL_MACHINES.splice(remInd, 1)
+            }
             const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
-                InstanceId: machine.id,
+                InstanceId: machine.instanceId,
                 ShouldDecrementDesiredCapacity: true
             })
             const deleteRes = await autoScalingClient.send(termiInstancecommand)
@@ -227,7 +255,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
             }
         })
         console.log(staleProjects, "staleProject")
-        let userProjects: any[] = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.id))
+        let userProjects: any[] = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.instanceId))
         userProjects = userProjects.concat(staleProjects)
         userProjects = [...userProjects]
         res.status(200).json(userProjects)
@@ -241,13 +269,13 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
 app.post("/deleteProject", middleAuth, async (req, res) => {
     try {
         console.log("**************** DELETE ENDPOINT **************")
-        const machine = req.body
+        const machine: machine = req.body
         const foundUser = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
             }
         })
-        const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.id) ?? []
+        const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
         const user = await prisma.user.update({
             where: {
                 id: req.userId as unknown as string
@@ -258,16 +286,79 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
                 }
             }
         })
-        const remInd = ALL_MACHINES.findIndex((elem) => elem.id == machine.id)
+        const remInd = ALL_MACHINES.findIndex((elem) => elem.instanceId == machine.instanceId)
         if (remInd > -1) {
             ALL_MACHINES.splice(remInd, 1)
         }
         const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
-            InstanceId: machine.id,
+            InstanceId: machine.instanceId,
             ShouldDecrementDesiredCapacity: true
         })
         const deleteRes = await autoScalingClient.send(termiInstancecommand)
         res.status(200).json({ msg: "Project Deleted Successfully" })
+        return
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ error: 'Invalid token' });
+    }
+
+})
+// =========================================================== ASSIGN STALE
+app.post("/assign-stale", middleAuth, async (req, res) => {
+    console.log("************** STALE PROJECT ASSIGN *****************")
+    try {
+        const machine: machine = req.body
+        if (!machine) {
+            console.log("WRONG payload = " + machine)
+            res.status(405).json({ msg: "Unauthorized Access" })
+            return
+        }
+        let foundMachine;
+        console.log(ALL_MACHINES, "ALL_MACHINES")
+        for (let i = 0; i < ALL_MACHINES.length; i++) {
+            if (!ALL_MACHINES[i]!.isUsed) {
+                foundMachine = ALL_MACHINES[i];
+                console.log(machine, "machine")
+                ALL_MACHINES[i]!.isUsed = true;
+                ALL_MACHINES[i]!.projectType = machine.projectType!;
+                ALL_MACHINES[i]!.assignedAt = machine.assignedAt;
+                ALL_MACHINES[i]!.userId = req.userId!;
+                ALL_MACHINES[i]!.projectName = machine.projectName!;
+                ALL_MACHINES[i]!.projectId = machine.projectId!;
+                break;
+            }
+        }
+        if (foundMachine === undefined) {
+            res.status(405).json({
+                message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
+            })
+            return
+        }
+        fetch(`http://${foundMachine.publicDnsName}:3001/restore-project`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: machine.userId, projectId: machine.projectId })
+        })
+        await prisma.project.delete({
+            where: {
+                id: machine.instanceId
+            }
+        })
+        await prisma.user.update({
+            where: {
+                id: req.userId as unknown as string
+            },
+            data: {
+                projects: {
+                    push: foundMachine?.instanceId as unknown as string
+                }
+            }
+        })
+        const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
+        increaseDesiredCapacity(assignedProjects.length + 2)
+        res.json(machine)
         return
     } catch (error) {
         console.error('Google auth error:', error);
@@ -320,7 +411,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
             },
             data: {
                 projects: {
-                    push: machine?.id as unknown as string
+                    push: machine?.instanceId as unknown as string
                 }
             }
         })

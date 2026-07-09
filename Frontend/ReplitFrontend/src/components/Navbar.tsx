@@ -21,8 +21,7 @@ export default function Navbar({
   });
 
   const logOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.clear();
     // NEED TO CHECK PROJECTID AS WELL
     nav("/");
   };

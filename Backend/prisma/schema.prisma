@@ -26,7 +26,10 @@ model Project {
   projectName   String?
   projectType   String?
   ip            String
+  isUsed        Boolean
   publicDnsName String
   assignedAt    DateTime?
   userId        String?
+  s3Key         String
+  instanceId    String
 }
