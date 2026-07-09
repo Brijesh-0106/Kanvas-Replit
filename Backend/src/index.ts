@@ -146,6 +146,7 @@ setInterval(async () => {
 
 setInterval(async () => {
     for (const machine of ALL_MACHINES) {
+        console.log(machine, "time check")
         if (!machine.isUsed) return;
         if (machine.lastHeartBeat === undefined) return;
         console.log("stale")
@@ -307,7 +308,7 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
 app.post("/assign-stale", middleAuth, async (req, res) => {
     console.log("************** STALE PROJECT ASSIGN *****************")
     try {
-        const machine: machine = req.body
+        const machine = req.body
         if (!machine) {
             console.log("WRONG payload = " + machine)
             res.status(405).json({ msg: "Unauthorized Access" })
@@ -325,6 +326,7 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
                 ALL_MACHINES[i]!.userId = req.userId!;
                 ALL_MACHINES[i]!.projectName = machine.projectName!;
                 ALL_MACHINES[i]!.projectId = machine.projectId!;
+                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
                 break;
             }
         }
@@ -343,7 +345,7 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         })
         await prisma.project.delete({
             where: {
-                id: machine.instanceId
+                id: machine.id!
             }
         })
         await prisma.user.update({
@@ -358,7 +360,7 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         })
         const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
         increaseDesiredCapacity(assignedProjects.length + 2)
-        res.json(machine)
+        res.json(foundMachine)
         return
     } catch (error) {
         console.error('Google auth error:', error);
@@ -394,6 +396,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 ALL_MACHINES[i]!.projectType = proType as unknown as string;
                 ALL_MACHINES[i]!.assignedAt = new Date();
                 ALL_MACHINES[i]!.userId = req.userId!;
+                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
                 ALL_MACHINES[i]!.projectName = projName as unknown as string
                 ALL_MACHINES[i]!.projectId = projectId as unknown as string;
                 break;

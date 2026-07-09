@@ -20,7 +20,7 @@ export default function Project() {
           },
         },
       );
-    }, 1000 * 60);
+    }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, []);
 

@@ -275,7 +275,7 @@ function DashboardPage({
 
                           <button
                             onClick={() => openProject(elem)}
-                            className="text-blue-500 flex ml-auto items-center max-md:text-sm text-base"
+                            className="text-blue-500 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
                           >
                             Open
                             <svg

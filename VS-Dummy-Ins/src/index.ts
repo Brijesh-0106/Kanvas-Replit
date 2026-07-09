@@ -28,8 +28,7 @@ app.post("/store-project", async (req: Request, res: Response) => {
     const { userId, projectId } = req.body
     console.log(userId, projectId)
     // zip the project
-    execSync("zip -r /tmp/project-backup.zip /tmp/project")
-
+    execSync("cd /tmp && zip -r /tmp/project-backup.zip project")
     // read zip file
     const fileBuffer = fs.readFileSync("/tmp/project-backup.zip")
 
@@ -47,18 +46,21 @@ app.post("/store-project", async (req: Request, res: Response) => {
 
 app.post("/restore-project", async (req: Request, res: Response) => {
     const { userId, projectId } = req.body
+    console.log(userId, projectId)
 
+    console.log(`projects/ + ${userId} + / + ${projectId}.zip`, "key")
     // download from S3
     const response = await client.send(new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
-        Key: `projects/${userId}/${projectId}.zip`
+        Key: `projects/ + ${userId} + / + ${projectId}.zip`
     }))
 
+    console.log(response, "res")
     // write zip to disk
     fs.writeFileSync("/tmp/project-backup.zip", await response.Body!.transformToByteArray())
 
     // unzip
-    execSync("unzip -o /tmp/project-backup.zip -d /tmp/project")
+    execSync("unzip -o /tmp/project-backup.zip -d /tmp")
 
     res.json({ msg: "restored" })
 })
