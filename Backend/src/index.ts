@@ -140,7 +140,7 @@ refreshedInstances()
 
 setInterval(async () => {
     await refreshedInstances()
-}, 10000);
+}, 45000);
 
 
 
@@ -203,7 +203,7 @@ setInterval(async () => {
         }
     }
 
-}, 60 * 1000);
+}, 210000);
 
 
 // ===================================== DEV API

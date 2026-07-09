@@ -7,3 +7,4 @@
 /generated/prisma
 copy-og-image.ps1
 *.tsbuildinfo
+*.txt
