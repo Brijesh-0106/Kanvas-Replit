@@ -86,12 +86,9 @@ export default function ProjectSelectorModal({
 
     console.log(machine, "machine from backend");
     onClose();
-    // window.location.href = `http://${machine.publicDnsName}:8080`;
-    // localStorage.setItem(projectId, machine.publicDnsName);
     navigate(`/project?projectId=${projectId}`, {
       state: machine.publicDnsName,
     });
-    // console.log("Machine ID stored in localStorage:", machine.id);
   };
 
   return (

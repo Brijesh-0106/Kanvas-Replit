@@ -97,7 +97,6 @@ function DashboardPage({
         return;
       }
       console.log(machine, "machine from backend");
-      // localStorage.setItem(elem.projectId!, machine.publicDnsName);
       nav(`/project?projectId=${elem.projectId!}`, {
         state: machine.publicDnsName,
       });
