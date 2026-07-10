@@ -6,20 +6,18 @@ import "../App.css";
 export default function Project() {
   const uri = useLocation();
   const nav = useNavigate();
-  console.log(localStorage.getItem(uri.search.split("=")[1]), "check");
+  console.log(uri.state, "check");
+  // console.log(localStorage.getItem(uri.search.split("=")[1]), "check");
   //http: ${localStorage.getItem(uri.search.split("=")[1])}:8080/?folder=/tmp/project
 
   useEffect(() => {
     const heartBeat = setInterval(() => {
       console.log("heartbeat", heartBeat);
-      fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/heartBeat/${uri.search.split("=")[1]}`,
-        {
-          headers: {
-            token: (localStorage.getItem("token") as string) ?? "",
-          },
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${uri.state}`, {
+        headers: {
+          token: (localStorage.getItem("token") as string) ?? "",
         },
-      );
+      });
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, []);
@@ -141,7 +139,7 @@ export default function Project() {
                 height="100%"
                 onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                 className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                src={`http://${localStorage.getItem(uri.search.split("=")[1])}:8080/?folder=/tmp/project`}
+                src={`http://${uri.state}:8080/?folder=/tmp/project`}
               />
             </div>
           </div>

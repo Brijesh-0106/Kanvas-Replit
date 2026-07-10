@@ -28,7 +28,7 @@ export default function Navbar({
 
   return (
     <>
-      <div className="bg-[#2c2c2a] px-8 w-screen h-16 flex items-center justify-between border-b border-[#c3c2b7]/10">
+      <div className="bg-[#2c2c2a] px-3 md:px-8 w-screen h-16 flex items-center justify-between border-b border-[#c3c2b7]/10">
         <div className="leftSideNav flex gap-1 items-center">
           <div
             style={{
@@ -75,11 +75,11 @@ export default function Navbar({
             </Link>
           )}
         </div>
-        <div className="rightSideNav flex gap-4">
+        <div className="rightSideNav flex gap-2 md:gap-4">
           {(token == "" || token == undefined) && (
             <>
               <button
-                className="border border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2 rounded-xl font-medium transition-all"
+                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2 rounded-xl font-medium transition-all"
                 onClick={() => setLoginModal(true)}
               >
                 Login
@@ -96,7 +96,7 @@ export default function Navbar({
             <>
               <button
                 onClick={() => setProjectModal(true)}
-                className="border border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2  rounded-xl font-medium transition-all"
+                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600  px-3 py-2  rounded-xl font-medium transition-all"
               >
                 New Project
               </button>

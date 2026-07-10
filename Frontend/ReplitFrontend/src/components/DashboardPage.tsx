@@ -97,10 +97,14 @@ function DashboardPage({
         return;
       }
       console.log(machine, "machine from backend");
-      localStorage.setItem(elem.projectId!, machine.publicDnsName);
-      nav(`/project?projectId=${elem.projectId!}`);
+      // localStorage.setItem(elem.projectId!, machine.publicDnsName);
+      nav(`/project?projectId=${elem.projectId!}`, {
+        state: machine.publicDnsName,
+      });
     } else {
-      nav(`/project?projectId=${elem.projectId}`);
+      nav(`/project?projectId=${elem.projectId}`, {
+        state: elem.publicDnsName,
+      });
     }
     // to={`/project?projectId=${elem.projectId}`}
     // machine.userId!
@@ -225,19 +229,19 @@ function DashboardPage({
               <h1 className="text-3xl text-[#c3c2b7] mb-7 flex items-center gap-1">
                 <GoProjectSymlink /> Projects
               </h1>
-              <div className="flex flex-wrap gap-8">
+              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
                 {projects.map((elem, index) => {
                   return (
                     elem.isUsed && (
                       <div
                         key={index}
-                        className="relative group border border-gray-400 w-56 h-56 rounded-xl"
+                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
                       >
                         <button
                           onClick={() => deleteProject(elem)}
-                          className="absolute top-2 right-2 invisible group-hover:visible bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
                         >
-                          <FaTrash className="text-gray-400 group-hover:text-white text-sm" />
+                          <FaTrash className="text-white text-sm" />
                         </button>
                         <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
                           {elem.projectType == "Node" && (
@@ -275,13 +279,13 @@ function DashboardPage({
 
                           <button
                             onClick={() => openProject(elem)}
-                            className="text-blue-500 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
+                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
                           >
                             Open
                             <svg
                               stroke="currentColor"
                               fill="currentColor"
-                              stroke-width="0"
+                              strokeWidth="0"
                               viewBox="0 0 24 24"
                               color="text-blue-500"
                               height="16"
