@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import type { LoginProps } from "../models/AuthProps";
 import GoogleSignIn from "./GoogleSignIn";
 export type alertType = "success" | "error" | "warning" | "info";
 
@@ -18,8 +20,15 @@ export default function Login({
   setSignInModal: (value: boolean) => void;
   onClose: () => void;
 }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // const [email, setEmail] = useState("");
+  // const [password, setPassword] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LoginProps>();
   const nav = useNavigate();
   const [errorGoogle, setErrorGoogle] = useState("");
   const googleButtonRef = useRef<HTMLDivElement>(null);
@@ -35,7 +44,7 @@ export default function Login({
     // setProjectModal(true);
   };
 
-  const loginViaEmail = async () => {
+  const loginViaEmail = async (credentials: LoginProps) => {
     const unfilteredRes = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/login`,
       {
@@ -43,7 +52,10 @@ export default function Login({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: credentials.emailInput,
+          password: credentials.passwordInput,
+        }),
       },
     );
     console.log(unfilteredRes, "login unfilteredRes from backend");
@@ -61,8 +73,7 @@ export default function Login({
       setTimeout(() => {
         setShowAlert(false);
       }, 2500);
-      setEmail("");
-      setPassword("");
+      reset();
     }
   };
 
@@ -138,7 +149,11 @@ export default function Login({
       </div>
 
       {/* Google */}
-      {errorGoogle && <div className="error-message">{errorGoogle}</div>}
+      {errorGoogle && (
+        <div className="error-message text-red-600 text-[12px] mb-1">
+          {errorGoogle}
+        </div>
+      )}
       <button
         onClick={handleCustomButtonClick}
         className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 hover:border-gray-500 text-white text-sm font-medium transition-all mb-3"
@@ -186,38 +201,68 @@ export default function Login({
       </div>
 
       {/* Email + Password */}
-      <div className="flex flex-col gap-3 mb-5">
-        <div>
-          <label className="text-gray-400 text-xs mb-1.5 block">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-gray-400 text-xs">Password</label>
+      <form onSubmit={handleSubmit(loginViaEmail)}>
+        <div className="flex flex-col gap-3 mb-5">
+          <div>
+            <label className="text-gray-400 text-xs mb-1.5 block">Email</label>
+            <input
+              type="email"
+              {...register("emailInput", {
+                required: {
+                  value: true,
+                  message: "Email is Required",
+                },
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Email is not valid",
+                },
+              })}
+              // value={email}
+              // onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+            />
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-          />
+          {errors.emailInput?.message && (
+            <p className="text-red-600 text-[12px] mb-1">
+              {errors.emailInput.message.toString()}
+            </p>
+          )}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-gray-400 text-xs">Password</label>
+            </div>
+            <input
+              type="password"
+              onPaste={(e) => e.preventDefault()}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              {...register("passwordInput", {
+                required: {
+                  value: true,
+                  message: "Password is Required",
+                },
+                minLength: {
+                  value: 8,
+                  message: "Password must be at least 8 characters",
+                },
+              })}
+              placeholder="••••••••"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          {errors.passwordInput?.message && (
+            <p className="text-red-600 text-[12px] mb-1">
+              {errors.passwordInput.message.toString()}
+            </p>
+          )}
         </div>
-      </div>
+        <button className="w-full bg-blue-600 cursor-pointer hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all">
+          Log in
+        </button>
+      </form>
 
       {/* Submit */}
-      <button
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all"
-        onClick={loginViaEmail}
-      >
-        Log in
-      </button>
 
       {/* Footer */}
       <p className="text-center text-gray-500 text-xs mt-6">

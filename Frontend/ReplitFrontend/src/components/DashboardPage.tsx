@@ -222,7 +222,7 @@ function DashboardPage({
         <div className="userProjectsSection flex-1 px-15 py-18 bg-[#1e1e1f]">
           {projects.length > 0 && (
             <>
-              <h1 className="text-3xl text-[#c3c2b7] mb-7 flex items-center gap-4">
+              <h1 className="text-3xl text-[#c3c2b7] mb-7 flex items-center gap-1">
                 <GoProjectSymlink /> Projects
               </h1>
               <div className="flex flex-wrap gap-8">

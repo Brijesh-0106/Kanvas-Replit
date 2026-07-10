@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
+import type { ProjectSelectorProps } from "../models/ProjectSelectorProps";
 export type alertType = "success" | "error" | "warning" | "info";
 
 const projectTypes = [
@@ -32,12 +34,17 @@ export default function ProjectSelectorModal({
   setAlertType: (value: alertType) => void;
   onClose: () => void;
 }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProjectSelectorProps>();
   const [selected, setSelected] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [projName, setProjName] = useState("");
+  // const [projName, setProjName] = useState("");
 
   //   ++++++++++++++++++++++++++++++++++++++++++ LANUCH PROJECT ++++++++++++++++++++++++++++++++++++++++++
-  const handleLaunch = async () => {
+  const handleLaunch = async (credential: ProjectSelectorProps) => {
     console.log("Launching:", selected);
     if (!selected) return;
     // console.log(Math.random(), "Random number");
@@ -45,7 +52,7 @@ export default function ProjectSelectorModal({
       "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
     console.log(projectId, "projectId");
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/assign/${projectId}/${projName}?proType=${selected}`,
+      `${import.meta.env.VITE_BACKEND_URL}/assign/${projectId}/${credential.nameInput}?proType=${selected}`,
       {
         headers: {
           token: localStorage.getItem("token") ?? "",
@@ -86,7 +93,7 @@ export default function ProjectSelectorModal({
   };
 
   return (
-    <>
+    <form onSubmit={handleSubmit(handleLaunch)}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-amber-700 text-lg font-semibold">
           Intialize Project
@@ -101,18 +108,33 @@ export default function ProjectSelectorModal({
       <p className="text-gray-400 text-sm mb-5">
         Select a project type and project name
       </p>
-      <div className="mb-5">
+      <div className={errors.nameInput ? "" : "mb-5"}>
         <label className="text-gray-400 text-xs mb-1.5 block">
           Project Name
         </label>
         <input
           type="text"
-          value={projName}
-          onChange={(e) => setProjName(e.target.value)}
+          {...register("nameInput", {
+            required: {
+              value: true,
+              message: "Project name is Required",
+            },
+            minLength: {
+              value: 4,
+              message: "Password must be at least 4 characters",
+            },
+          })}
+          // value={projName}
+          // onChange={(e) => setProjName(e.target.value)}
           placeholder="TODO App..."
           className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[#c3c2b7] text-sm placeholder-gray-500 focus:outline-none focus:border-amber-700 transition-colors"
         />
       </div>
+      {errors.nameInput?.message && (
+        <p className="text-red-600 text-[12px] mb-5">
+          {errors.nameInput.message.toString()}
+        </p>
+      )}
 
       <label className="text-gray-400 text-xs mb-1.5 block">Project Type</label>
       {/* Options */}
@@ -157,7 +179,7 @@ export default function ProjectSelectorModal({
           Cancel
         </button>
         <button
-          onClick={handleLaunch}
+          // onClick={handleLaunch}
           disabled={!selected}
           className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all
               ${
@@ -171,6 +193,6 @@ export default function ProjectSelectorModal({
             : "Launch"}
         </button>
       </div>
-    </>
+    </form>
   );
 }
