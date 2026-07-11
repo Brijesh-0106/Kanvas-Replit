@@ -19,7 +19,12 @@ const projectTypes = [
   {
     value: "Python",
     label: "Python",
-    description: "venv · Flask, scripts",
+    description: "Python Environment",
+  },
+  {
+    value: "Java",
+    label: "Java",
+    description: "Java Environment",
   },
 ];
 

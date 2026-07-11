@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaNodeJs, FaPython, FaReact } from "react-icons/fa";
+import { FaJava, FaNodeJs, FaPython, FaReact } from "react-icons/fa";
 import { LuCheck, LuChevronDown, LuFilter } from "react-icons/lu";
 
 const options = [
@@ -22,6 +22,11 @@ const options = [
     label: "Node",
     icon: <FaNodeJs className="text-green-500" />,
     value: "Node",
+  },
+  {
+    label: "Java",
+    icon: <FaJava className="text-red-500" />,
+    value: "Java",
   },
 ];
 

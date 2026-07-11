@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   FaFolderOpen,
+  FaJava,
   FaNodeJs,
   FaPython,
   FaReact,
@@ -24,6 +25,10 @@ const icons = [
   {
     icon: <FaPython height={30} width={30} className="text-yellow-400" />,
     label: "Python",
+  },
+  {
+    label: "Java",
+    icon: <FaJava className="text-red-500" height={30} width={30} />,
   },
 ];
 type machine = {
@@ -432,6 +437,14 @@ function DashboardPage({
                               <span className="text-7xl">{icons[2].icon}</span>
                               <span className=" text-lg font-bold text-[#c3c2b7]">
                                 {icons[2].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Java" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[3].label}
                               </span>
                             </>
                           )}
