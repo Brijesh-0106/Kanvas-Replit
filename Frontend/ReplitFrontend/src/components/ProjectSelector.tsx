@@ -107,6 +107,7 @@ export default function ProjectSelectorModal({
           Project Name
         </label>
         <input
+          maxLength={13}
           type="text"
           {...register("nameInput", {
             required: {
@@ -116,6 +117,10 @@ export default function ProjectSelectorModal({
             minLength: {
               value: 4,
               message: "Password must be at least 4 characters",
+            },
+            maxLength: {
+              value: 13,
+              message: "Password must be at max 13 characters",
             },
           })}
           // value={projName}
