@@ -10,6 +10,7 @@ import { GoProjectSymlink } from "react-icons/go";
 export type alertType = "success" | "error" | "warning" | "info";
 
 import { useNavigate } from "react-router-dom";
+import Dropdown from "./Dropdown";
 import Navbar from "./Navbar";
 const icons = [
   {
@@ -105,25 +106,83 @@ function DashboardPage({
   const [projects, setProjects] = useState<machine[]>([]);
   const [searchedProjects, setSearchedProjects] = useState<machine[]>([]);
   const [isSearched, setIsSearched] = useState<Boolean>(false);
+  const [isFiltered, setIsFiltered] = useState<Boolean>(false);
   const [loaded, setLoaded] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
+  const [filterValue, setFilterValue] = useState("");
   const [loadingMsg, setLoadingMsg] = useState("");
 
   const handleSearch = () => {
     if (searchInput) {
       setIsSearched(true);
-      setSearchedProjects(
-        projects.filter((elem) =>
-          elem.projectName
-            ?.toLocaleLowerCase()
-            .includes(searchInput.toLowerCase()),
-        ),
-      );
+      console.log("1");
+      console.log(filterValue, "fi");
+      console.log(isFiltered, "fi");
+      if (filterValue) {
+        console.log("2");
+        setSearchedProjects(
+          projects.filter((elem) => {
+            return (
+              elem.projectName
+                ?.toLocaleLowerCase()
+                .includes(searchInput.toLowerCase()) &&
+              elem.projectType == filterValue
+            );
+          }),
+        );
+      } else {
+        console.log("3");
+        setSearchedProjects(
+          projects.filter((elem) =>
+            elem.projectName
+              ?.toLocaleLowerCase()
+              .includes(searchInput.toLowerCase()),
+          ),
+        );
+      }
     } else {
       setIsSearched(false);
+      if (isFiltered) {
+        setSearchedProjects(
+          projects.filter((elem) => {
+            return elem.projectType == filterValue;
+          }),
+        );
+      }
     }
   };
+
+  useEffect(() => {
+    if (filterValue) {
+      setIsFiltered(true);
+      if (isSearched) {
+        setSearchedProjects(
+          projects.filter((elem) => {
+            return (
+              elem.projectName
+                ?.toLocaleLowerCase()
+                .includes(searchInput.toLowerCase()) &&
+              elem.projectType == filterValue
+            );
+          }),
+        );
+      } else {
+        setSearchedProjects(
+          projects.filter((elem) => {
+            return elem.projectType == filterValue;
+          }),
+        );
+      }
+    } else {
+      setIsFiltered(false);
+      if (isSearched) {
+        console.log("check");
+        handleSearch();
+      }
+      console.log(isFiltered, "false time");
+    }
+  }, [filterValue]);
 
   async function fetchUserProjects() {
     setLoaded(false);
@@ -238,8 +297,12 @@ function DashboardPage({
               <GoProjectSymlink /> Projects
             </h1>
             <div className="flex gap-2">
+              <div>
+                <Dropdown setFilter={setFilterValue} />
+              </div>
+              {/* <div> */}
               <input
-                className="rounded-xl  border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
+                className="rounded-xl  bg-[#2c2c2a] py-0 border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
                 type="search"
                 value={searchInput}
                 placeholder="Search"
@@ -248,14 +311,15 @@ function DashboardPage({
               />
               <button
                 onClick={handleSearch}
-                className="text-amber-600 hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-amber-600 px-3 py-2 rounded-xl"
+                className="bg-[#2c2c2a] text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-3 py-0 rounded-xl"
                 type="submit"
               >
                 Search
               </button>
             </div>
+            {/* </div> */}
           </div>
-          {projects.length > 0 && !isSearched && (
+          {projects.length > 0 && !isSearched && !isFiltered && (
             <>
               <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
                 {projects.map((elem, index) => {
@@ -331,7 +395,7 @@ function DashboardPage({
               </div>
             </>
           )}
-          {projects.length > 0 && isSearched && (
+          {projects.length > 0 && (isSearched || isFiltered) && (
             <>
               <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
                 {searchedProjects.map((elem, index) => {
@@ -407,7 +471,7 @@ function DashboardPage({
               </div>
             </>
           )}
-          {projects.length == 0 && !isSearched && (
+          {projects.length == 0 && !isSearched && !isFiltered && (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
               <div className="text-2xl">
                 <FaFolderOpen />
@@ -416,7 +480,7 @@ function DashboardPage({
               <div>Create a Project to get started</div>
             </div>
           )}
-          {searchedProjects.length == 0 && isSearched && (
+          {searchedProjects.length == 0 && (isSearched || isFiltered) && (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
               <div className="text-2xl">
                 <FaFolderOpen />
