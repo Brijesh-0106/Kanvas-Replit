@@ -292,17 +292,13 @@ function DashboardPage({
           />
         </div>
         <div className="userProjectsSection flex-1 px-15 py-18 bg-[#1e1e1f]">
+          <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-5 gap-1">
+            <GoProjectSymlink /> Projects
+          </h1>
           <div className="flex justify-between mb-10 items-center">
-            <h1 className="text-2xl text-[#c3c2b7] flex items-center gap-1">
-              <GoProjectSymlink /> Projects
-            </h1>
             <div className="flex gap-2">
-              <div>
-                <Dropdown setFilter={setFilterValue} />
-              </div>
-              {/* <div> */}
               <input
-                className="rounded-xl  bg-[#2c2c2a] py-0 border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
+                className="rounded-xl  bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
                 type="search"
                 value={searchInput}
                 placeholder="Search"
@@ -311,11 +307,14 @@ function DashboardPage({
               />
               <button
                 onClick={handleSearch}
-                className="bg-[#2c2c2a] text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-3 py-0 rounded-xl"
+                className="bg-[#2c2c2a] max-h-10 py-2  text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-3 rounded-xl"
                 type="submit"
               >
                 Search
               </button>
+            </div>
+            <div>
+              <Dropdown setFilter={setFilterValue} />
             </div>
             {/* </div> */}
           </div>
