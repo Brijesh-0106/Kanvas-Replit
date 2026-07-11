@@ -82,7 +82,6 @@ function DashboardPage({
         setTimeout(() => {
           setShowAlert(false);
         }, 2500);
-        // onClose();
         return;
       }
       if (res.status === 405) {
@@ -92,7 +91,6 @@ function DashboardPage({
         setTimeout(() => {
           setShowAlert(false);
         }, 2500);
-        // onClose();
         return;
       }
       nav(`/project?projectId=${elem.projectId!}`, {
@@ -103,12 +101,29 @@ function DashboardPage({
         state: elem.publicDnsName,
       });
     }
-    // to={`/project?projectId=${elem.projectId}`}
-    // machine.userId!
   }
   const [projects, setProjects] = useState<machine[]>([]);
+  const [searchedProjects, setSearchedProjects] = useState<machine[]>([]);
+  const [isSearched, setIsSearched] = useState<Boolean>(false);
   const [loaded, setLoaded] = useState(false);
+
+  const [searchInput, setSearchInput] = useState("");
   const [loadingMsg, setLoadingMsg] = useState("");
+
+  const handleSearch = () => {
+    if (searchInput) {
+      setIsSearched(true);
+      setSearchedProjects(
+        projects.filter((elem) =>
+          elem.projectName
+            ?.toLocaleLowerCase()
+            .includes(searchInput.toLowerCase()),
+        ),
+      );
+    } else {
+      setIsSearched(false);
+    }
+  };
 
   async function fetchUserProjects() {
     setLoaded(false);
@@ -206,7 +221,6 @@ function DashboardPage({
             <span className="text-[#c3c2b7] font-bold text-lg">Kanvas</span>
           </div>
 
-          {/* <p className="text-gray-400 text-sm">Setting up your workspace...</p> */}
           <p className="text-gray-400 text-sm">{loadingMsg}</p>
         </div>
       )}
@@ -219,11 +233,30 @@ function DashboardPage({
           />
         </div>
         <div className="userProjectsSection flex-1 px-15 py-18 bg-[#1e1e1f]">
-          {projects.length > 0 && (
+          <div className="flex justify-between mb-10 items-center">
+            <h1 className="text-2xl text-[#c3c2b7] flex items-center gap-1">
+              <GoProjectSymlink /> Projects
+            </h1>
+            <div className="flex gap-2">
+              <input
+                className="rounded-xl  border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
+                type="search"
+                value={searchInput}
+                placeholder="Search"
+                onChange={(e) => setSearchInput(e.target.value)}
+                aria-label="Search"
+              />
+              <button
+                onClick={handleSearch}
+                className="text-amber-600 hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-amber-600 px-3 py-2 rounded-xl"
+                type="submit"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+          {projects.length > 0 && !isSearched && (
             <>
-              <h1 className="text-3xl text-[#c3c2b7] mb-7 flex items-center gap-1">
-                <GoProjectSymlink /> Projects
-              </h1>
               <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
                 {projects.map((elem, index) => {
                   return (
@@ -291,7 +324,6 @@ function DashboardPage({
                             </svg>
                           </button>
                         </div>
-                        {/* <div>{elem.}</div> TYPE */}
                       </div>
                     )
                   );
@@ -299,13 +331,97 @@ function DashboardPage({
               </div>
             </>
           )}
-          {projects.length == 0 && (
+          {projects.length > 0 && isSearched && (
+            <>
+              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
+                {searchedProjects.map((elem, index) => {
+                  return (
+                    elem.isUsed && (
+                      <div
+                        key={index}
+                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
+                      >
+                        <button
+                          onClick={() => deleteProject(elem)}
+                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                        >
+                          <FaTrash className="text-white text-sm" />
+                        </button>
+                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                          {elem.projectType == "Node" && (
+                            <>
+                              <span className="text-7xl">{icons[0].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[0].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "React" && (
+                            <>
+                              <span className="text-7xl">{icons[1].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[1].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Python" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[2].label}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
+                          <div>
+                            <p>{elem.projectName}</p>
+                            <p className="text-[10px] text-gray-400">
+                              {elem.assignedAt?.toString().split("T")[0]}{" "}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => openProject(elem)}
+                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
+                          >
+                            Open
+                            <svg
+                              stroke="currentColor"
+                              fill="currentColor"
+                              strokeWidth="0"
+                              viewBox="0 0 24 24"
+                              color="text-blue-500"
+                              height="16"
+                              width="16"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {projects.length == 0 && !isSearched && (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
               <div className="text-2xl">
                 <FaFolderOpen />
               </div>
               <div>No Projects yet</div>
               <div>Create a Project to get started</div>
+            </div>
+          )}
+          {searchedProjects.length == 0 && isSearched && (
+            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
+              <div className="text-2xl">
+                <FaFolderOpen />
+              </div>
+              <div>No Project found</div>
             </div>
           )}
         </div>

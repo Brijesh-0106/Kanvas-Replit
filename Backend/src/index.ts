@@ -380,7 +380,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 id: req.userId as unknown as string
             }
         })
-        if (user?.projects!.length! >= 2) {
+        if (user?.projects!.length! >= 12) {
             res.status(405).json({
                 message: "Free plan limit reached. Either delete a project or upgrade to premium.",
             })
