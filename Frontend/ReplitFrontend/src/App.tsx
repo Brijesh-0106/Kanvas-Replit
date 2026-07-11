@@ -23,7 +23,6 @@ function App() {
   async function verifyToken() {
     const token = localStorage.getItem("token");
     if (token) {
-      console.log(import.meta.env.VITE_BACKEND_URL, "backend url");
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/verifyToken`,
         {
@@ -32,7 +31,6 @@ function App() {
           },
         },
       );
-      console.log(res, "verifyToken res from backend");
       if (res.status == 200) {
         setLoaded(true);
         nav("/dashboard");

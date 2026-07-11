@@ -45,12 +45,9 @@ export default function ProjectSelectorModal({
 
   //   ++++++++++++++++++++++++++++++++++++++++++ LANUCH PROJECT ++++++++++++++++++++++++++++++++++++++++++
   const handleLaunch = async (credential: ProjectSelectorProps) => {
-    console.log("Launching:", selected);
     if (!selected) return;
-    // console.log(Math.random(), "Random number");
     const projectId =
       "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
-    console.log(projectId, "projectId");
     const res = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/assign/${projectId}/${credential.nameInput}?proType=${selected}`,
       {
@@ -59,7 +56,6 @@ export default function ProjectSelectorModal({
         },
       },
     );
-    console.log(res, "res from backend");
     const machine = await res.json();
     if (res.status === 403) {
       setAlertMsg(
@@ -84,7 +80,6 @@ export default function ProjectSelectorModal({
       return;
     }
 
-    console.log(machine, "machine from backend");
     onClose();
     navigate(`/project?projectId=${projectId}`, {
       state: machine.publicDnsName,
@@ -140,6 +135,7 @@ export default function ProjectSelectorModal({
       <div className="flex flex-col gap-3">
         {projectTypes.map((project) => (
           <button
+            type="button"
             key={project.value}
             onClick={() => setSelected(project.value)}
             className={`flex items-center gap-4 p-4 cursor-pointer rounded-xl border text-left transition-all duration-150
@@ -178,7 +174,7 @@ export default function ProjectSelectorModal({
           Cancel
         </button>
         <button
-          // onClick={handleLaunch}
+          type="submit"
           disabled={!selected}
           className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all
               ${

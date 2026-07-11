@@ -72,7 +72,6 @@ function DashboardPage({
           body: JSON.stringify(elem),
         },
       );
-      console.log(res, "res from backend");
       const machine = await res.json();
       if (res.status === 403) {
         setAlertMsg(
@@ -96,7 +95,6 @@ function DashboardPage({
         // onClose();
         return;
       }
-      console.log(machine, "machine from backend");
       nav(`/project?projectId=${elem.projectId!}`, {
         state: machine.publicDnsName,
       });
@@ -125,7 +123,6 @@ function DashboardPage({
     );
     const projs = await res.json();
     if (res.status === 200) {
-      console.log(projs, "user's projects");
       setProjects(projs);
     } else {
       setProjects([]);
@@ -136,7 +133,6 @@ function DashboardPage({
   async function deleteProject(project: machine) {
     setLoaded(false);
     setLoadingMsg("Deleting project...");
-    console.log(project, "project");
     const res = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/deleteProject`,
       {

@@ -6,13 +6,9 @@ import "../App.css";
 export default function Project() {
   const uri = useLocation();
   const nav = useNavigate();
-  console.log(uri.state, "check");
-  // console.log(localStorage.getItem(uri.search.split("=")[1]), "check");
-  //http: ${localStorage.getItem(uri.search.split("=")[1])}:8080/?folder=/tmp/project
 
   useEffect(() => {
     const heartBeat = setInterval(() => {
-      console.log("heartbeat", heartBeat);
       fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${uri.state}`, {
         headers: {
           token: (localStorage.getItem("token") as string) ?? "",

@@ -36,7 +36,6 @@ export default function SignIn({
   };
 
   const handleGoogleSuccess = (user: Record<string, unknown>) => {
-    console.log("Signed in successfully:", user);
     onClose();
     nav("/dashboard");
     setProjectModal(true);
@@ -56,7 +55,6 @@ export default function SignIn({
         }),
       },
     );
-    console.log(unfilteredRes, "signin unfilteredRes from backend");
     if (unfilteredRes.status !== 200 && unfilteredRes.status !== 201) {
       setAlertType("error");
       if (unfilteredRes.status === 405) {
@@ -78,14 +76,12 @@ export default function SignIn({
       }, 2500);
     }
     const res = await unfilteredRes.json();
-    console.log(res, "signin res from backend");
     changeModal();
   };
 
   const handleCustomButtonClick = () => {
     const googleButton =
       googleButtonRef.current?.querySelector('div[role="button"]');
-    console.log(googleButton);
     if (googleButton) {
       (googleButton as HTMLElement).click();
     }

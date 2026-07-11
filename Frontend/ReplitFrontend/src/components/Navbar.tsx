@@ -16,7 +16,6 @@ export default function Navbar({
   const nav = useNavigate();
 
   useEffect(() => {
-    console.log("token in navbar", localStorage.getItem("token"));
     setToken(localStorage.getItem("token") ?? "");
   });
 

@@ -38,7 +38,6 @@ export default function Login({
   };
 
   const handleGoogleSuccess = (user: Record<string, unknown>) => {
-    console.log("Signed in successfully:", user);
     onClose();
     nav("/dashboard");
     // setProjectModal(true);
@@ -58,11 +57,9 @@ export default function Login({
         }),
       },
     );
-    console.log(unfilteredRes, "login unfilteredRes from backend");
     const res = await unfilteredRes.json();
     if (unfilteredRes.status == 200) {
       localStorage.setItem("token", res.token);
-      console.log(res, "login res from backend");
       onClose();
       nav("/dashboard");
       // setProjectModal(true);
@@ -80,7 +77,6 @@ export default function Login({
   const handleCustomButtonClick = () => {
     const googleButton =
       googleButtonRef.current?.querySelector('div[role="button"]');
-    console.log(googleButton);
     if (googleButton) {
       (googleButton as HTMLElement).click();
     }
