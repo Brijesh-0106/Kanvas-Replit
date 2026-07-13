@@ -79,7 +79,7 @@ export default function Project() {
         {/* {loaded && ( */}
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
-          <div className="text-[#c3c2b7] h-14 px-8 border-gray-400 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
+          <div className="text-[#c3c2b7] h-14 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
             <div className="leftSideNav flex gap-1 items-center">
               {/* <Link to="/dashboard"> */}
               <div
@@ -125,7 +125,7 @@ export default function Project() {
           </div>
 
           {/* Below topbar — takes remaining height */}
-          <div className="flex flex-1 overflow-hidden p-10 bg-[#1f1f1e]">
+          <div className="flex flex-1 overflow-hidden p-4 bg-[#1f1f1e]">
             {/* Left sidebar — fixed 36px wide */}
 
             {/* iframe — fills rest */}
