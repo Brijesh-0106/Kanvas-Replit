@@ -87,7 +87,10 @@ export default function ProjectSelectorModal({
 
     onClose();
     navigate(`/project?projectId=${projectId}`, {
-      state: machine.publicDnsName,
+      state: {
+        publicDnsName: machine.publicDnsName,
+        projectName: credential.nameInput,
+      },
     });
   };
 

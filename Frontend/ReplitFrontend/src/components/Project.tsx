@@ -7,16 +7,24 @@ export default function Project() {
   const uri = useLocation();
   const nav = useNavigate();
 
+  const queryParams = new URLSearchParams(uri.search);
+  const projectId = queryParams.get("projectId") || "";
+
+  const stateVal = uri.state;
+  const publicDnsName = typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
+  const projectName = typeof stateVal === "string" ? "" : (stateVal?.projectName ?? "");
+
   useEffect(() => {
+    if (!projectId) return;
     const heartBeat = setInterval(() => {
-      fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${uri.state}`, {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${projectId}`, {
         headers: {
           token: (localStorage.getItem("token") as string) ?? "",
         },
       });
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
-  }, []);
+  }, [projectId]);
 
   function navDashboard() {
     nav("/dashboard");
@@ -80,7 +88,7 @@ export default function Project() {
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
           <div className="text-[#c3c2b7] h-14 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
-            <div className="leftSideNav flex gap-1 items-center">
+            <div className="leftSideNav flex gap-2.5 items-center">
               {/* <Link to="/dashboard"> */}
               <div
                 style={{
@@ -117,6 +125,11 @@ export default function Project() {
                 </svg>
               </div>
               <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
+              {projectName && (
+                <span className="text-[#c3c2b7] text-xs font-semibold px-2.5 py-1 rounded-md bg-[#1f1f1e] border border-[#c3c2b7]/15 ml-1">
+                  {projectName}
+                </span>
+              )}
               {/* </Link> */}
             </div>
             <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">
@@ -135,7 +148,7 @@ export default function Project() {
                 height="100%"
                 onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                 className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                src={`http://${uri.state}:8080/?folder=/tmp/project`}
+                src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
               />
             </div>
           </div>

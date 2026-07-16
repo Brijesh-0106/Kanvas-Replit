@@ -100,11 +100,17 @@ function DashboardPage({
         return;
       }
       nav(`/project?projectId=${elem.projectId!}`, {
-        state: machine.publicDnsName,
+        state: {
+          publicDnsName: machine.publicDnsName,
+          projectName: elem.projectName,
+        },
       });
     } else {
       nav(`/project?projectId=${elem.projectId}`, {
-        state: elem.publicDnsName,
+        state: {
+          publicDnsName: elem.publicDnsName,
+          projectName: elem.projectName,
+        },
       });
     }
   }
