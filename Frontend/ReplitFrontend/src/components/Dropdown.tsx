@@ -45,7 +45,7 @@ export default function Dropdown({
   };
 
   return (
-    <div className="relative py-0 w-52">
+    <div className="relative py-0 w-full sm:w-52">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between gap-2 px-4 h-10 bg-[#2c2c2a] border border-[#c3c2b7]/50 rounded-xl text-sm  transition-colors"
