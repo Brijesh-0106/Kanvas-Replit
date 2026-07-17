@@ -27,7 +27,7 @@ export default function Navbar({
 
   return (
     <>
-      <div className="bg-[#2c2c2a] px-3 md:px-8 w-full h-16 flex items-center justify-between border-b border-[#c3c2b7]/10">
+      <div className="bg-[#2c2c2a] px-3 md:px-8 w-screen h-16 flex items-center justify-between border-b border-[#c3c2b7]/10">
         <div className="leftSideNav flex gap-1 items-center">
           <div
             style={{
@@ -74,21 +74,20 @@ export default function Navbar({
             </Link>
           )}
         </div>
-        <div className="rightSideNav flex gap-2 md:gap-4 shrink-0">
+        <div className="rightSideNav flex gap-2 md:gap-4">
           {(token == "" || token == undefined) && (
             <>
               <button
-                className="border md:border-[#2c2c2a] hover:border-amber-600 text-sm md:text-base cursor-pointer text-amber-600 px-2.5 py-1.5 md:px-3.5 md:py-2 rounded-xl font-medium transition-all"
+                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2 rounded-xl font-medium transition-all"
                 onClick={() => setLoginModal(true)}
               >
                 Login
               </button>
               <button
-                className="text-[#c3c2b7] font-semibold bg-amber-700 hover:bg-amber-600 cursor-pointer px-2.5 py-1.5 md:px-3.5 md:py-2 rounded-xl text-sm md:text-base transition-all"
+                className="text-[#c3c2b7] font-bold bg-amber-700  hover:border-amber-700 cursor-pointer px-3 py-2 rounded-md transition-all"
                 onClick={() => setSignInModal(true)}
               >
-                <span className="hidden sm:inline">Create Account</span>
-                <span className="sm:hidden">Sign Up</span>
+                Create Account
               </button>
             </>
           )}
@@ -96,14 +95,13 @@ export default function Navbar({
             <>
               <button
                 onClick={() => setProjectModal(true)}
-                className="border md:border-[#2c2c2a] hover:border-amber-600 text-sm md:text-base cursor-pointer text-amber-600 px-2.5 py-1.5 md:px-3.5 md:py-2 rounded-xl font-medium transition-all"
+                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600  px-3 py-2  rounded-xl font-medium transition-all"
               >
-                <span className="hidden sm:inline">New Project</span>
-                <span className="sm:hidden">+ Project</span>
+                New Project
               </button>
               <button
                 onClick={logOut}
-                className="border border-red-800 text-[#c3c2b7] bg-red-700 hover:bg-red-600 text-sm md:text-base cursor-pointer px-2.5 py-1.5 md:px-3.5 rounded-xl font-medium transition-all"
+                className="border border-red-800 text-[#c3c2b7] bg-red-700  text-md cursor-pointer  px-3 rounded-xl font-medium transition-all"
               >
                 Logout
               </button>

@@ -13,7 +13,24 @@ export type alertType = "success" | "error" | "warning" | "info";
 import { useNavigate } from "react-router-dom";
 import Dropdown from "./Dropdown";
 import Navbar from "./Navbar";
-
+const icons = [
+  {
+    icon: <FaNodeJs height={30} width={30} className="text-green-500" />,
+    label: "Node.js",
+  },
+  {
+    icon: <FaReact height={30} width={30} className="text-blue-400" />,
+    label: "React",
+  },
+  {
+    icon: <FaPython height={30} width={30} className="text-yellow-400" />,
+    label: "Python",
+  },
+  {
+    label: "Java",
+    icon: <FaJava className="text-red-500" height={30} width={30} />,
+  },
+];
 type machine = {
   isUsed: Boolean;
   assignedAt?: Date;
@@ -25,7 +42,6 @@ type machine = {
   projectName?: string;
   s3Key?: string;
 };
-
 function DashboardPage({
   setShowAlert,
   setAlertMsg,
@@ -111,7 +127,11 @@ function DashboardPage({
   const handleSearch = () => {
     if (searchInput) {
       setIsSearched(true);
+      console.log("1");
+      console.log(filterValue, "fi");
+      console.log(isFiltered, "fi");
       if (filterValue) {
+        console.log("2");
         setSearchedProjects(
           projects.filter((elem) => {
             return (
@@ -123,6 +143,7 @@ function DashboardPage({
           }),
         );
       } else {
+        console.log("3");
         setSearchedProjects(
           projects.filter((elem) =>
             elem.projectName
@@ -167,8 +188,10 @@ function DashboardPage({
     } else {
       setIsFiltered(false);
       if (isSearched) {
+        console.log("check");
         handleSearch();
       }
+      console.log(isFiltered, "false time");
     }
   }, [filterValue]);
 
@@ -221,39 +244,6 @@ function DashboardPage({
   useEffect(() => {
     fetchUserProjects();
   }, []);
-
-  const getProjectDetails = (type: string | undefined) => {
-    switch (type) {
-      case "Node":
-        return {
-          icon: <FaNodeJs className="text-green-500" size={64} />,
-          label: "Node.js",
-        };
-      case "React":
-        return {
-          icon: <FaReact className="text-blue-400" size={64} />,
-          label: "React",
-        };
-      case "Python":
-        return {
-          icon: <FaPython className="text-yellow-400" size={64} />,
-          label: "Python",
-        };
-      case "Java":
-        return {
-          icon: <FaJava className="text-red-500" size={64} />,
-          label: "Java",
-        };
-      default:
-        return {
-          icon: <FaFolderOpen className="text-gray-400" size={64} />,
-          label: type || "Project",
-        };
-    }
-  };
-
-  const displayProjects = isFiltered || isSearched ? searchedProjects : projects;
-
   return (
     <>
       {/* Loader — shown until iframe fires onLoad */}
@@ -304,7 +294,7 @@ function DashboardPage({
           <p className="text-gray-400 text-sm">{loadingMsg}</p>
         </div>
       )}
-      <div className="flex h-screen w-screen flex-col overflow-hidden">
+      <div className="flex h-screen w-screen flex-col">
         <div className="flex shrink-0">
           <Navbar
             setProjectModal={setProjectModal}
@@ -312,103 +302,208 @@ function DashboardPage({
             setLoginModal={setLoginModal}
           />
         </div>
-        <div className="userProjectsSection flex-1 px-4 py-6 sm:px-8 sm:py-10 md:px-15 md:py-18 bg-[#1e1e1f] overflow-y-auto">
-          <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-6 gap-2">
+        <div className="userProjectsSection flex-1 px-15 py-18 bg-[#1e1e1f]">
+          <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-5 gap-1">
             <GoProjectSymlink /> Projects
           </h1>
-          <div className="flex flex-col sm:flex-row gap-4 justify-between mb-10 items-stretch sm:items-center">
-            <div className="flex gap-2 flex-1 sm:flex-initial">
+          <div className="flex justify-between mb-10 items-center">
+            <div className="flex gap-2">
               <input
-                className="rounded-xl bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-3 py-2 text-[#c3c2b7] flex-1 sm:w-64 outline-none focus:border-amber-500 transition-colors"
+                className="rounded-xl  bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
                 type="search"
                 value={searchInput}
-                placeholder="Search projects..."
+                placeholder="Search"
                 onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
                 aria-label="Search"
               />
               <button
                 onClick={handleSearch}
-                className="bg-[#2c2c2a] max-h-10 py-2 text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-4 rounded-xl text-sm font-medium"
+                className="bg-[#2c2c2a] max-h-10 py-2  text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-3 rounded-xl"
                 type="submit"
               >
                 Search
               </button>
             </div>
-            <div className="flex sm:justify-end">
+            <div>
               <Dropdown setFilter={setFilterValue} />
             </div>
+            {/* </div> */}
           </div>
-
-          {displayProjects.length > 0 ? (
-            <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
-              {displayProjects.map((elem, index) => {
-                const projectDetails = getProjectDetails(elem.projectType?.toString());
-                return (
-                  elem.isUsed && (
-                    <div
-                      key={index}
-                      className="relative border border-[#c3c2b7]/25 hover:border-amber-500/50 w-56 h-56 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 bg-[#252527]/30 flex flex-col group overflow-hidden"
-                    >
-                      <button
-                        onClick={() => deleteProject(elem)}
-                        className="absolute top-2 right-2 bg-amber-700/95 hover:bg-red-600 p-1.5 rounded-lg transition-all opacity-100 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 z-10 cursor-pointer"
+          {projects.length > 0 && !isSearched && !isFiltered && (
+            <>
+              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
+                {projects.map((elem, index) => {
+                  return (
+                    elem.isUsed && (
+                      <div
+                        key={index}
+                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
                       >
-                        <FaTrash className="text-white text-xs" />
-                      </button>
-                      <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-[#c3c2b7]/25">
-                        <span className="mb-2">{projectDetails.icon}</span>
-                        <span className="text-lg font-bold text-[#c3c2b7]">
-                          {projectDetails.label}
-                        </span>
-                      </div>
-                      <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1 mt-auto">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-sm">{elem.projectName}</p>
-                          <p className="text-[10px] text-gray-400">
-                            {elem.assignedAt?.toString().split("T")[0]}
-                          </p>
-                        </div>
-
                         <button
-                          onClick={() => openProject(elem)}
-                          className="text-blue-500 hover:text-blue-400 cursor-pointer flex items-center gap-0.5 text-sm font-semibold shrink-0"
+                          onClick={() => deleteProject(elem)}
+                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
                         >
-                          Open
-                          <svg
-                            stroke="currentColor"
-                            fill="currentColor"
-                            strokeWidth="0"
-                            viewBox="0 0 24 24"
-                            className="text-blue-500 hover:text-blue-400"
-                            height="14"
-                            width="14"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
-                          </svg>
+                          <FaTrash className="text-white text-sm" />
                         </button>
+                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                          {elem.projectType == "Node" && (
+                            <>
+                              <span className="text-7xl">{icons[0].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[0].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "React" && (
+                            <>
+                              <span className="text-7xl">{icons[1].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[1].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Python" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[2].label}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
+                          <div>
+                            <p>{elem.projectName}</p>
+                            <p className="text-[10px] text-gray-400">
+                              {elem.assignedAt?.toString().split("T")[0]}{" "}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => openProject(elem)}
+                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
+                          >
+                            Open
+                            <svg
+                              stroke="currentColor"
+                              fill="currentColor"
+                              strokeWidth="0"
+                              viewBox="0 0 24 24"
+                              color="text-blue-500"
+                              height="16"
+                              width="16"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )
-                );
-              })}
-            </div>
-          ) : (
-            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-12 gap-3">
-              <div className="text-4xl text-gray-500">
+                    )
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {projects.length > 0 && (isSearched || isFiltered) && (
+            <>
+              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
+                {searchedProjects.map((elem, index) => {
+                  return (
+                    elem.isUsed && (
+                      <div
+                        key={index}
+                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
+                      >
+                        <button
+                          onClick={() => deleteProject(elem)}
+                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                        >
+                          <FaTrash className="text-white text-sm" />
+                        </button>
+                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                          {elem.projectType == "Node" && (
+                            <>
+                              <span className="text-7xl">{icons[0].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[0].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "React" && (
+                            <>
+                              <span className="text-7xl">{icons[1].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[1].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Python" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[2].label}
+                              </span>
+                            </>
+                          )}
+                          {elem.projectType == "Java" && (
+                            <>
+                              <span className="text-7xl">{icons[2].icon}</span>
+                              <span className=" text-lg font-bold text-[#c3c2b7]">
+                                {icons[3].label}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
+                          <div>
+                            <p>{elem.projectName}</p>
+                            <p className="text-[10px] text-gray-400">
+                              {elem.assignedAt?.toString().split("T")[0]}{" "}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => openProject(elem)}
+                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
+                          >
+                            Open
+                            <svg
+                              stroke="currentColor"
+                              fill="currentColor"
+                              strokeWidth="0"
+                              viewBox="0 0 24 24"
+                              color="text-blue-500"
+                              height="16"
+                              width="16"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {projects.length == 0 && !isSearched && !isFiltered && (
+            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
+              <div className="text-2xl">
                 <FaFolderOpen />
               </div>
-              <div className="font-medium text-center">
-                {isSearched || isFiltered ? "No Projects found matching criteria" : "No Projects yet"}
+              <div>No Projects yet</div>
+              <div>Create a Project to get started</div>
+            </div>
+          )}
+          {searchedProjects.length == 0 && (isSearched || isFiltered) && (
+            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
+              <div className="text-2xl">
+                <FaFolderOpen />
               </div>
-              {!isSearched && !isFiltered && (
-                <div className="text-sm text-gray-400 text-center">Create a Project to get started</div>
-              )}
+              <div>No Project found</div>
             </div>
           )}
         </div>
@@ -418,4 +513,3 @@ function DashboardPage({
 }
 
 export default DashboardPage;
-
