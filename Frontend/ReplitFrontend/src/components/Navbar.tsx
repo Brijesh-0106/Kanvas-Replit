@@ -74,7 +74,8 @@ export default function Navbar({
             </Link>
           )}
         </div>
-        <div className="rightSideNav flex gap-2 md:gap-4">
+        <div className="rightSideNav flex gap-2 md:gap-4 items-center">
+
           {(token == "" || token == undefined) && (
             <>
               <button

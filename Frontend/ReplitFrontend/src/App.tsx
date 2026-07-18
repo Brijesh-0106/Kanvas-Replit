@@ -8,6 +8,7 @@ import Modal from "./components/Modal";
 import Project from "./components/Project";
 import ProjectSelector from "./components/ProjectSelector";
 import SignIn from "./components/SignIn";
+import Pricing from "./components/Pricing";
 export type alertType = "success" | "error" | "warning" | "info";
 
 function App() {
@@ -64,7 +65,7 @@ function App() {
           <p className="text-gray-400 text-sm">Setting up your workspace...</p>
         </div>
       )}
-      <div className="bg-[#1f1f1e] h-screen w-screen">
+      <div className="bg-[#1f1f1e] min-h-screen w-full overflow-x-hidden">
         {showModal && (
           <Modal>
             <ProjectSelector
@@ -102,6 +103,7 @@ function App() {
         {showAlert && <Alert type={alertType} title={alertMsg} />}
         <Routes>
           <Route path="/project" element={<Project />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route
             path="/"
             element={

@@ -244,6 +244,9 @@ function DashboardPage({
   useEffect(() => {
     fetchUserProjects();
   }, []);
+
+  const displayedProjects = isSearched || isFiltered ? searchedProjects : projects;
+
   return (
     <>
       {/* Loader — shown until iframe fires onLoad */}
@@ -294,7 +297,7 @@ function DashboardPage({
           <p className="text-gray-400 text-sm">{loadingMsg}</p>
         </div>
       )}
-      <div className="flex h-screen w-screen flex-col">
+      <div className="flex h-screen w-screen flex-col overflow-hidden">
         <div className="flex shrink-0">
           <Navbar
             setProjectModal={setProjectModal}
@@ -302,208 +305,130 @@ function DashboardPage({
             setLoginModal={setLoginModal}
           />
         </div>
-        <div className="userProjectsSection flex-1 px-15 py-18 bg-[#1e1e1f]">
+        <div className="userProjectsSection flex-1 overflow-y-auto px-4 py-8 md:px-15 md:py-18 bg-[#1e1e1f]">
           <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-5 gap-1">
             <GoProjectSymlink /> Projects
           </h1>
-          <div className="flex justify-between mb-10 items-center">
-            <div className="flex gap-2">
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-between mb-10 sm:items-center">
+            <div className="flex gap-2 w-full sm:w-auto">
               <input
-                className="rounded-xl  bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-2 text-[#c3c2b7]"
+                className="flex-1 sm:w-64 rounded-xl bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-3 py-2 text-[#c3c2b7] outline-none focus:border-amber-600 transition-colors"
                 type="search"
                 value={searchInput}
-                placeholder="Search"
+                placeholder="Search projects..."
                 onChange={(e) => setSearchInput(e.target.value)}
                 aria-label="Search"
               />
               <button
                 onClick={handleSearch}
-                className="bg-[#2c2c2a] max-h-10 py-2  text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-3 rounded-xl"
+                className="bg-[#2c2c2a] max-h-10 py-2 text-[#c3c2b7] hover:text-white hover:bg-amber-600 transition-all cursor-pointer border border-[#c3c2b7]/50 px-4 rounded-xl font-medium"
                 type="submit"
               >
                 Search
               </button>
             </div>
-            <div>
+            <div className="w-full sm:w-auto">
               <Dropdown setFilter={setFilterValue} />
             </div>
-            {/* </div> */}
           </div>
-          {projects.length > 0 && !isSearched && !isFiltered && (
-            <>
-              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
-                {projects.map((elem, index) => {
-                  return (
-                    elem.isUsed && (
-                      <div
-                        key={index}
-                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
-                      >
-                        <button
-                          onClick={() => deleteProject(elem)}
-                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
-                        >
-                          <FaTrash className="text-white text-sm" />
-                        </button>
-                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
-                          {elem.projectType == "Node" && (
-                            <>
-                              <span className="text-7xl">{icons[0].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[0].label}
-                              </span>
-                            </>
-                          )}
-                          {elem.projectType == "React" && (
-                            <>
-                              <span className="text-7xl">{icons[1].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[1].label}
-                              </span>
-                            </>
-                          )}
-                          {elem.projectType == "Python" && (
-                            <>
-                              <span className="text-7xl">{icons[2].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[2].label}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
-                          <div>
-                            <p>{elem.projectName}</p>
-                            <p className="text-[10px] text-gray-400">
-                              {elem.assignedAt?.toString().split("T")[0]}{" "}
-                            </p>
-                          </div>
 
-                          <button
-                            onClick={() => openProject(elem)}
-                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
-                          >
-                            Open
-                            <svg
-                              stroke="currentColor"
-                              fill="currentColor"
-                              strokeWidth="0"
-                              viewBox="0 0 24 24"
-                              color="text-blue-500"
-                              height="16"
-                              width="16"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {projects.length > 0 && (isSearched || isFiltered) && (
-            <>
-              <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
-                {searchedProjects.map((elem, index) => {
-                  return (
-                    elem.isUsed && (
-                      <div
-                        key={index}
-                        className="relative border border-gray-400 w-56 h-56 rounded-xl"
-                      >
-                        <button
-                          onClick={() => deleteProject(elem)}
-                          className="absolute top-2 right-2  bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
-                        >
-                          <FaTrash className="text-white text-sm" />
-                        </button>
-                        <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
-                          {elem.projectType == "Node" && (
-                            <>
-                              <span className="text-7xl">{icons[0].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[0].label}
-                              </span>
-                            </>
-                          )}
-                          {elem.projectType == "React" && (
-                            <>
-                              <span className="text-7xl">{icons[1].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[1].label}
-                              </span>
-                            </>
-                          )}
-                          {elem.projectType == "Python" && (
-                            <>
-                              <span className="text-7xl">{icons[2].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[2].label}
-                              </span>
-                            </>
-                          )}
-                          {elem.projectType == "Java" && (
-                            <>
-                              <span className="text-7xl">{icons[2].icon}</span>
-                              <span className=" text-lg font-bold text-[#c3c2b7]">
-                                {icons[3].label}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
-                          <div>
-                            <p>{elem.projectName}</p>
-                            <p className="text-[10px] text-gray-400">
-                              {elem.assignedAt?.toString().split("T")[0]}{" "}
-                            </p>
-                          </div>
-
-                          <button
-                            onClick={() => openProject(elem)}
-                            className="text-blue-500 hover:text-blue-700 cursor-pointer flex ml-auto items-center max-md:text-sm text-base"
-                          >
-                            Open
-                            <svg
-                              stroke="currentColor"
-                              fill="currentColor"
-                              strokeWidth="0"
-                              viewBox="0 0 24 24"
-                              color="text-blue-500"
-                              height="16"
-                              width="16"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {projects.length == 0 && !isSearched && !isFiltered && (
-            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
-              <div className="text-2xl">
-                <FaFolderOpen />
-              </div>
-              <div>No Projects yet</div>
-              <div>Create a Project to get started</div>
-            </div>
-          )}
-          {searchedProjects.length == 0 && (isSearched || isFiltered) && (
-            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center">
-              <div className="text-2xl">
+          {projects.length > 0 && (isSearched || isFiltered) && searchedProjects.length === 0 ? (
+            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-10">
+              <div className="text-2xl mb-2">
                 <FaFolderOpen />
               </div>
               <div>No Project found</div>
+            </div>
+          ) : projects.length > 0 ? (
+            <div className="flex flex-wrap gap-8 justify-center md:justify-normal">
+              {displayedProjects.map((elem, index) => {
+                return (
+                  elem.isUsed && (
+                    <div
+                      key={index}
+                      className="relative border border-gray-400 w-56 h-56 rounded-xl"
+                    >
+                      <button
+                        onClick={() => deleteProject(elem)}
+                        className="absolute top-2 right-2 bg-amber-700 hover:bg-red-600 p-1.5 rounded-lg transition-all"
+                      >
+                        <FaTrash className="text-white text-sm" />
+                      </button>
+                      <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                        {elem.projectType == "Node" && (
+                          <>
+                            <span className="text-7xl">{icons[0].icon}</span>
+                            <span className="text-lg font-bold text-[#c3c2b7]">
+                              {icons[0].label}
+                            </span>
+                          </>
+                        )}
+                        {elem.projectType == "React" && (
+                          <>
+                            <span className="text-7xl">{icons[1].icon}</span>
+                            <span className="text-lg font-bold text-[#c3c2b7]">
+                              {icons[1].label}
+                            </span>
+                          </>
+                        )}
+                        {elem.projectType == "Python" && (
+                          <>
+                            <span className="text-7xl">{icons[2].icon}</span>
+                            <span className="text-lg font-bold text-[#c3c2b7]">
+                              {icons[2].label}
+                            </span>
+                          </>
+                        )}
+                        {elem.projectType == "Java" && (
+                          <>
+                            <span className="text-7xl">{icons[3].icon}</span>
+                            <span className="text-lg font-bold text-[#c3c2b7]">
+                              {icons[3].label}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{elem.projectName}</p>
+                          <p className="text-[10px] text-gray-400">
+                            {elem.assignedAt?.toString().split("T")[0]}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => openProject(elem)}
+                          className="text-blue-500 hover:text-blue-700 cursor-pointer flex items-center max-md:text-sm text-base shrink-0 ml-2"
+                        >
+                          Open
+                          <svg
+                            stroke="currentColor"
+                            fill="currentColor"
+                            strokeWidth="0"
+                            viewBox="0 0 24 24"
+                            color="text-blue-500"
+                            height="16"
+                            width="16"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="ml-0.5"
+                          >
+                            <path d="M13.0508 12.361L7.39395 18.0179L5.97974 16.6037L11.6366 10.9468L6.68684 5.99707H18.0006V17.3108L13.0508 12.361Z"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )
+                );
+              })}
+            </div>
+          ) : (
+            <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-10">
+              <div className="text-2xl mb-2">
+                <FaFolderOpen />
+              </div>
+              <div>No Projects yet</div>
+              <div className="text-sm text-gray-400 mt-1">Create a Project to get started</div>
             </div>
           )}
         </div>

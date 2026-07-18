@@ -22,6 +22,7 @@ import {
   X,
   CheckCircle,
 } from "lucide-react";
+import Pricing from "./Pricing";
 
 export default function Landing({
   setProjectModal,
@@ -34,6 +35,7 @@ export default function Landing({
 }) {
   // Mockup IDE State
   const [activeTab, setActiveTab] = useState<"dracula" | "index">("index");
+  const [mockupHover, setMockupHover] = useState(false);
 
   // Auto-typing animation for the preview code
   const indexJsCode = `// anc/index.js
@@ -76,21 +78,20 @@ app.listen(PORT, () => {
       />
 
       {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-32 pb-24 max-w-6xl mx-auto">
+      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-24 pb-14 max-w-6xl mx-auto">
 
-
-        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight leading-tight max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400">
-          Code from <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">anywhere.</span>
+        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400">
+          Code from <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 drop-shadow-[0_0_30px_rgba(245,158,11,0.15)]">anywhere.</span>
           <br />
-          Ship from <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-purple-600">everywhere.</span>
+          Ship from <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-500 drop-shadow-[0_0_30px_rgba(139,92,246,0.15)]">everywhere.</span>
         </h1>
 
-        <p className="mt-8 text-zinc-400 text-lg md:text-xl max-w-2xl leading-relaxed">
+        <p className="mt-6 text-zinc-400 text-base md:text-lg max-w-2xl leading-relaxed">
           Kanvas spins up instant, AWS EC2-backed VS Code workspaces in the cloud. No resource drain, no complex setups — just click and build.
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-12 w-full justify-center">
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 w-full justify-center">
           <button
             onClick={() => setSignInModal(true)}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold px-8 py-4 rounded-xl text-sm transition-all duration-300 shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_30px_rgba(217,119,6,0.55)] hover:scale-105 cursor-pointer"
@@ -110,23 +111,63 @@ app.listen(PORT, () => {
         </div>
 
         {/* Realistic Interactive VS Code Web Workspace Mockup */}
-        <div className="mt-20 w-full max-w-5xl rounded-2xl border border-zinc-800/80 bg-[#1e1e1e] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col">
-          <img
-            src="/landing.png"
-            alt="Kanvas Editor Workspace Mockup"
-            className="w-full h-auto object-contain block"
-          />
+        <div
+          className="relative mt-14 group w-full max-w-5xl cursor-pointer"
+          onMouseEnter={() => setMockupHover(true)}
+          onMouseLeave={() => setMockupHover(false)}
+        >
+          {/* Ambient Glow behind frame */}
+          <div className="absolute -inset-2 bg-gradient-to-r from-amber-500 via-orange-600 to-purple-600 rounded-2xl blur-3xl opacity-15 group-hover:opacity-30 transition duration-700 pointer-events-none" />
+
+          {/* Main frame container with 3D Tilt */}
+          <div
+            className="w-full rounded-2xl border border-zinc-800/80 bg-[#1e1e1e] overflow-hidden flex flex-col"
+            style={{
+              transform: mockupHover
+                ? "perspective(1200px) rotateX(0deg) scale(1.01)"
+                : "perspective(1200px) rotateX(4deg) translateY(0)",
+              transformStyle: "preserve-3d",
+              transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease",
+              boxShadow: mockupHover
+                ? "0 35px 80px rgba(0,0,0,0.9), 0 0 40px rgba(245,158,11,0.08)"
+                : "0 25px 60px rgba(0,0,0,0.8), 0 0 25px rgba(245,158,11,0.03)",
+            }}
+          >
+            {/* macOS Window Controls Chrome */}
+            <div className="bg-[#121214] border-b border-zinc-900/60 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-rose-500/80" />
+                <span className="w-3 h-3 rounded-full bg-amber-500/80" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+              </div>
+              <div className="flex items-center gap-2 bg-[#1c1c1f]/80 border border-zinc-800/85 px-4 py-1 rounded-md text-xs text-zinc-400 font-mono shadow-inner select-none">
+                <FileCode className="w-3.5 h-3.5 text-amber-500" />
+                <span>workspace-main-server.js</span>
+              </div>
+              <div className="w-12" />
+            </div>
+
+            {/* Mockup Image Container */}
+            <div className="relative overflow-hidden w-full h-auto">
+              <img
+                src="/landing.png"
+                alt="Kanvas Editor Workspace Mockup"
+                className="w-full h-auto object-contain block"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-10 transition-opacity duration-700" />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="px-6 py-32 max-w-6xl mx-auto relative border-t border-zinc-900/60">
+      <section id="features" className="px-6 py-16 max-w-6xl mx-auto relative border-t border-zinc-900/60">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/5 via-transparent to-transparent blur-[100px] pointer-events-none" />
 
         <p className="text-center text-amber-500 text-xs uppercase tracking-widest font-semibold mb-3">
           Platform Architecture
         </p>
-        <h2 className="text-center text-3xl md:text-5xl font-extrabold mb-16 bg-clip-text text-transparent bg-gradient-to-b from-white to-zinc-400">
+        <h2 className="text-center text-3xl md:text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-b from-white to-zinc-400">
           Engineered for cloud IDE scale
         </h2>
 
@@ -167,8 +208,8 @@ app.listen(PORT, () => {
       </section>
 
       {/* Runtimes Section */}
-      <section className="px-6 py-24 border-t border-zinc-900/60 max-w-6xl mx-auto">
-        <p className="text-center text-zinc-500 text-sm mb-10 uppercase tracking-widest font-mono">
+      <section className="px-6 py-12 border-t border-zinc-900/60 max-w-6xl mx-auto">
+        <p className="text-center text-zinc-500 text-sm mb-8 uppercase tracking-widest font-mono">
           Ready-To-Code Runtimes
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -195,7 +236,7 @@ app.listen(PORT, () => {
       </section>
 
       {/* Key Innovation Panel */}
-      <section className="px-6 py-16 max-w-5xl mx-auto">
+      <section className="px-6 py-10 max-w-5xl mx-auto">
         <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-r from-amber-950/20 via-orange-950/10 to-zinc-950/60 p-8 md:p-12 shadow-[0_10px_40px_rgba(245,158,11,0.05)]">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/5 blur-[80px] rounded-full pointer-events-none" />
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -224,21 +265,7 @@ app.listen(PORT, () => {
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="px-6 py-32 flex flex-col items-center text-center relative border-t border-zinc-900/60 max-w-6xl mx-auto">
-        <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">
-          Ready to launch your workspace?
-        </h2>
-        <p className="mt-4 text-zinc-400 max-w-md text-sm md:text-base leading-relaxed">
-          Spin up your next project in Node.js, React, or Python and experience seamless cloud compilation.
-        </p>
-        <button
-          onClick={() => setSignInModal(true)}
-          className="mt-10 bg-white hover:bg-zinc-200 text-zinc-950 font-bold px-8 py-4 rounded-xl text-sm transition-all duration-300 hover:scale-105 cursor-pointer shadow-[0_0_30px_rgba(255,255,255,0.15)]"
-        >
-          Create Free Account
-        </button>
-      </section>
+      <Pricing />
 
       {/* Footer */}
       <footer className="border-t border-zinc-900/80 px-8 py-8 bg-zinc-950/40">
