@@ -100,7 +100,7 @@ export default function PricingPage() {
                 onClick={() => setYearly(label === "Yearly")}
                 style={{
                   padding: "9px 22px", borderRadius: 9, border: "none",
-                  background: isActive ? "rgba(255,255,255,0.9)" : "transparent",
+                  background: isActive ? "#c3c2b7" : "transparent",
                   color: isActive ? "#0f0f0f" : "#9ca3af",
                   fontSize: 14, fontWeight: isActive ? 600 : 400,
                   cursor: "pointer",

@@ -80,7 +80,7 @@ app.listen(PORT, () => {
       {/* Hero Section */}
       <section className="relative flex flex-col items-center justify-center text-center px-6 pt-24 pb-14 max-w-6xl mx-auto">
 
-        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400">
+        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-[#c3c2b7] via-zinc-200 to-zinc-400">
           Code from <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 drop-shadow-[0_0_30px_rgba(245,158,11,0.15)]">anywhere.</span>
           <br />
           Ship from <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-500 drop-shadow-[0_0_30px_rgba(139,92,246,0.15)]">everywhere.</span>
@@ -104,7 +104,7 @@ app.listen(PORT, () => {
               const el = document.getElementById("features");
               if (el) el.scrollIntoView({ behavior: "smooth" });
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-900/60 text-zinc-300 hover:text-white px-8 py-4 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-900/60 text-zinc-300 hover:text-[#c3c2b7] px-8 py-4 rounded-xl text-sm font-semibold transition-all cursor-pointer"
           >
             <span>See Architecture</span>
           </button>
@@ -141,7 +141,7 @@ app.listen(PORT, () => {
                 alt="Kanvas Editor Workspace Mockup"
                 className="w-full h-auto object-contain block"
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-10 transition-opacity duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#c3c2b7]/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-10 transition-opacity duration-700" />
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ app.listen(PORT, () => {
         <p className="text-center text-amber-500 text-xs uppercase tracking-widest font-semibold mb-3">
           Platform Architecture
         </p>
-        <h2 className="text-center text-3xl md:text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-b from-white to-zinc-400">
+        <h2 className="text-center text-3xl md:text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-b from-[#c3c2b7] to-zinc-400">
           Engineered for cloud IDE scale
         </h2>
 
@@ -183,7 +183,7 @@ app.listen(PORT, () => {
               <div className="w-12 h-12 rounded-xl bg-zinc-900/80 border border-zinc-800/80 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 {f.icon}
               </div>
-              <h3 className="text-white text-lg font-bold mb-3 group-hover:text-amber-500 transition-colors">
+              <h3 className="text-[#c3c2b7] text-lg font-bold mb-3 group-hover:text-amber-500 transition-colors">
                 {f.title}
               </h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
@@ -211,7 +211,7 @@ app.listen(PORT, () => {
               className="bg-zinc-950/30 border border-zinc-900/80 rounded-xl p-5 hover:border-zinc-800 transition-colors text-left"
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-white font-bold">{r.name}</span>
+                <span className="text-[#c3c2b7] font-bold">{r.name}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono">
                   {r.badge}
                 </span>
@@ -232,7 +232,7 @@ app.listen(PORT, () => {
                 <Activity className="w-3.5 h-3.5 animate-pulse" />
                 <span>Zero Cost Waste</span>
               </div>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-white">
+              <h3 className="text-2xl md:text-3xl font-extrabold text-[#c3c2b7]">
                 Save 90% cloud bill with Active-Heartbeat Hibernation
               </h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
@@ -245,7 +245,7 @@ app.listen(PORT, () => {
                 <CheckCircle className="w-4 h-4" />
                 <span>Saved to EBS</span>
               </div>
-              <div className="text-2xl font-black text-white mt-1">Idle Sleep</div>
+              <div className="text-2xl font-black text-[#c3c2b7] mt-1">Idle Sleep</div>
               <div className="text-[10px] text-zinc-500 mt-1">Automatic ASG scale-down</div>
             </div>
           </div>
@@ -259,9 +259,9 @@ app.listen(PORT, () => {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-zinc-500 text-xs">
           <div className="flex gap-2 items-center">
             <div className="w-6 h-6 bg-gradient-to-r from-amber-600 to-orange-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xs">K</span>
+              <span className="text-[#c3c2b7] font-bold text-xs">K</span>
             </div>
-            <span className="text-white font-bold text-base">Kanvas</span>
+            <span className="text-[#c3c2b7] font-bold text-base">Kanvas</span>
           </div>
           <span className="text-zinc-600 font-mono">
             Designed for developers. Backed by ☁️ AWS ASG & code-server.
