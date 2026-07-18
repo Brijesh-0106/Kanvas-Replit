@@ -133,19 +133,6 @@ app.listen(PORT, () => {
                 : "0 25px 60px rgba(0,0,0,0.8), 0 0 25px rgba(245,158,11,0.03)",
             }}
           >
-            {/* macOS Window Controls Chrome */}
-            <div className="bg-[#121214] border-b border-zinc-900/60 px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-                <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-              </div>
-              <div className="flex items-center gap-2 bg-[#1c1c1f]/80 border border-zinc-800/85 px-4 py-1 rounded-md text-xs text-zinc-400 font-mono shadow-inner select-none">
-                <FileCode className="w-3.5 h-3.5 text-amber-500" />
-                <span>workspace-main-server.js</span>
-              </div>
-              <div className="w-12" />
-            </div>
 
             {/* Mockup Image Container */}
             <div className="relative overflow-hidden w-full h-auto">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "../App.css"
 
 const plans = [
   {
@@ -10,10 +11,8 @@ const plans = [
     color: "#94a3b8",
     features: [
       "2 active workspaces",
-      "1 GB project storage",
-      "30 min inactivity timeout",
     ],
-    limits: ["No Java runtime", "No persistent storage"],
+    limits: ["30s spin up time", "No persistent storage"],
   },
   {
     name: "Pro",
@@ -24,7 +23,6 @@ const plans = [
     color: "#bd4f01",
     features: [
       "10 active workspaces",
-      "10 GB S3-backed storage",
       "Workspaces never sleep",
       "Priority instance assignment",
     ],
@@ -162,9 +160,8 @@ export default function PricingPage() {
                   borderRadius: 24,
                   padding: plan.highlight ? 2 : 1,
                   background: borderGradient,
-                  transform: plan.highlight
-                    ? "translateY(-12px) scale(1.02)"
-                    : isHovered ? "translateY(-6px)" : "translateY(0)",
+                  transform:
+                    isHovered ? "translateY(-6px)" : "translateY(0)",
                   transition: "transform 0.3s ease, box-shadow 0.3s ease",
                   boxShadow: plan.highlight
                     ? `0 32px 64px rgba(249,115,22,0.3), 0 8px 24px rgba(0,0,0,0.3)`
@@ -349,9 +346,9 @@ export default function PricingPage() {
                   cursor: "pointer",
                 }}
               >
-                <div style={{
+                <div className="text-[#c3c2b7]" style={{
                   borderRadius: 15,
-                  background: "linear-gradient(135deg, #f7f9fc 0%, #ffffff 50%, #f1f5f9 100%)",
+                  background: "linear-gradient(135deg, #000 0%, #000 50%, #000 100%)",
                   padding: "20px 24px",
                   transition: "background 0.2s ease",
                 }}>
@@ -362,7 +359,6 @@ export default function PricingPage() {
                     gap: 16,
                   }}>
                     <span style={{
-                      color: "#0f0f0f",
                       fontSize: 14.5,
                       fontWeight: 600,
                       userSelect: "none",
@@ -395,7 +391,7 @@ export default function PricingPage() {
                     marginTop: isOpen ? 12 : 0,
                   }}>
                     <p style={{
-                      color: "#4b5563",
+                      color: "#c3c2b7",
                       fontSize: 13.5,
                       lineHeight: 1.6,
                       margin: 0,
