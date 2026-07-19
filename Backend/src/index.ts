@@ -25,7 +25,6 @@ declare global {
 const middleAuth = (req: Request, res: Response, next: NextFunction): void => {
     try {
         let token = req.header('Token') as string;
-
         if (!token) {
             res.status(403).json({ error: "Authentication token required" })
             return;
@@ -186,6 +185,8 @@ setInterval(async () => {
                     id: machine.userId! as unknown as string
                 }
             })
+            const cacheKey = `cache:user:${machine.userId!}:projects`;
+            await redis.del(cacheKey)
             const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
             await prisma.user.update({
                 where: {
@@ -249,7 +250,16 @@ app.get("/verifyToken", middleAuth, (req, res) => {
 // ============================================================== ALL PROJECTS FOR USER
 app.get("/fetchProjects", middleAuth, async (req, res) => {
     console.log("**************** FETCH PROJECTS ENDPOINT **************")
+    const cacheKey = `cache:user:${req.userId!}:projects`;
+
     try {
+        const cachedProjects = await redis.get(cacheKey);
+        if (cachedProjects) {
+            console.log("Cache Hit");
+            return res.status(200).json(JSON.parse(cachedProjects));
+        }
+
+        console.log("Cache Miss - Fetching from DB");
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
@@ -279,6 +289,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
         }
         userProjects = userProjects.concat(staleProjects)
         userProjects = [...userProjects]
+        await redis.set(cacheKey, JSON.stringify(userProjects), 'EX', 300);
         res.status(200).json(userProjects)
         return
     } catch (error) {
@@ -310,6 +321,8 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
 
         await redis.del(`ALL_MACHINES:${machine.instanceId!}`)
         await redis.srem(`ALL_INSTANCES`, machine.instanceId!)
+        const cacheKey = `cache:user:${req.userId!}:projects`;
+        await redis.del(cacheKey);
         const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
             InstanceId: machine.instanceId,
             ShouldDecrementDesiredCapacity: true
@@ -327,6 +340,8 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
 app.post("/assign-stale", middleAuth, async (req, res) => {
     console.log("************** STALE PROJECT ASSIGN *****************")
     try {
+        const cacheKey = `cache:user:${req.userId!}:projects`;
+        await redis.del(cacheKey);
         const machine = req.body
         if (!machine) {
             console.log("WRONG payload = " + machine)
@@ -421,6 +436,9 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
 app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
     try {
         console.log("******************* ASSIGN METHOD ***************")
+
+        const cacheKey = `cache:user:${req.userId!}:projects`;
+        await redis.del(cacheKey);
         const { projectId, projName } = req.params;
         const { proType } = req.query
         const user = await prisma.user.findFirst({
@@ -555,7 +573,7 @@ app.post("/login", async (req, res) => {
     try {
         const user = await prisma.user.findFirst({
             where: {
-                email: email, password
+                email, password
             }
         })
         if (user) {
