@@ -337,13 +337,16 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
 
         for (const instanceId of ALL_INSTANCES) {
-            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-            if (Object.keys(singleMachine).length === 0)
-                continue;
-            if (singleMachine.isUsed !== 'true') {
+            const claimed = await redis.hsetnx(`ALL_MACHINES:${instanceId}`, "userId", req.userId!);
+            if (claimed === 1) {
+                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                if (Object.keys(singleMachine).length === 0) {
+                    await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
+                    continue;
+                }
                 foundMachine = {
                     ...singleMachine,
-                    isUsed: true,
+                    isUsed: "true",
                     projectType: machine.projectType!,
                     assignedAt: machine.assignedAt,
                     userId: req.userId!,
@@ -436,13 +439,16 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
         console.log(ALL_INSTANCES, "ALL_MACHINES")
 
         for (const instanceId of ALL_INSTANCES) {
-            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-            if (Object.keys(singleMachine).length === 0)
-                continue;
-            if (singleMachine.isUsed !== 'true') {
+            const claimed = await redis.hsetnx(`ALL_MACHINES:${instanceId}`, "userId", req.userId!);
+            if (claimed === 1) {
+                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                if (Object.keys(singleMachine).length === 0) {
+                    await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
+                    continue;
+                }
                 machine = {
                     ...singleMachine,
-                    isUsed: true,
+                    isUsed: "true",
                     projectType: proType as string,
                     assignedAt: new Date().toISOString(),
                     userId: req.userId!,
