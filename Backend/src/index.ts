@@ -1,5 +1,6 @@
 import { AutoScalingClient, DescribeAutoScalingInstancesCommand, SetDesiredCapacityCommand, TerminateInstanceInAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
+import { Redis } from 'ioredis';
 
 import cors from "cors";
 import 'dotenv/config';
@@ -8,6 +9,7 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from "./generated/prisma/client.js";
 const prisma = new PrismaClient()
+const redis = new Redis()
 const app = express();
 
 declare global {
@@ -56,7 +58,7 @@ interface GoogleTokenPayload {
 }
 
 type machine = {
-    isUsed: Boolean,
+    isUsed: boolean,
     assignedAt?: Date | undefined,
     ip: string,
     instanceId: string,
@@ -68,7 +70,6 @@ type machine = {
     userId?: string
 }
 
-const ALL_MACHINES: machine[] = []
 
 const autoScalingClient = new AutoScalingClient({
     region: "us-east-1", credentials: {
@@ -106,34 +107,34 @@ const refreshedInstances = async () => {
     const activeInstanceIds = instanceData.Reservations?.map(
         (r) => r.Instances![0]?.InstanceId!
     ) ?? []
-    for (let i = ALL_MACHINES.length - 1; i >= 0; i--) {
-        if (!activeInstanceIds.includes(ALL_MACHINES[i]!.instanceId)) {
-            console.log(`Removing terminated instance: ${ALL_MACHINES[i]!.instanceId}`)
-            ALL_MACHINES.splice(i, 1)
+    const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
+
+    for (const instanceId of ALL_INSTANCES) {
+        if (!activeInstanceIds.includes(instanceId)) {
+            console.log(`Removing terminated instance: ${instanceId}`)
+            await redis.del(`ALL_MACHINES:${instanceId!}`)
+            await redis.srem(`ALL_INSTANCES`, instanceId!)
         }
     }
     // ****************** END *************************
-    const existingInstanceIds = ALL_MACHINES.map((machine) => machine.instanceId) ?? []
-    instanceData.Reservations?.map((reservation) => {
-        if (existingInstanceIds.includes(reservation.Instances![0]?.InstanceId!)) {
+    for (const reservation of instanceData.Reservations ?? []) {
+        const instance = reservation.Instances?.[0];
+        if (!instance || !instance.InstanceId) continue;
 
-        } else {
-            if (reservation.Instances![0]?.State?.Name == 'pending') {
-
-            } else {
-                ALL_MACHINES.push({
-                    isUsed: false,
-                    publicDnsName: reservation.Instances![0]?.PublicDnsName!,
-                    instanceId: reservation.Instances![0]?.InstanceId!,
-                    ip: reservation.Instances![0]?.PrivateIpAddress!,
-                })
-            }
-            console.log("\n\n")
-            console.log(instanceIds, "instanceIds")
-            console.log("\n\n")
-            console.log(ALL_MACHINES, "ref All Mac")
+        if (instance.State?.Name === 'pending') {
+            continue;
         }
-    })
+
+        const exist = await redis.sadd('ALL_INSTANCES', instance.InstanceId)
+        if (exist == 1) {
+            await redis.hset(`ALL_MACHINES:${instance.InstanceId}`, {
+                isUsed: false,
+                publicDnsName: instance.PublicDnsName ?? "",
+                instanceId: instance.InstanceId,
+                ip: instance.PrivateIpAddress ?? "",
+            })
+        }
+    }
 }
 refreshedInstances()
 
@@ -145,26 +146,32 @@ setInterval(async () => {
 
 
 setInterval(async () => {
-    for (const machine of ALL_MACHINES) {
+    const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
+    for (const instanceId of ALL_INSTANCES) {
+        const machine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+        console.log(machine, "check")
+        if (Object.keys(machine).length === 0)
+            continue;
         console.log(machine, "time check")
-        if (!machine.isUsed) return;
-        if (machine.lastHeartBeat === undefined) return;
+        const isUsed = machine.isUsed === "true";
+        if (!isUsed) continue;
+        if (machine.lastHeartBeat === undefined) continue;
         console.log("stale")
-        const lastPingTime: any = Date.now() - (machine!.lastHeartBeat as unknown as number)
-        if (lastPingTime > (process.env.GRACE_PERIOD as unknown as number ?? 0)) {
+        const lastPingTime: number = Date.now() - Number(machine!.lastHeartBeat)
+        if (lastPingTime > Number(process.env.GRACE_PERIOD ?? 0)) {
             console.log("**************** DEAD MACHINE INTERVAL **************")
             await prisma.project.create({
                 data: {
-                    ip: machine.ip,
+                    ip: machine.ip!,
                     projectId: machine.projectId!,
                     projectName: machine.projectName!,
                     projectType: machine.projectType!,
-                    instanceId: machine.instanceId,
+                    instanceId: machine.instanceId!,
                     isUsed: true,
-                    publicDnsName: machine.publicDnsName,
+                    publicDnsName: machine.publicDnsName!,
                     userId: machine.userId!,
                     s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
-                    ...(machine.assignedAt && { assignedAt: machine.assignedAt })
+                    ...(machine.assignedAt && { assignedAt: new Date(machine.assignedAt) })
                 }
             })
             fetch(`http://${machine.publicDnsName}:3001/store-project`, {
@@ -180,7 +187,7 @@ setInterval(async () => {
                 }
             })
             const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
-            const user = await prisma.user.update({
+            await prisma.user.update({
                 where: {
                     id: machine.userId! as unknown as string
                 },
@@ -190,10 +197,8 @@ setInterval(async () => {
                     }
                 }
             })
-            const remInd = ALL_MACHINES.findIndex((elem) => elem.instanceId == machine.instanceId)
-            if (remInd > -1) {
-                ALL_MACHINES.splice(remInd, 1)
-            }
+            await redis.del(`ALL_MACHINES:${instanceId!}`)
+            await redis.srem(`ALL_INSTANCES`, instanceId!)
             const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
                 InstanceId: machine.instanceId,
                 ShouldDecrementDesiredCapacity: true
@@ -221,21 +226,21 @@ app.get("/verifyToken", middleAuth, (req, res) => {
     res.status(200).json({ message: "Token is valid" })
 })
 // ===================================== HEARTBEAT
-app.get("/heartBeat/:projectId", middleAuth, (req: Request, res: Response) => {
+app.get("/heartBeat/:instanceId", middleAuth, async (req: Request, res: Response) => {
     console.log("**************** HEARTBEAT ENDPOINT **************")
-    const { projectId } = req.params
+    const { instanceId } = req.params
     try {
-        for (let i = 0; i < ALL_MACHINES.length; i++) {
-            if (ALL_MACHINES[i]?.projectId == projectId) {
-                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
-                break;
-            }
+        const exists = await redis.exists(`ALL_MACHINES:${instanceId}`)
+        if (exists === 0) {
+            res.status(404).json({ error: "Machine not found" })
+            return
         }
+        await redis.hset(`ALL_MACHINES:${instanceId}`, { lastHeartBeat: Date.now() })
         res.json({})
         return
     } catch (error) {
         console.error('HEARTBEAT error:', error);
-        res.status(401).json({ error: 'Internal server Error' });
+        res.status(500).json({ error: 'Internal server Error' });
     }
 })
 app.get("/verifyToken", middleAuth, (req, res) => {
@@ -255,8 +260,23 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
                 userId: req.userId as unknown as string
             }
         })
-        console.log(staleProjects, "staleProject")
-        let userProjects: any[] = ALL_MACHINES.filter((machine) => user?.projects.includes(machine.instanceId))
+        let userProjects: any[] = [];
+        for (const instanceId of user?.projects!) {
+            console.log(instanceId)
+            const userMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+            console.log(userMachine, "userMachine")
+            if (Object.keys(userMachine).length > 0) {
+                const machine = {
+                    ...userMachine,
+                    isUsed: userMachine.isUsed === "true",
+                    lastHeartBeat: userMachine.lastHeartBeat
+                        ? Number(userMachine.lastHeartBeat)
+                        : undefined,
+                };
+                console.log(machine, "machine")
+                userProjects.push(machine);
+            }
+        }
         userProjects = userProjects.concat(staleProjects)
         userProjects = [...userProjects]
         res.status(200).json(userProjects)
@@ -287,15 +307,14 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
                 }
             }
         })
-        const remInd = ALL_MACHINES.findIndex((elem) => elem.instanceId == machine.instanceId)
-        if (remInd > -1) {
-            ALL_MACHINES.splice(remInd, 1)
-        }
+
+        await redis.del(`ALL_MACHINES:${machine.instanceId!}`)
+        await redis.srem(`ALL_INSTANCES`, machine.instanceId!)
         const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
             InstanceId: machine.instanceId,
             ShouldDecrementDesiredCapacity: true
         })
-        const deleteRes = await autoScalingClient.send(termiInstancecommand)
+        await autoScalingClient.send(termiInstancecommand)
         res.status(200).json({ msg: "Project Deleted Successfully" })
         return
     } catch (error) {
@@ -315,22 +334,41 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
             return
         }
         let foundMachine;
-        console.log(ALL_MACHINES, "ALL_MACHINES")
-        for (let i = 0; i < ALL_MACHINES.length; i++) {
-            if (!ALL_MACHINES[i]!.isUsed) {
-                foundMachine = ALL_MACHINES[i];
-                console.log(machine, "machine")
-                ALL_MACHINES[i]!.isUsed = true;
-                ALL_MACHINES[i]!.projectType = machine.projectType!;
-                ALL_MACHINES[i]!.assignedAt = machine.assignedAt;
-                ALL_MACHINES[i]!.userId = req.userId!;
-                ALL_MACHINES[i]!.projectName = machine.projectName!;
-                ALL_MACHINES[i]!.projectId = machine.projectId!;
-                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
-                break;
+        const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
+
+        for (const instanceId of ALL_INSTANCES) {
+            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+            if (Object.keys(singleMachine).length === 0)
+                continue;
+            if (singleMachine.isUsed !== 'true') {
+                foundMachine = {
+                    ...singleMachine,
+                    isUsed: true,
+                    projectType: machine.projectType!,
+                    assignedAt: machine.assignedAt,
+                    userId: req.userId!,
+                    projectName: machine.projectName!,
+                    projectId: machine.projectId!,
+                    lastHeartBeat: Date.now(),
+                    instanceId: singleMachine.instanceId,
+                    publicDnsName: singleMachine.publicDnsName
+                };
+
+                await redis.hset(`ALL_MACHINES:${instanceId}`, foundMachine);
+                break
             }
         }
         if (foundMachine === undefined) {
+            let usedMachines = 0
+            for (const instanceId of ALL_INSTANCES) {
+                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                if (Object.keys(singleMachine).length === 0)
+                    continue;
+                if (singleMachine.isUsed == 'true') {
+                    usedMachines += 1;
+                }
+            }
+            increaseDesiredCapacity(usedMachines + 2)
             res.status(405).json({
                 message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
             })
@@ -358,8 +396,16 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
                 }
             }
         })
-        const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
-        increaseDesiredCapacity(assignedProjects.length + 2)
+        let usedMachines = 0
+        for (const instanceId of ALL_INSTANCES) {
+            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+            if (Object.keys(singleMachine).length === 0)
+                continue;
+            if (singleMachine.isUsed == 'true') {
+                usedMachines += 1;
+            }
+        }
+        increaseDesiredCapacity(usedMachines + 2)
         res.json(foundMachine)
         return
     } catch (error) {
@@ -374,7 +420,6 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
         console.log("******************* ASSIGN METHOD ***************")
         const { projectId, projName } = req.params;
         const { proType } = req.query
-        // JWT TO GET USERID OR EMAIL
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
@@ -387,22 +432,41 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
             return
         }
         let machine;
-        console.log(ALL_MACHINES, "ALL_MACHINES")
-        for (let i = 0; i < ALL_MACHINES.length; i++) {
-            if (!ALL_MACHINES[i]!.isUsed) {
-                machine = ALL_MACHINES[i];
-                console.log(machine, "machine")
-                ALL_MACHINES[i]!.isUsed = true;
-                ALL_MACHINES[i]!.projectType = proType as unknown as string;
-                ALL_MACHINES[i]!.assignedAt = new Date();
-                ALL_MACHINES[i]!.userId = req.userId!;
-                ALL_MACHINES[i]!.lastHeartBeat = Date.now()
-                ALL_MACHINES[i]!.projectName = projName as unknown as string
-                ALL_MACHINES[i]!.projectId = projectId as unknown as string;
-                break;
+        const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
+        console.log(ALL_INSTANCES, "ALL_MACHINES")
+
+        for (const instanceId of ALL_INSTANCES) {
+            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+            if (Object.keys(singleMachine).length === 0)
+                continue;
+            if (singleMachine.isUsed !== 'true') {
+                machine = {
+                    ...singleMachine,
+                    isUsed: true,
+                    projectType: proType as string,
+                    assignedAt: new Date().toISOString(),
+                    userId: req.userId!,
+                    lastHeartBeat: Date.now().toString(),
+                    projectName: projName as string,
+                    projectId: projectId as string,
+                    instanceId: singleMachine.instanceId
+                };
+
+                await redis.hset(`ALL_MACHINES:${instanceId}`, machine);
+                break
             }
         }
         if (machine === undefined) {
+            let usedMachines = 0
+            for (const instanceId of ALL_INSTANCES) {
+                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                if (Object.keys(singleMachine).length === 0)
+                    continue;
+                if (singleMachine.isUsed == 'true') {
+                    usedMachines += 1;
+                }
+            }
+            increaseDesiredCapacity(usedMachines + 2)
             res.status(405).json({
                 message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
             })
@@ -418,8 +482,16 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 }
             }
         })
-        const assignedProjects = ALL_MACHINES.filter((machine) => machine.isUsed)
-        increaseDesiredCapacity(assignedProjects.length + 2)
+        let usedMachines = 0
+        for (const instanceId of ALL_INSTANCES) {
+            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+            if (Object.keys(singleMachine).length === 0)
+                continue;
+            if (singleMachine.isUsed == 'true') {
+                usedMachines += 1;
+            }
+        }
+        increaseDesiredCapacity(usedMachines + 2)
         res.json(machine)
         return
     } catch (error) {

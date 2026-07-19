@@ -11,17 +11,27 @@ export default function Project() {
   const projectId = queryParams.get("projectId") || "";
 
   const stateVal = uri.state;
-  const publicDnsName = typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
-  const projectName = typeof stateVal === "string" ? "" : (stateVal?.projectName ?? "");
+  const publicDnsName =
+    typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
+  const projectName =
+    typeof stateVal === "string" ? "" : (stateVal?.projectName ?? "");
+  const instanceId =
+    typeof stateVal === "string" ? "" : (stateVal?.instanceId ?? "");
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!instanceId) return;
     const heartBeat = setInterval(() => {
-      fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${projectId}`, {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/heartBeat/${instanceId}`, {
         headers: {
           token: (localStorage.getItem("token") as string) ?? "",
         },
-      });
+      })
+        .then((res) => {
+          if (res.status === 404) {
+            clearInterval(heartBeat);
+          }
+        })
+        .catch(() => { });
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, [projectId]);
@@ -80,7 +90,7 @@ export default function Project() {
             </div>
 
             <p className="text-gray-400 text-sm">
-              Setting up your workspace...
+              Setting up workspace {projectName ? `"${projectName}"` : ""}...
             </p>
           </div>
         )}
@@ -88,49 +98,61 @@ export default function Project() {
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
           <div className="text-[#c3c2b7] h-14 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
-            <div className="leftSideNav flex gap-2.5 items-center">
-              {/* <Link to="/dashboard"> */}
+            <div className="flex items-center gap-4">
               <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  background: "#f97316",
-                  borderRadius: 6,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                onClick={navDashboard}
+                className="flex items-center gap-2 cursor-pointer group/brand"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
-                  <rect
-                    x="8"
-                    y="1"
-                    width="5"
-                    height="5"
-                    rx="1"
-                    fill="white"
-                    opacity="0.5"
-                  />
-                  <rect
-                    x="1"
-                    y="8"
-                    width="5"
-                    height="5"
-                    rx="1"
-                    fill="white"
-                    opacity="0.5"
-                  />
-                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
-                </svg>
-              </div>
-              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
-              {projectName && (
-                <span className="text-[#c3c2b7] text-xs font-semibold px-2.5 py-1 rounded-md bg-[#1f1f1e] border border-[#c3c2b7]/15 ml-1">
-                  {projectName}
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: "#f97316",
+                    borderRadius: 6,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  className="shadow-sm shadow-orange-500/25 group-hover/brand:scale-105 transition-transform duration-200"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                    <rect
+                      x="8"
+                      y="1"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="white"
+                      opacity="0.5"
+                    />
+                    <rect
+                      x="1"
+                      y="8"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="white"
+                      opacity="0.5"
+                    />
+                    <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                  </svg>
+                </div>
+                <span className="text-[#c3c2b7] font-extrabold text-[19px] tracking-tight group-hover/brand:text-orange-500 transition-colors duration-200">
+                  Kanvas
                 </span>
-              )}
-              {/* </Link> */}
+              </div>
+              <div className="h-6 w-[1px] bg-[#c3c2b7]/25" />
+              <div className="flex flex-col pl-1">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider select-none leading-none mb-1">
+                  Active Workspace
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 text-sm font-extrabold tracking-wide leading-none">
+                    {projectName || "Untitled"}
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">
               <IoHome onClick={navDashboard} />

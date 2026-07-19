@@ -63,7 +63,7 @@ function DashboardPage({
     if (!elem) {
       return;
     }
-    if (!elem.projectId) {
+    if (!elem.instanceId) {
       return;
     }
     if (elem.s3Key) {
@@ -103,6 +103,7 @@ function DashboardPage({
         state: {
           publicDnsName: machine.publicDnsName,
           projectName: elem.projectName,
+          instanceId: machine.instanceId,
         },
       });
     } else {
@@ -110,6 +111,7 @@ function DashboardPage({
         state: {
           publicDnsName: elem.publicDnsName,
           projectName: elem.projectName,
+          instanceId: elem.instanceId,
         },
       });
     }
@@ -333,7 +335,9 @@ function DashboardPage({
             </div>
           </div>
 
-          {projects.length > 0 && (isSearched || isFiltered) && searchedProjects.length === 0 ? (
+          {projects.length > 0 &&
+          (isSearched || isFiltered) &&
+          searchedProjects.length === 0 ? (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-10">
               <div className="text-2xl mb-2">
                 <FaFolderOpen />
@@ -391,7 +395,9 @@ function DashboardPage({
                       </div>
                       <div className="text-[#c3c2b7] bg-[#252527] flex gap-3 items-center rounded-b-xl h-1/4 px-3 py-1">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{elem.projectName}</p>
+                          <p className="truncate text-sm font-medium">
+                            {elem.projectName}
+                          </p>
                           <p className="text-[10px] text-gray-400">
                             {elem.assignedAt?.toString().split("T")[0]}
                           </p>
@@ -428,7 +434,9 @@ function DashboardPage({
                 <FaFolderOpen />
               </div>
               <div>No Projects yet</div>
-              <div className="text-sm text-gray-400 mt-1">Create a Project to get started</div>
+              <div className="text-sm text-gray-400 mt-1">
+                Create a Project to get started
+              </div>
             </div>
           )}
         </div>

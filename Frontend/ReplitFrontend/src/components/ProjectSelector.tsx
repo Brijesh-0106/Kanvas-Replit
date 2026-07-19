@@ -90,6 +90,7 @@ export default function ProjectSelectorModal({
       state: {
         publicDnsName: machine.publicDnsName,
         projectName: credential.nameInput,
+        instanceId: machine.instanceId,
       },
     });
   };

@@ -75,7 +75,6 @@ export default function Navbar({
           )}
         </div>
         <div className="rightSideNav flex gap-2 md:gap-4 items-center">
-
           {(token == "" || token == undefined) && (
             <>
               <button
@@ -102,7 +101,7 @@ export default function Navbar({
               </button>
               <button
                 onClick={logOut}
-                className="border border-red-800 text-[#c3c2b7] bg-red-700  text-md cursor-pointer  px-3 rounded-xl font-medium transition-all"
+                className="border border-red-800 text-[#c3c2b7] bg-red-700  text-md cursor-pointer  py-2 px-3 rounded-xl font-medium transition-all"
               >
                 Logout
               </button>
