@@ -9,6 +9,10 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from "./generated/prisma/client.js";
 const prisma = new PrismaClient()
+// const redis = new Redis({
+//     host: 'redis',  // container name, not localhost
+//     port: 6379
+// })
 const redis = new Redis()
 const app = express();
 
@@ -126,6 +130,7 @@ const refreshedInstances = async () => {
 
         const exist = await redis.sadd('ALL_INSTANCES', instance.InstanceId)
         if (exist == 1) {
+            await redis.set(`machine-${instance.InstanceId}`, instance.PublicDnsName!)
             await redis.hset(`ALL_MACHINES:${instance.InstanceId}`, {
                 isUsed: false,
                 publicDnsName: instance.PublicDnsName ?? "",
@@ -225,6 +230,12 @@ app.get("/setDesiredCapacityTo1", (req, res) => {
 // ===================================== DEV API
 app.get("/verifyToken", middleAuth, (req, res) => {
     res.status(200).json({ message: "Token is valid" })
+})
+// ===================================== ASSIGN SUB-DOMAIN
+app.get('/resolve/:instanceId', async (req, res) => {
+    const dns = await redis.get(`machine-${req.params.instanceId}`)
+    if (!dns) return res.status(404).send('Not found')
+    res.send(dns)
 })
 // ===================================== HEARTBEAT
 app.get("/heartBeat/:instanceId", middleAuth, async (req: Request, res: Response) => {

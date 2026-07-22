@@ -336,8 +336,8 @@ function DashboardPage({
           </div>
 
           {projects.length > 0 &&
-          (isSearched || isFiltered) &&
-          searchedProjects.length === 0 ? (
+            (isSearched || isFiltered) &&
+            searchedProjects.length === 0 ? (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-10">
               <div className="text-2xl mb-2">
                 <FaFolderOpen />

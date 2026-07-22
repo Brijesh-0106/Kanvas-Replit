@@ -31,7 +31,7 @@ export default function Project() {
             clearInterval(heartBeat);
           }
         })
-        .catch(() => { });
+        .catch(() => {});
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, [projectId]);
@@ -116,7 +116,14 @@ export default function Project() {
                   className="shadow-sm shadow-orange-500/25 group-hover/brand:scale-105 transition-transform duration-200"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                    <rect
+                      x="1"
+                      y="1"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="white"
+                    />
                     <rect
                       x="8"
                       y="1"
@@ -135,7 +142,14 @@ export default function Project() {
                       fill="white"
                       opacity="0.5"
                     />
-                    <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                    <rect
+                      x="8"
+                      y="8"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="white"
+                    />
                   </svg>
                 </div>
                 <span className="text-[#c3c2b7] font-extrabold text-[19px] tracking-tight group-hover/brand:text-orange-500 transition-colors duration-200">
@@ -170,7 +184,7 @@ export default function Project() {
                 height="100%"
                 onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                 className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
               />
             </div>
           </div>

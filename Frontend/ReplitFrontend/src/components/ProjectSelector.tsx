@@ -153,11 +153,10 @@ export default function ProjectSelectorModal({
             key={project.value}
             onClick={() => setSelected(project.value)}
             className={`flex items-center gap-4 p-4 cursor-pointer rounded-xl border text-left transition-all duration-150
-                ${
-                  selected === project.value
-                    ? "border-amber-700 bg-amber-700/10"
-                    : "border-gray-700 bg-gray-800 hover:border-gray-500"
-                }`}
+                ${selected === project.value
+                ? "border-amber-700 bg-amber-700/10"
+                : "border-gray-700 bg-gray-800 hover:border-gray-500"
+              }`}
           >
             <div
               className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
@@ -191,11 +190,10 @@ export default function ProjectSelectorModal({
           type="submit"
           disabled={!selected}
           className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all
-              ${
-                selected
-                  ? "bg-amber-700 hover:bg-amber-700 text-[#c3c2b7] cursor-pointer"
-                  : "bg-gray-800 text-gray-500 cursor-not-allowed"
-              }`}
+              ${selected
+              ? "bg-amber-700 hover:bg-amber-700 text-[#c3c2b7] cursor-pointer"
+              : "bg-gray-800 text-gray-500 cursor-not-allowed"
+            }`}
         >
           {selected
             ? `Launch ${projectTypes.find((p) => p.value === selected)?.label}`
