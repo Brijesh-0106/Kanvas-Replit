@@ -445,10 +445,10 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
 })
 // ============================================================== ASSIGN PROJECT
 app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
+    const cacheKey = `cache:user:${req.userId!}:projects`;
     try {
         console.log("******************* ASSIGN METHOD ***************")
 
-        const cacheKey = `cache:user:${req.userId!}:projects`;
         await redis.del(cacheKey);
         const { projectId, projName } = req.params;
         const { proType } = req.query
@@ -457,7 +457,7 @@ app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
                 id: req.userId as unknown as string
             }
         })
-        if (user?.projects!.length! >= 2) {
+        if (user?.projects!.length! >= user?.maxProject!) {
             res.status(405).json({
                 message: "Free plan limit reached. Either delete a project or upgrade to premium.",
             })
