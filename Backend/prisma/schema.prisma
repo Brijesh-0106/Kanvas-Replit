@@ -13,12 +13,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  refToken  String
+  ip        String
+  revoked   Boolean  @default(false)
+  user      User     @relation(references: [id], fields: [userId])
+  userId    String
+  userAgent String
+  createdAt DateTime @default(now()) // like createdAt in Mongoose
+  updatedAt DateTime @updatedAt // auto-updates on every save
+}
+
 model User {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  email      String   @unique
-  password   String
-  projects   String[] @default([])
-  maxProject Int      @default(2)
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  email        String    @unique
+  password     String
+  projects     Project[]
+  maxProject   Int       @default(2)
+  aiProjectCnt Int       @default(0)
+  sessions     session[]
+}
+
+model File {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  project   Project  @relation(references: [id], fields: [projectId])
+  projectId String
+  path      String
+  content   String
+  createdAt DateTime @default(now()) // like createdAt in Mongoose
+  updatedAt DateTime @updatedAt // auto-updates on every save
+  embedding Float[]
 }
 
 model Project {
@@ -28,9 +53,13 @@ model Project {
   projectType   String?
   ip            String
   isUsed        Boolean
+  isStale       Boolean   @default(false)
   publicDnsName String
   assignedAt    DateTime?
   userId        String?
   s3Key         String
   instanceId    String
+  user          User?     @relation(fields: [userId], references: [id])
+  fileTree      Json      @default("{}")
+  files         File[]
 }

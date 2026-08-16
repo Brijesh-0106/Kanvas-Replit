@@ -7,6 +7,12 @@ export type alertType = "success" | "error" | "warning" | "info";
 
 const projectTypes = [
   {
+    value: "AI",
+    label: "AI Project",
+    description: "AI Integrated Environment",
+    extra: "Only 1",
+  },
+  {
     value: "Node",
     label: "Node.js",
     description: "npm init -y · Express, APIs",
@@ -18,7 +24,7 @@ const projectTypes = [
   },
   {
     value: "Python",
-    label: "Python",
+    label: "Python ",
     description: "Python Environment",
   },
   {
@@ -51,10 +57,10 @@ export default function ProjectSelectorModal({
   //   ++++++++++++++++++++++++++++++++++++++++++ LANUCH PROJECT ++++++++++++++++++++++++++++++++++++++++++
   const handleLaunch = async (credential: ProjectSelectorProps) => {
     if (!selected) return;
-    const projectId =
-      "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
+    // const projectId =
+    //   "project-" + (("" + Math.random()).split(".")[1] ?? Math.random());
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/assign/${projectId}/${credential.nameInput}?proType=${selected}`,
+      `${import.meta.env.VITE_BACKEND_URL}/assign/${credential.nameInput}?proType=${selected}`,
       {
         headers: {
           token: localStorage.getItem("token") ?? "",
@@ -86,11 +92,12 @@ export default function ProjectSelectorModal({
     }
 
     onClose();
-    navigate(`/project?projectId=${projectId}`, {
+    navigate(`/project?projectId=${machine.projectId}`, {
       state: {
         publicDnsName: machine.publicDnsName,
         projectName: credential.nameInput,
         instanceId: machine.instanceId,
+        isAI: machine.projectType == "AI",
       },
     });
   };
@@ -152,14 +159,15 @@ export default function ProjectSelectorModal({
             type="button"
             key={project.value}
             onClick={() => setSelected(project.value)}
-            className={`flex items-center gap-4 p-4 cursor-pointer rounded-xl border text-left transition-all duration-150
-                ${selected === project.value
-                ? "border-amber-700 bg-amber-700/10"
-                : "border-gray-700 bg-gray-800 hover:border-gray-500"
-              }`}
+            className={`flex items-center relative gap-4 px-4 py-2 cursor-pointer rounded-xl border text-left transition-all duration-150
+                ${
+                  selected === project.value
+                    ? "border-amber-700 bg-amber-700/10"
+                    : "border-gray-700 bg-gray-800 hover:border-gray-500"
+                }`}
           >
             <div
-              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+              className={`w-4 h-4 rounded-full relative border-2 flex items-center justify-center flex-shrink-0 transition-all
                 ${selected === project.value ? "border-amber-700" : "border-gray-600"}`}
             >
               {selected === project.value && (
@@ -167,6 +175,13 @@ export default function ProjectSelectorModal({
               )}
             </div>
             <div>
+              {project.extra && (
+                <span className="absolute top-2 right-2 text-sm">
+                  <span className="text-white  bg-amber-700 text-[12px] py-1 px-2 rounded-lg">
+                    {project.extra}
+                  </span>
+                </span>
+              )}
               <p className="text-[#c3c2b7] text-sm font-medium">
                 {project.label}
               </p>
@@ -190,10 +205,11 @@ export default function ProjectSelectorModal({
           type="submit"
           disabled={!selected}
           className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all
-              ${selected
-              ? "bg-amber-700 hover:bg-amber-700 text-[#c3c2b7] cursor-pointer"
-              : "bg-gray-800 text-gray-500 cursor-not-allowed"
-            }`}
+              ${
+                selected
+                  ? "bg-amber-700 hover:bg-amber-700 text-[#c3c2b7] cursor-pointer"
+                  : "bg-gray-800 text-gray-500 cursor-not-allowed"
+              }`}
         >
           {selected
             ? `Launch ${projectTypes.find((p) => p.value === selected)?.label}`

@@ -2,11 +2,13 @@ import { AutoScalingClient, DescribeAutoScalingInstancesCommand, SetDesiredCapac
 import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { Redis } from 'ioredis';
 
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import 'dotenv/config';
 import express, { NextFunction, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+import morgan from 'morgan';
 import { PrismaClient } from "./generated/prisma/client.js";
 const prisma = new PrismaClient()
 // const redis = new Redis({
@@ -26,16 +28,28 @@ declare global {
 
 
 // AUTH Middleware
-const middleAuth = (req: Request, res: Response, next: NextFunction): void => {
+const middleAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
         let token = req.header('Token') as string;
         if (!token) {
             res.status(403).json({ error: "Authentication token required" })
             return;
         }
-        let payload = jwt.verify(token, process.env.SECRET_KEY as string) as string;
-        req.userId = payload
-        next()
+        const payload = await jwt.verify(token, process.env.SECRET_KEY as string)
+        if (payload) {
+            const blackListed = await redis.get(`blackList:${token}`)
+            if (blackListed) {
+                return res.status(401).send('Token has expired');
+            }
+            req.userId = (payload as { id: string }).id
+            next()
+        } else {
+            console.log(payload, "check middle auth jwt verify failed")
+            if (payload === 'TokenExpiredError') {
+                return res.status(401).send('Token has expired');
+            }
+            return res.status(403).send('Invalid token');
+        }
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
             res.status(401).json({ error: "Invalid token" });
@@ -50,6 +64,8 @@ const middleAuth = (req: Request, res: Response, next: NextFunction): void => {
 
 app.use(cors());
 app.use(express.json());
+app.use(morgan('dev'))
+app.use(cookieParser())
 
 // --------------------------------------------OAUTH2 CONFIG
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -164,20 +180,37 @@ setInterval(async () => {
         const lastPingTime: number = Date.now() - Number(machine!.lastHeartBeat)
         if (lastPingTime > Number(process.env.GRACE_PERIOD ?? 0)) {
             console.log("**************** DEAD MACHINE INTERVAL **************")
-            await prisma.project.create({
-                data: {
-                    ip: machine.ip!,
-                    projectId: machine.projectId!,
-                    projectName: machine.projectName!,
-                    projectType: machine.projectType!,
-                    instanceId: machine.instanceId!,
-                    isUsed: true,
-                    publicDnsName: machine.publicDnsName!,
-                    userId: machine.userId!,
-                    s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
-                    ...(machine.assignedAt && { assignedAt: new Date(machine.assignedAt) })
+            const proj = await prisma.project.findFirst({
+                where: {
+                    instanceId
                 }
             })
+            if (proj) {
+                if (proj.id) {
+                    await prisma.project.update({
+                        where: {
+                            id: proj?.id
+                        }, data: {
+                            isStale: true,
+                            s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
+                        }
+                    })
+                }
+            }
+            // await prisma.project.create({
+            //     data: {
+            //         ip: machine.ip!,
+            //         projectId: machine.projectId!,
+            //         projectName: machine.projectName!,
+            //         projectType: machine.projectType!,
+            //         instanceId: machine.instanceId!,
+            //         isUsed: true,
+            //         publicDnsName: machine.publicDnsName!,
+            //         userId: machine.userId!,
+            //         s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
+            //         ...(machine.assignedAt && { assignedAt: new Date(machine.assignedAt) })
+            //     }
+            // })
             fetch(`http://${machine.publicDnsName}:3001/store-project`, {
                 method: "POST",
                 headers: {
@@ -185,24 +218,24 @@ setInterval(async () => {
                 },
                 body: JSON.stringify({ userId: machine.userId, projectId: machine.projectId })
             })
-            const foundUser = await prisma.user.findFirst({
-                where: {
-                    id: machine.userId! as unknown as string
-                }
-            })
+            // const foundUser = await prisma.user.findFirst({
+            //     where: {
+            //         id: machine.userId! as unknown as string
+            //     }
+            // })
             const cacheKey = `cache:user:${machine.userId!}:projects`;
             await redis.del(cacheKey)
-            const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
-            await prisma.user.update({
-                where: {
-                    id: machine.userId! as unknown as string
-                },
-                data: {
-                    projects: {
-                        set: remainingProjects
-                    }
-                }
-            })
+            // const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
+            // await prisma.user.update({
+            //     where: {
+            //         id: machine.userId! as unknown as string
+            //     },
+            //     data: {
+            //         projects: {
+            //             set: remainingProjects
+            //         }
+            //     }
+            // })
             await redis.del(`ALL_MACHINES:${instanceId!}`)
             await redis.srem(`ALL_INSTANCES`, instanceId!)
             const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
@@ -226,10 +259,6 @@ app.get("/test", (req, res) => {
 app.get("/setDesiredCapacityTo1", (req, res) => {
     increaseDesiredCapacity(1)
     res.json({ message: "Desired capacity set to 1" })
-})
-// ===================================== DEV API
-app.get("/verifyToken", middleAuth, (req, res) => {
-    res.status(200).json({ message: "Token is valid" })
 })
 // ===================================== ASSIGN SUB-DOMAIN
 app.get('/resolve/:instanceId', async (req, res) => {
@@ -256,7 +285,13 @@ app.get("/heartBeat/:instanceId", middleAuth, async (req: Request, res: Response
     }
 })
 app.get("/verifyToken", middleAuth, (req, res) => {
-    res.status(200).json({ message: "Token is valid" })
+    try {
+        res.status(200).json({ message: "Token is valid" })
+    } catch (err) {
+        res.json({
+            status: 401, msg: "Token expired"
+        })
+    }
 })
 // ============================================================== ALL PROJECTS FOR USER
 app.get("/fetchProjects", middleAuth, async (req, res) => {
@@ -271,37 +306,37 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
         }
 
         console.log("Cache Miss - Fetching from DB");
-        const user = await prisma.user.findFirst({
-            where: {
-                id: req.userId as unknown as string
-            },
-        })
-        const staleProjects = await prisma.project.findMany({
+        // const user = await prisma.user.findFirst({
+        //     where: {
+        //         id: req.userId as unknown as string
+        //     },
+        // })
+        const allProjects = await prisma.project.findMany({
             where: {
                 userId: req.userId as unknown as string
             }
         })
-        let userProjects: any[] = [];
-        for (const instanceId of user?.projects!) {
-            console.log(instanceId)
-            const userMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-            console.log(userMachine, "userMachine")
-            if (Object.keys(userMachine).length > 0) {
-                const machine = {
-                    ...userMachine,
-                    isUsed: userMachine.isUsed === "true",
-                    lastHeartBeat: userMachine.lastHeartBeat
-                        ? Number(userMachine.lastHeartBeat)
-                        : undefined,
-                };
-                console.log(machine, "machine")
-                userProjects.push(machine);
-            }
-        }
-        userProjects = userProjects.concat(staleProjects)
-        userProjects = [...userProjects]
-        await redis.set(cacheKey, JSON.stringify(userProjects), 'EX', 300);
-        res.status(200).json(userProjects)
+        // let userProjects: any[] = [];
+        // for (const instanceId of user?.projects!) {
+        //     console.log(instanceId)
+        //     const userMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+        //     console.log(userMachine, "userMachine")
+        //     if (Object.keys(userMachine).length > 0) {
+        //         const machine = {
+        //             ...userMachine,
+        //             isUsed: userMachine.isUsed === "true",
+        //             lastHeartBeat: userMachine.lastHeartBeat
+        //                 ? Number(userMachine.lastHeartBeat)
+        //                 : undefined,
+        //         };
+        //         console.log(machine, "machine")
+        //         userProjects.push(machine);
+        //     }
+        // }
+        // userProjects = userProjects.concat(staleProjects)
+        // userProjects = [...userProjects]
+        await redis.set(cacheKey, JSON.stringify(allProjects), 'EX', 300);
+        res.status(200).json(allProjects)
         return
     } catch (error) {
         console.error('Google auth error:', error);
@@ -313,22 +348,31 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
     try {
         console.log("**************** DELETE ENDPOINT **************")
         const machine: machine = req.body
-        const foundUser = await prisma.user.findFirst({
+        const foundProject = await prisma.project.findFirst({
             where: {
-                id: req.userId as unknown as string
+                instanceId: machine.instanceId
             }
         })
-        const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
-        const user = await prisma.user.update({
-            where: {
-                id: req.userId as unknown as string
-            },
-            data: {
-                projects: {
-                    set: remainingProjects
-                }
+        if (foundProject) {
+            if (foundProject.id) {
+                await prisma.project.delete({
+                    where: {
+                        id: foundProject?.id
+                    }
+                })
             }
-        })
+        }
+        // const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
+        // const user = await prisma.user.update({
+        //     where: {
+        //         id: req.userId as unknown as string
+        //     },
+        //     data: {
+        //         projects: {
+        //             set: remainingProjects
+        //         }
+        //     }
+        // })
 
         await redis.del(`ALL_MACHINES:${machine.instanceId!}`)
         await redis.srem(`ALL_INSTANCES`, machine.instanceId!)
@@ -410,21 +454,23 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
             },
             body: JSON.stringify({ userId: machine.userId, projectId: machine.projectId })
         })
-        await prisma.project.delete({
+        await prisma.project.update({
             where: {
                 id: machine.id!
+            }, data: {
+                isStale: false, s3Key: ""
             }
         })
-        await prisma.user.update({
-            where: {
-                id: req.userId as unknown as string
-            },
-            data: {
-                projects: {
-                    push: foundMachine?.instanceId as unknown as string
-                }
-            }
-        })
+        // await prisma.user.update({
+        //     where: {
+        //         id: req.userId as unknown as string
+        //     },
+        //     data: {
+        //         projects: {
+        //             push: foundMachine?.instanceId as unknown as string
+        //         }
+        //     }
+        // })
         let usedMachines = 0
         for (const instanceId of ALL_INSTANCES) {
             const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
@@ -444,91 +490,116 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
 
 })
 // ============================================================== ASSIGN PROJECT
-app.get("/assign/:projectId/:projName", middleAuth, async (req, res) => {
+app.get("/assign/:projName", middleAuth, async (req, res) => {
     const cacheKey = `cache:user:${req.userId!}:projects`;
     try {
         console.log("******************* ASSIGN METHOD ***************")
 
         await redis.del(cacheKey);
-        const { projectId, projName } = req.params;
+        const { projName } = req.params;
         const { proType } = req.query
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
             }
         })
-        if (user?.projects!.length! >= user?.maxProject!) {
-            res.status(405).json({
-                message: "Free plan limit reached. Either delete a project or upgrade to premium.",
-            })
-            return
-        }
-        let machine;
-        const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
-        console.log(ALL_INSTANCES, "ALL_MACHINES")
+        if (user) {
+            if (user.id) {
+                const projects = await prisma.project.findMany({ where: { userId: user?.id } })
 
-        for (const instanceId of ALL_INSTANCES) {
-            const claimed = await redis.hsetnx(`ALL_MACHINES:${instanceId}`, "userId", req.userId!);
-            if (claimed === 1) {
-                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-                if (Object.keys(singleMachine).length === 0) {
-                    await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
-                    continue;
+                if (projects.length! >= user?.maxProject!) {
+                    res.status(405).json({
+                        message: "Free plan limit reached. Either delete a project or upgrade to premium.",
+                    })
+                    return
                 }
-                machine = {
-                    ...singleMachine,
-                    isUsed: "true",
-                    projectType: proType as string,
-                    assignedAt: new Date().toISOString(),
-                    userId: req.userId!,
-                    lastHeartBeat: Date.now().toString(),
-                    projectName: projName as string,
-                    projectId: projectId as string,
-                    instanceId: singleMachine.instanceId
-                };
+                if (proType == 'AI' && user?.aiProjectCnt && user?.aiProjectCnt > 0) {
+                    res.status(405).json({
+                        message: "Free plan AI Project limit reached. Either delete a AI project or upgrade to premium.",
+                    })
+                    return
+                }
+                let machine;
+                const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
+                console.log(ALL_INSTANCES, "ALL_MACHINES")
 
-                await redis.hset(`ALL_MACHINES:${instanceId}`, machine);
-                break
-            }
-        }
-        if (machine === undefined) {
-            let usedMachines = 0
-            for (const instanceId of ALL_INSTANCES) {
-                const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-                if (Object.keys(singleMachine).length === 0)
-                    continue;
-                if (singleMachine.isUsed == 'true') {
-                    usedMachines += 1;
+                for (const instanceId of ALL_INSTANCES) {
+                    const claimed = await redis.hsetnx(`ALL_MACHINES:${instanceId}`, "userId", req.userId!);
+                    if (claimed === 1) {
+                        const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                        if (Object.keys(singleMachine).length === 0) {
+                            await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
+                            continue;
+                        }
+                        const project = await prisma.project.create({
+                            data: {
+                                ip: singleMachine.ip!,
+                                publicDnsName: singleMachine.publicDnsName!,
+                                s3Key: "",
+                                instanceId: singleMachine.instanceId!,
+                                isUsed: true,
+                                projectType: proType as string,
+                                assignedAt: new Date().toISOString(),
+                                userId: req.userId!,
+                                projectName: projName as string,
+                            }
+                        })
+                        machine = {
+                            ...singleMachine,
+                            isUsed: "true",
+                            projectType: proType as string,
+                            assignedAt: new Date().toISOString(),
+                            userId: req.userId!,
+                            lastHeartBeat: Date.now().toString(),
+                            projectName: projName as string,
+                            projectId: project.id,
+                            instanceId: singleMachine.instanceId
+                        };
+
+                        await redis.hset(`ALL_MACHINES:${instanceId}`, machine);
+                        break
+                    }
                 }
-            }
-            increaseDesiredCapacity(usedMachines + 2)
-            res.status(405).json({
-                message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
-            })
-            return
-        }
-        await prisma.user.update({
-            where: {
-                id: req.userId as unknown as string
-            },
-            data: {
-                projects: {
-                    push: machine?.instanceId as unknown as string
+                if (machine === undefined) {
+                    let usedMachines = 0
+                    for (const instanceId of ALL_INSTANCES) {
+                        const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                        if (Object.keys(singleMachine).length === 0)
+                            continue;
+                        if (singleMachine.isUsed == 'true') {
+                            usedMachines += 1;
+                        }
+                    }
+                    increaseDesiredCapacity(usedMachines + 2)
+                    res.status(405).json({
+                        message: "We're spinning up a workspace for you, please wait 30 seconds and try again"
+                    })
+                    return
                 }
-            }
-        })
-        let usedMachines = 0
-        for (const instanceId of ALL_INSTANCES) {
-            const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-            if (Object.keys(singleMachine).length === 0)
-                continue;
-            if (singleMachine.isUsed == 'true') {
-                usedMachines += 1;
+                // await prisma.user.update({
+                //     where: {
+                //         id: req.userId as unknown as string
+                //     },
+                //     data: {
+                //         projects: {
+                //             push: machine?.instanceId as unknown as string
+                //         }
+                //     }
+                // })
+                let usedMachines = 0
+                for (const instanceId of ALL_INSTANCES) {
+                    const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
+                    if (Object.keys(singleMachine).length === 0)
+                        continue;
+                    if (singleMachine.isUsed == 'true') {
+                        usedMachines += 1;
+                    }
+                }
+                increaseDesiredCapacity(usedMachines + 2)
+                res.json(machine)
+                return
             }
         }
-        increaseDesiredCapacity(usedMachines + 2)
-        res.json(machine)
-        return
     } catch (error) {
         console.error('Google auth error:', error);
         res.status(401).json({ error: 'Invalid token' });
@@ -562,11 +633,13 @@ app.post("/v0/api/google", async (req: Request, res: Response) => {
         if (User) {
 
         } else {
-            User = await prisma.user.create({ data: { email, password: googleId as unknown as string, projects: [] } });
+            User = await prisma.user.create({ data: { email, password: googleId as unknown as string } });
         }
         const jwtToken = jwt.sign(
             User.id.toString(),
-            process.env.SECRET_KEY!,
+            process.env.SECRET_KEY!, {
+            expiresIn: "4h"
+        }
         );
         return res.status(200).json({
             success: true,
@@ -578,6 +651,81 @@ app.post("/v0/api/google", async (req: Request, res: Response) => {
         res.status(401).json({ error: 'Invalid token' });
     }
 })
+
+// ============================================================== LOGOUT
+app.get("/logout", async (req: Request, res: Response) => {
+    try {
+        const refToken = req.cookies.refToken
+        if (!refToken) {
+            return res.json({
+                msg: "Token Not Found", status: 401
+            })
+        }
+        let token = req.header('Token') as string;
+        if (!token) {
+            return res.status(403).json({ error: "Authentication token required" })
+        }
+        const currSession = await prisma.session.findFirst({
+            where: {
+                revoked: false, refToken
+            }
+        })
+        if (!currSession) {
+            console.log("Session with refreshToken not found")
+            return res.json({ status: 401, msg: "InValid Token" })
+        }
+        currSession.revoked = true
+        await prisma.session.update({
+            where: { id: currSession.id },
+            data: {
+                revoked: false
+            }
+        })
+        await redis.set(`blackList:${token}`, 1, "EX", 15 * 60)
+        res.json({ status: 200, msg: "Logged Out SeccessFully" })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ err })
+        return
+    }
+})
+// ============================================================== ROTATE TOKEN
+app.get("/rotate-token", async (req: Request, res: Response) => {
+    try {
+        const refToken = req.cookies.refToken
+        if (!refToken) {
+            return res.json({
+                msg: "Token Not Found", status: 401
+            })
+        }
+        const currSession = await prisma.session.findFirst({
+            where: {
+                revoked: false, refToken
+            }
+        })
+        if (!currSession) {
+            console.log("Session with refreshToken not found")
+            return res.json({ status: 401, msg: "InValid Token" })
+        }
+        const payload = jwt.verify(refToken, process.env.SECRET_KEY as string)
+        const newAccessToken = jwt.sign(payload as string, process.env.SECRET_KEY as string, { expiresIn: "15m" })
+        const newRefToken = jwt.sign(payload as string, process.env.SECRET_KEY as string, { expiresIn: "7d" })
+        await prisma.session.update({
+            where: { id: currSession.id },
+            data: {
+                refToken: newRefToken
+            }
+        })
+        res.cookie("refToken", newRefToken)
+        console.log(refToken)
+        res.json({ status: 200, token: newAccessToken })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ err })
+        return
+    }
+})
+
 // ============================================================== LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -588,10 +736,17 @@ app.post("/login", async (req, res) => {
             }
         })
         if (user) {
-            let token = jwt.sign(user.id.toString(), process.env.SECRET_KEY as string);
+            let refToken = jwt.sign({ id: user.id.toString() }, process.env.SECRET_KEY as string, { expiresIn: "7d" });
+            await prisma.session.create({
+                data: {
+                    ip: req.ip!, userAgent: req.headers['user-agent']!, userId: user.id, refToken
+                }
+            })
+            res.cookie("refToken", refToken, { maxAge: 7 * 60 * 60 * 24 * 1000 })
+            let accessToken = jwt.sign({ id: user.id.toString() }, process.env.SECRET_KEY as string, { expiresIn: "15m" });
             res.status(200).json({
                 msg: "Login Successfully",
-                token: token,
+                token: accessToken,
                 name: user.email
             })
             return
@@ -622,7 +777,7 @@ app.post("/signIn", async (req, res) => {
             })
             return
         } else {
-            await prisma.user.create({ data: { email, password, projects: [] } })
+            await prisma.user.create({ data: { email, password } })
             res.status(201).json({
                 msg: "Account created successfully"
             })

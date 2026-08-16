@@ -8,6 +8,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { GoProjectSymlink } from "react-icons/go";
+import { RiAi } from "react-icons/ri";
 export type alertType = "success" | "error" | "warning" | "info";
 
 import { useNavigate } from "react-router-dom";
@@ -30,8 +31,13 @@ const icons = [
     label: "Java",
     icon: <FaJava className="text-red-500" height={30} width={30} />,
   },
+  {
+    label: "AI",
+    icon: <RiAi className="text-red-500" height={30} width={30} />,
+  },
 ];
 type machine = {
+  id: String;
   isUsed: Boolean;
   assignedAt?: Date;
   ip: string;
@@ -99,16 +105,18 @@ function DashboardPage({
         }, 2500);
         return;
       }
-      nav(`/project?projectId=${elem.projectId!}`, {
+      nav(`/project?projectId=${elem.id!}`, {
         state: {
           publicDnsName: machine.publicDnsName,
           projectName: elem.projectName,
           instanceId: machine.instanceId,
+          isAI: elem.projectType == "AI",
         },
       });
     } else {
-      nav(`/project?projectId=${elem.projectId}`, {
+      nav(`/project?projectId=${elem.id!}`, {
         state: {
+          isAI: elem.projectType == "AI",
           publicDnsName: elem.publicDnsName,
           projectName: elem.projectName,
           instanceId: elem.instanceId,
@@ -247,7 +255,8 @@ function DashboardPage({
     fetchUserProjects();
   }, []);
 
-  const displayedProjects = isSearched || isFiltered ? searchedProjects : projects;
+  const displayedProjects =
+    isSearched || isFiltered ? searchedProjects : projects;
 
   return (
     <>
@@ -336,8 +345,8 @@ function DashboardPage({
           </div>
 
           {projects.length > 0 &&
-            (isSearched || isFiltered) &&
-            searchedProjects.length === 0 ? (
+          (isSearched || isFiltered) &&
+          searchedProjects.length === 0 ? (
             <div className="alert text-[#c3c2b7] text-lg flex flex-col items-center mt-10">
               <div className="text-2xl mb-2">
                 <FaFolderOpen />
@@ -390,6 +399,14 @@ function DashboardPage({
                             <span className="text-lg font-bold text-[#c3c2b7]">
                               {icons[3].label}
                             </span>
+                          </>
+                        )}
+                        {elem.projectType == "AI" && (
+                          <>
+                            <span className="text-7xl">{icons[4].icon}</span>
+                            {/* <span className="text-lg font-bold text-[#c3c2b7]">
+                              {icons[4].label}
+                            </span> */}
                           </>
                         )}
                       </div>
