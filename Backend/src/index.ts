@@ -10,6 +10,9 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import morgan from 'morgan';
 import { PrismaClient } from "./generated/prisma/client.js";
+import { generateResult } from "./services/ai.service.js";
+import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
+import { findRelevantFiles } from "./services/similarity.service.js";
 const prisma = new PrismaClient()
 // const redis = new Redis({
 //     host: 'redis',  // container name, not localhost
@@ -266,6 +269,24 @@ app.get('/resolve/:instanceId', async (req, res) => {
     if (!dns) return res.status(404).send('Not found')
     res.send(dns)
 })
+// ===================================== ASSIGN SUB-DOMAIN
+app.get('/chat-history/:projectId', async (req, res) => {
+    const { projectId } = req.params
+    try {
+        const project = await prisma.project.findFirst({
+            where: {
+                id: `${projectId}`
+            }, include: {
+                messages: true
+            }
+        })
+        console.log(project?.messages)
+        return res.json({ status: 200, messages: project?.messages })
+    } catch (error) {
+        console.error('Message:', error);
+        res.status(500).json({ error: 'Internal server Error' });
+    }
+})
 // ===================================== HEARTBEAT
 app.get("/heartBeat/:instanceId", middleAuth, async (req: Request, res: Response) => {
     console.log("**************** HEARTBEAT ENDPOINT **************")
@@ -343,7 +364,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
         res.status(401).json({ error: 'Invalid token' });
     }
 })
-// ============================================================== DELETE USER
+// ============================================================== DELETE PROJECT
 app.post("/deleteProject", middleAuth, async (req, res) => {
     try {
         console.log("**************** DELETE ENDPOINT **************")
@@ -355,6 +376,14 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
         })
         if (foundProject) {
             if (foundProject.id) {
+                await prisma.file.deleteMany({
+                    where: { projectId: foundProject.id }
+                })
+                await prisma.message.deleteMany({
+                    where: {
+                        projectId: foundProject.id
+                    }
+                })
                 await prisma.project.delete({
                     where: {
                         id: foundProject?.id
@@ -488,6 +517,38 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         res.status(401).json({ error: 'Invalid token' });
     }
 
+})
+
+app.post("/send-message", middleAuth, async (req, res) => {
+    const { msg, projectId }: { msg: string, projectId: string } = req.body
+    console.log(msg)
+    const usrMsg = await prisma.message.create({
+        data: {
+            projectId: projectId,
+            msg: msg,
+        }
+    })
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId
+        }
+    })
+
+    const prompt = msg.replace(/@kanvas/gi, "").trim();
+    const relevantFiles = await findRelevantFiles(projectId, prompt)
+    console.log("Relevant Files:", relevantFiles.map(file => file.path));
+
+    const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles })
+    const mergedFileTree = mergeFileTrees(project?.fileTree!, aiResult.fileTree || {})
+    console.log(mergedFileTree, "mergedFileTree")
+
+    await indexChangedFiles(project, aiResult.fileTree || {})
+    const aiMsg = await prisma.message.create({
+        data: {
+            isAi: true, replyTo: usrMsg.id, msg: aiResult.text, projectId
+        }
+    })
+    res.json({ aiMsg })
 })
 // ============================================================== ASSIGN PROJECT
 app.get("/assign/:projName", middleAuth, async (req, res) => {

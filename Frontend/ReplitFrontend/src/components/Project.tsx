@@ -40,7 +40,6 @@ export default function Project() {
   };
 
   const stateVal = uri.state;
-  console.log(stateVal);
   const publicDnsName =
     typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
   const projectName =
@@ -86,7 +85,7 @@ export default function Project() {
     setMsgList((prevMsgList) => [...prevMsgList, newMessage]);
     setNoChat(() => false);
     const chatRes = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/v0/api/add-chat`,
+      `${import.meta.env.VITE_BACKEND_URL}/send-message`,
       {
         headers: {
           token: localStorage.getItem("token") || "",
@@ -94,17 +93,17 @@ export default function Project() {
         },
         method: "POST",
         body: JSON.stringify({
-          content: newMessage.content,
-          role: newMessage.role,
-          timeStamp: newMessage.timeStamp,
+          msg: userText,
+          projectId: projectId,
         }),
       },
     );
     const res = await chatRes.json();
+    console.log(res, "res");
     const newAIMessage: ConversationProps = {
       role: "assistant", //assitant or user
-      content: res.AIResponse.messages[0].content,
-      timeStamp: res.AIResponse.messages[0].timeStamp,
+      content: res.aiMsg.msg,
+      timeStamp: res.aiMsg.createdAt,
     };
     setMsgList((prevMsgList) => [...prevMsgList, newAIMessage]);
     // scrollToBottom();
@@ -183,12 +182,15 @@ export default function Project() {
             </div>
 
             <p className="text-gray-400 text-sm">
-              Setting up workspace {projectName ? `"${projectName}"` : ""}...
+              Setting up workspace{" "}
+              <span className="text-amber-700">
+                {projectName ? `${projectName}` : ""}
+              </span>
             </p>
           </div>
         )}
         {/* {loaded && ( */}
-        <div className="flex flex-col h-screen w-screen0">
+        <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
           <div className="text-[#c3c2b7] h-14 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-4">
@@ -267,7 +269,7 @@ export default function Project() {
           </div>
 
           {/* Below topbar — takes remaining height */}
-          <div className="flex flex-1 overflow-hidden p-3 bg-[#1f1f1e]">
+          <div className="flex flex-1 p-3 bg-[#1f1f1e]">
             {/* Left sidebar — fixed 36px wide */}
 
             {/* iframe — fills rest */}
@@ -357,7 +359,8 @@ export default function Project() {
                   </div>
                   <div
                     id="message-container"
-                    className="w-full max-w-[820px] max-md:px-2 mb-28"
+                    style={{ height: "calc(100vh - 250px)" }}
+                    className="w-full h-sceen overflow-y-auto  max-md:px-2 mb-28"
                   >
                     {!msgList.length && nochat && (
                       <div className="flex mt-42 gap-4 flex-col justify-center items-center">
@@ -387,7 +390,7 @@ export default function Project() {
                                 key={ind}
                                 className="mt-6 w-fit flex items-center ml-auto"
                               >
-                                <div className="rounded-lg max-w-lg p-2 w-fit text-white text-sm bg-primary shadow-md">
+                                <div className="rounded-lg max-w-lg p-2 w-fit text-[#c3c2b7] text-sm bg-primary shadow-md">
                                   {msg.content}
                                 </div>
                                 {/* <div className="text-zinc-900 dark:text-white ml-2">
@@ -408,22 +411,71 @@ export default function Project() {
                               <div className="my-12">
                                 <div className="flex items-center ">
                                   <div className="mr-2 flex items-center justify-center">
-                                    <img
-                                      src="/Assets/isolated_brain.png"
-                                      className="w-9 h-9 object-contain"
-                                      alt="AI Icon"
-                                    />
+                                    <div
+                                      style={{
+                                        width: 24,
+                                        height: 24,
+                                        background: "#f97316",
+                                        borderRadius: 6,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 14 14"
+                                        fill="none"
+                                      >
+                                        <rect
+                                          x="1"
+                                          y="1"
+                                          width="5"
+                                          height="5"
+                                          rx="1"
+                                          fill="white"
+                                        />
+                                        <rect
+                                          x="8"
+                                          y="1"
+                                          width="5"
+                                          height="5"
+                                          rx="1"
+                                          fill="white"
+                                          opacity="0.5"
+                                        />
+                                        <rect
+                                          x="1"
+                                          y="8"
+                                          width="5"
+                                          height="5"
+                                          rx="1"
+                                          fill="white"
+                                          opacity="0.5"
+                                        />
+                                        <rect
+                                          x="8"
+                                          y="8"
+                                          width="5"
+                                          height="5"
+                                          rx="1"
+                                          fill="white"
+                                        />
+                                      </svg>
+                                    </div>
                                   </div>
                                   <div
                                     key={ind}
-                                    className="rounded-lg text-zinc-900 dark:text-white w-fit max-w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
+                                    style={{ maxWidth: "calc(100% - 50px)" }}
+                                    className="rounded-lg text-[#c3c2b7] w-fit bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
                                   >
                                     <ReactMarkdown
                                       components={{
                                         p: ({ children, ...props }) => {
                                           return (
                                             <p
-                                              className="text-zinc-700 dark:text-gray-200 mb-2"
+                                              className="text-[#c3c2b7] text-sm dark:text-gray-200 mb-2"
                                               {...props}
                                             >
                                               {children}
@@ -475,16 +527,16 @@ export default function Project() {
                     <div ref={messagesEndRef} />
                   </div>
                   <form onSubmit={handleSubmit(sendChat)} className="flex">
-                    <div className="bottom-chat-box absolute w-full bottom-3 right-0">
+                    <div className="bottom-chat-box absolute w-full bottom-0 right-0">
                       <div className="relative p-2">
-                        <div className="flex rounded-lg text-[#c3c2b7] p-1 bottom-1 min-h-20 border-[#c3c2b7]/10 border-2">
+                        <div className="flex rounded-lg text-[#c3c2b7] p-1 bottom-1 min-h-20 gap-1 justify-between border-[#c3c2b7]/10 border-2">
                           <textarea
                             rows={3}
                             {...register("userInput", {})}
                             placeholder={`${isLoading ? "Processing..." : "@kanvas to talk AI..."}`}
                             className="focus:outline-none focus:ring-0 w-9/10 text-sm p-2"
                           />
-                          <div className="relative">
+                          <div className="relative w-1/10">
                             {isLoading && (
                               <button
                                 type="submit"
@@ -501,13 +553,13 @@ export default function Project() {
                               (userChat !== "" ? (
                                 <button className="">
                                   <span className="absolute bottom-1 bg-amber-700 hover:bg-amber-800 rounded-lg p-1.5 cursor-pointer left-1">
-                                    <FaArrowUp className="text-[#c3c2b7]" />
+                                    <FaArrowUp className="text-white" />
                                   </span>
                                 </button>
                               ) : (
                                 <button className="">
                                   <span className="absolute bottom-1 bg-zinc-200 dark:bg-zinc-700 rounded-lg p-1.5 cursor-pointer left-1">
-                                    <FaArrowUp className="text-[#c3c2b7] dark:text-zinc-500" />
+                                    <FaArrowUp className="text-white dark:text-zinc-500" />
                                   </span>
                                 </button>
                               ))}

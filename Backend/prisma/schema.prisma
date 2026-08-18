@@ -44,6 +44,20 @@ model File {
   createdAt DateTime @default(now()) // like createdAt in Mongoose
   updatedAt DateTime @updatedAt // auto-updates on every save
   embedding Float[]
+
+  @@unique([projectId, path]) // Creates the compound index `projectId_path`
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  project   Project  @relation(references: [id], fields: [projectId])
+  isAi      Boolean  @default(false)
+  edited    Boolean  @default(false)
+  replyTo   String?
+  msg       String
+  createdAt DateTime @default(now()) // like createdAt in Mongoose
+  updatedAt DateTime @updatedAt // auto-updates on every save
+  projectId String   @db.ObjectId
 }
 
 model Project {
@@ -62,4 +76,5 @@ model Project {
   user          User?     @relation(fields: [userId], references: [id])
   fileTree      Json      @default("{}")
   files         File[]
+  messages      Message[]
 }
