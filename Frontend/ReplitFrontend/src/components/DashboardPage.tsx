@@ -221,6 +221,9 @@ function DashboardPage({
       setProjects(projs);
     } else {
       setProjects([]);
+      if (res.status == 403) {
+        nav("/");
+      }
     }
     setLoaded(true);
   }

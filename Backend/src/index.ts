@@ -12,6 +12,7 @@ import morgan from 'morgan';
 import { PrismaClient } from "./generated/prisma/client.js";
 import { generateResult } from "./services/ai.service.js";
 import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
+import * as projectService from "./services/project.service.js";
 import { findRelevantFiles } from "./services/similarity.service.js";
 const prisma = new PrismaClient()
 // const redis = new Redis({
@@ -516,9 +517,52 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         console.error('Google auth error:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
-
 })
-
+// ============= NEW FILE FROM PARASITE =============
+app.post("/:projectId/createFile", async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { folderPath, fileName } = req.body;
+        const fileTree = await projectService.createFile({
+            projectId,
+            folderPath,
+            fileName,
+        });
+        res.status(200).json({ fileTree });
+    } catch (err) {
+        res.status(400).json({ error: err });
+    }
+})
+// ============= NEW FOLDER FROM PARASITE =============
+app.post("/:projectId/createFolder", async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { folderPath, folderName } = req.body;
+        const fileTree = await projectService.createFolder({
+            projectId,
+            folderPath,
+            folderName,
+        });
+        res.status(200).json({ fileTree });
+    } catch (err) {
+        res.status(400).json({ error: err });
+    }
+})
+// ============= DELETE ITEM FROM PARASITE =============
+app.post("/:projectId/node", async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { path } = req.body;
+        const fileTree = await projectService.deleteItem({
+            projectId,
+            path
+        });
+        res.status(200).json({ fileTree });
+    } catch (err) {
+        res.status(400).json({ error: err });
+    }
+})
+// ===================== SEND MSG ====================
 app.post("/send-message", middleAuth, async (req, res) => {
     const { msg, projectId }: { msg: string, projectId: string } = req.body
     console.log(msg)

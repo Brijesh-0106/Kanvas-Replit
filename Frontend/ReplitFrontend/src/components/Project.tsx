@@ -4,14 +4,13 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaArrowUp } from "react-icons/fa";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { IoHome } from "react-icons/io5";
-import ReactMarkdown from "react-markdown";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../App.css";
 
 export interface ConversationProps {
-  role: "user" | "assistant";
-  content: string;
-  timeStamp: string;
+  isAi?: boolean;
+  msg?: string;
+  createdAt?: string;
 }
 export interface chatProps {
   _id?: string;
@@ -49,18 +48,19 @@ export default function Project() {
     typeof stateVal === "string" ? "" : (stateVal?.instanceId ?? "");
 
   useEffect(() => {
+    console.log("entered");
     const fetchChatHistory = async () => {
-      // const chatRes = await fetch(
-      //   `${import.meta.env.VITE_BACKEND_URL}/v0/api/load-chat`,
-      //   {
-      //     headers: {
-      //       token: localStorage.getItem("token") || "",
-      //     },
-      //     method: "GET",
-      //   },
-      // );
-      // const data = await chatRes.json();
-      // setMsgList(data.messages);
+      const chatRes = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/chat-history/${projectId}`,
+        {
+          headers: {
+            token: localStorage.getItem("token") || "",
+          },
+          method: "GET",
+        },
+      );
+      const data = await chatRes.json();
+      setMsgList(data.messages);
       if (!msgList.length) setNoChat(() => true);
       // scrollToBottom();
     };
@@ -78,11 +78,14 @@ export default function Project() {
     setIsAIResReady(() => false);
     setIsLoading(() => true);
     const newMessage: ConversationProps = {
-      role: "user", //assitant or user
-      content: userText.trim(),
-      timeStamp: new Date().toLocaleString(),
+      isAi: false, //assitant or user
+      msg: userText.trim(),
+      createdAt: new Date().toLocaleString(),
     };
+    console.log(userText);
+    console.log(newMessage);
     setMsgList((prevMsgList) => [...prevMsgList, newMessage]);
+    console.log(msgList);
     setNoChat(() => false);
     const chatRes = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/send-message`,
@@ -101,9 +104,10 @@ export default function Project() {
     const res = await chatRes.json();
     console.log(res, "res");
     const newAIMessage: ConversationProps = {
-      role: "assistant", //assitant or user
-      content: res.aiMsg.msg,
-      timeStamp: res.aiMsg.createdAt,
+      // role: "assistant", //assitant or user
+      isAi: true,
+      msg: res.aiMsg.msg,
+      createdAt: res.aiMsg.createdAt,
     };
     setMsgList((prevMsgList) => [...prevMsgList, newAIMessage]);
     // scrollToBottom();
@@ -365,7 +369,7 @@ export default function Project() {
                     {!msgList.length && nochat && (
                       <div className="flex mt-42 gap-4 flex-col justify-center items-center">
                         <div className="empty-cards-desc text-zinc-900 dark:text-white">
-                          <div className="text-zinc-900 dark:text-white text-md text-center">
+                          <div className="text-amber-700 text-md text-center">
                             Welcome to Kanvas
                           </div>
                           <div className="text-center mt-3 text-zinc-600 text-sm dark:text-[#a9a9a9] max-md:text-sm">
@@ -373,7 +377,7 @@ export default function Project() {
                           </div>
                         </div>
                         <div className="empty-cards-boxes">
-                          <button className="px-3 py-1 bg-primary/20 text-primary text-sm dark:bg-[#E6D8F2] dark:text-zinc-900 rounded flex items-center gap-1 hover:bg-primary/30 dark:hover:bg-purple-200 transition-colors">
+                          <button className="px-3 py-1 bg-primary/20 text-primary text-sm bg-amber-700  rounded flex items-center gap-1 text-white transition-colors">
                             <HiOutlineChatBubbleLeftRight size={16} />
                             Start Chatting
                           </button>
@@ -383,15 +387,15 @@ export default function Project() {
                     {msgList.length > 0 &&
                       msgList.map((msg: ConversationProps, ind) => (
                         <>
-                          {msg.role == "user" ? (
+                          {msg.isAi == false ? (
                             // FOR USER MESSAGE
                             <>
                               <div
                                 key={ind}
                                 className="mt-6 w-fit flex items-center ml-auto"
                               >
-                                <div className="rounded-lg max-w-lg p-2 w-fit text-[#c3c2b7] text-sm bg-primary shadow-md">
-                                  {msg.content}
+                                <div className="rounded-lg max-w-lg p-2 w-fit bg-[#212121] text-[#c3c2b7] text-sm bg-primary shadow-md">
+                                  {msg.msg}
                                 </div>
                                 {/* <div className="text-zinc-900 dark:text-white ml-2">
                                   <img
@@ -402,7 +406,7 @@ export default function Project() {
                                 </div> */}
                               </div>
                               <div className="text-zinc-500 dark:text-[#a9a9a9] ml-auto  text-[10px] mb-6 text-right">
-                                {msg.timeStamp}
+                                {msg.createdAt}
                               </div>
                             </>
                           ) : (
@@ -468,36 +472,9 @@ export default function Project() {
                                   <div
                                     key={ind}
                                     style={{ maxWidth: "calc(100% - 50px)" }}
-                                    className="rounded-lg text-[#c3c2b7] w-fit bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
+                                    className="rounded-lg text-[#c3c2b7] text-sm w-fit bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
                                   >
-                                    <ReactMarkdown
-                                      components={{
-                                        p: ({ children, ...props }) => {
-                                          return (
-                                            <p
-                                              className="text-[#c3c2b7] text-sm dark:text-gray-200 mb-2"
-                                              {...props}
-                                            >
-                                              {children}
-                                            </p>
-                                          );
-                                        },
-                                        li: ({ children, ...props }) => {
-                                          // Fix: join array children properly instead of String()
-                                          return (
-                                            <li
-                                              style={{ listStyle: "inside" }}
-                                              className="text-zinc-700 dark:text-gray-200 ml-5 mb-1"
-                                              {...props}
-                                            >
-                                              {children}
-                                            </li>
-                                          );
-                                        },
-                                      }}
-                                    >
-                                      {msg.content}
-                                    </ReactMarkdown>
+                                    {msg.msg}
                                   </div>
                                 </div>
                               </div>

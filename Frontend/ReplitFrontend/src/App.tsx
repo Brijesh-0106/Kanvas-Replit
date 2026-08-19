@@ -38,6 +38,7 @@ function App() {
       } else {
         localStorage.removeItem("token");
         setLoaded(true);
+        nav("/");
       }
     } else {
       setLoaded(true);
