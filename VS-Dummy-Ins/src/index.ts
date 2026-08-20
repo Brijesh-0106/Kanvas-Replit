@@ -5,6 +5,7 @@ import cors from 'cors';
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import fs from "fs";
+import path from 'path';
 
 console.log("check")
 const watcher = chokidar.watch('/tmp/project').on('all', (event, path) => {
@@ -14,6 +15,24 @@ const watcher = chokidar.watch('/tmp/project').on('all', (event, path) => {
 
 
 
+function writeFileTree(tree: any, basePath: any) {
+    for (const [name, node] of Object.entries(tree)) {
+        let fullPath = path.join(basePath, name);
+        let newNode = node as unknown as any
+        if (newNode.file) {
+            // It's a file — write contents to disk
+            fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+            fs.writeFileSync(fullPath, newNode.file.contents, 'utf-8');
+            console.log(`Written: ${fullPath}`);
+        } else {
+            // It's a directory — recurse into it
+            fs.mkdirSync(fullPath, { recursive: true });
+            writeFileTree(node, fullPath);
+        }
+    }
+}
+
+let currProjectId: String
 const app = express();
 
 app.use(express.json())
@@ -42,11 +61,33 @@ watcher
     .on('ready', () => console.log('Initial scan complete. Ready for changes'))
 let watchedPaths = watcher.getWatched();
 console.log(watchedPaths, "watched path")
+
+// ======================== REGISTER PROJECT =====================
+app.get(`/register-project/:projectId`, (req, res) => {
+    const projectId = req.params.projectId
+    console.log(projectId, "projectdId");
+    currProjectId = projectId;
+    res.json({ msg: "project registered" })
+})
+
+// ======================== UPDATE FILES =====================
+app.post("/update-files", async (req: Request, res: Response) => {
+    console.log("***************** AMI STORE PROJECT *************************")
+    try {
+        const { mergedFileTree } = req.body
+        const PROJECT_ROOT = '/tmp/project'; // → /tmp/project ✅
+        console.log(mergedFileTree, "check mergedFileTree");
+        writeFileTree(mergedFileTree, PROJECT_ROOT)
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err });
+    }
+})
 // ======================== STORE ZIP =====================
 app.post("/store-project", async (req: Request, res: Response) => {
     console.log("***************** AMI STORE PROJECT *************************")
     const { userId, projectId } = req.body
-    console.log(userId, projectId)
+    console.log(userId, projectId, "check projectId in parasite")
     // zip the project
     execSync("cd /tmp && zip -r /tmp/project-backup.zip project")
     // read zip file
@@ -67,7 +108,7 @@ app.post("/store-project", async (req: Request, res: Response) => {
 // ======================== RESTORE ZIP => NEW MACHINE =====================
 app.post("/restore-project", async (req: Request, res: Response) => {
     const { userId, projectId } = req.body
-    console.log(userId, projectId)
+    console.log(userId, projectId, "check projectId in parasite")
 
     console.log(`projects/ + ${userId} + / + ${projectId}.zip`, "key")
     // download from S3

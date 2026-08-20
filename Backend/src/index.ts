@@ -9,6 +9,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import morgan from 'morgan';
+import { machine } from "node:os";
 import { PrismaClient } from "./generated/prisma/client.js";
 import { generateResult } from "./services/ai.service.js";
 import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
@@ -444,6 +445,7 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
                     await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
                     continue;
                 }
+
                 foundMachine = {
                     ...singleMachine,
                     isUsed: "true",
@@ -583,9 +585,29 @@ app.post("/send-message", middleAuth, async (req, res) => {
     console.log("Relevant Files:", relevantFiles.map(file => file.path));
 
     const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles })
+    console.log("=========================================================================")
+    console.log(aiResult, "AI RESULT")
+    console.log("=========================================================================")
+    console.log(aiResult.fileTree, "AI RESULT aiResult.fileTree")
+    console.log("=========================================================================")
+    console.log(project?.fileTree, "existing files")
     const mergedFileTree = mergeFileTrees(project?.fileTree!, aiResult.fileTree || {})
     console.log(mergedFileTree, "mergedFileTree")
-
+    await prisma.project.update({
+        where: {
+            id: projectId
+        }, data: {
+            fileTree: mergedFileTree
+        }
+    })
+    console.log(JSON.stringify({ mergedFileTree: mergedFileTree }), "send file")
+    fetch(`http://${project?.publicDnsName}:3001/update-files`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mergedFileTree: mergedFileTree })
+    })
     await indexChangedFiles(project, aiResult.fileTree || {})
     const aiMsg = await prisma.message.create({
         data: {
@@ -625,6 +647,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                     return
                 }
                 let machine;
+                let machinePublicDNSName;
                 const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
                 console.log(ALL_INSTANCES, "ALL_MACHINES")
 
@@ -636,6 +659,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                             await redis.hdel(`ALL_MACHINES:${instanceId}`, "userId")
                             continue;
                         }
+                        machinePublicDNSName = singleMachine.publicDnsName!
                         const project = await prisma.project.create({
                             data: {
                                 ip: singleMachine.ip!,
@@ -691,6 +715,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                 //         }
                 //     }
                 // })
+                fetch(`http://${machinePublicDNSName}:3001/register-project/${machine?.projectId}`)
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {
                     const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
