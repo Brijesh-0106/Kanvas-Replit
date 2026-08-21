@@ -521,10 +521,10 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
     }
 })
 // ============= NEW FILE FROM PARASITE =============
-app.post("/:projectId/createFile", async (req, res) => {
+app.post("/createFile", async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const { folderPath, fileName } = req.body;
+        const { folderPath, projectId, fileName } = req.body;
+        console.log(folderPath, projectId, fileName, "create file")
         const fileTree = await projectService.createFile({
             projectId,
             folderPath,
@@ -532,14 +532,15 @@ app.post("/:projectId/createFile", async (req, res) => {
         });
         res.status(200).json({ fileTree });
     } catch (err) {
+        console.error(err); // ← add this to see the REAL error in your logs
         res.status(400).json({ error: err });
     }
 })
 // ============= NEW FOLDER FROM PARASITE =============
-app.post("/:projectId/createFolder", async (req, res) => {
+app.post("/createFolder", async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const { folderPath, folderName } = req.body;
+        const { folderPath, projectId, folderName } = req.body;
+        console.log(folderPath, projectId, folderName, "create file")
         const fileTree = await projectService.createFolder({
             projectId,
             folderPath,
@@ -551,13 +552,13 @@ app.post("/:projectId/createFolder", async (req, res) => {
     }
 })
 // ============= DELETE ITEM FROM PARASITE =============
-app.post("/:projectId/node", async (req, res) => {
+app.post("/deleteNode", async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const { path } = req.body;
+        const { folderPath, projectId } = req.body;
+        console.log(folderPath, projectId, "create file")
         const fileTree = await projectService.deleteItem({
             projectId,
-            path
+            path: folderPath
         });
         res.status(200).json({ fileTree });
     } catch (err) {
@@ -582,17 +583,9 @@ app.post("/send-message", middleAuth, async (req, res) => {
 
     const prompt = msg.replace(/@kanvas/gi, "").trim();
     const relevantFiles = await findRelevantFiles(projectId, prompt)
-    console.log("Relevant Files:", relevantFiles.map(file => file.path));
 
     const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles })
-    console.log("=========================================================================")
-    console.log(aiResult, "AI RESULT")
-    console.log("=========================================================================")
-    console.log(aiResult.fileTree, "AI RESULT aiResult.fileTree")
-    console.log("=========================================================================")
-    console.log(project?.fileTree, "existing files")
     const mergedFileTree = mergeFileTrees(project?.fileTree!, aiResult.fileTree || {})
-    console.log(mergedFileTree, "mergedFileTree")
     await prisma.project.update({
         where: {
             id: projectId

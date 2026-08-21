@@ -52,15 +52,61 @@ app.get("/test", async (req: Request, res: Response) => {
 })
 
 watcher
-    .on('add', (path) => console.log(`File ${path} has been added`))
+    .on('add', (fullPath) => {
+        console.log(`File ${fullPath} has been added`)
+        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        console.log(`trimmedPath`, trimmedPath)
+        // const dirPath = trimmedPath.split('/')
+        const dir = path.dirname(trimmedPath);   // "/src/comp1"
+        const file = path.basename(trimmedPath);  // "index.js"
+
+        console.log(`dirPath`, dir)
+        console.log(`file`, file)
+        fetch(`http://54.90.126.40:9092/createFile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, fileName: file })
+        })
+    })
     .on('change', (path) => console.log(`File ${path} has been changed`))
-    .on('unlink', (path) => console.log(`File ${path} has been removed`))
-    .on('addDir', (path) => console.log(`Directory ${path} has been added`))
-    .on('unlinkDir', (path) => console.log(`Directory ${path} has been removed`))
+    .on('unlink', (fullPath) => {
+        console.log(`file ${fullPath} has been removed`)
+        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        console.log(`trimmedPath`, trimmedPath)
+        fetch(`http://54.90.126.40:9092/deleteNode`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
+        })
+    })
+    .on('addDir', (fullPath) => {
+        console.log(`Directory ${fullPath} has been added`)
+        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        console.log(`trimmedPath`, trimmedPath)
+        // const dirPath = trimmedPath.split('/')
+        const dir = path.dirname(trimmedPath);   // "/src/comp1"
+        const file = path.basename(trimmedPath);  // "index.js"
+
+        console.log(`dirPath`, dir)
+        console.log(`file`, file)
+        fetch(`http://54.90.126.40:9092/createFolder`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, folderName: file })
+        })
+    })
+    .on('unlinkDir', (fullPath) => {
+        console.log(`folder ${fullPath} has been removed`)
+        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        console.log(`trimmedPath`, trimmedPath)
+        fetch(`http://54.90.126.40:9092/deleteNode`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
+        })
+    })
     .on('error', (error) => console.log(`Watcher error: ${error}`))
     .on('ready', () => console.log('Initial scan complete. Ready for changes'))
-let watchedPaths = watcher.getWatched();
-console.log(watchedPaths, "watched path")
 
 // ======================== REGISTER PROJECT =====================
 app.get(`/register-project/:projectId`, (req, res) => {
