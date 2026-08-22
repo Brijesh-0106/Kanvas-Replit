@@ -256,7 +256,7 @@ export default function Project() {
                   Active Workspace
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-500 text-sm font-extrabold tracking-wide leading-none">
+                  <span className="text-amber-700 text-sm font-extrabold tracking-wide leading-none">
                     {projectName || "Untitled"}
                   </span>
                 </div>
@@ -279,8 +279,8 @@ export default function Project() {
                   height="100%"
                   onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                   className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                  // src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
-                  src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                  src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
+                  // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
                 />
               </div>
             )}
@@ -292,8 +292,8 @@ export default function Project() {
                     height="100%"
                     onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                    // src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
-                    src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                    src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
+                    // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
                   />
                 </div>
                 <div className="w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">

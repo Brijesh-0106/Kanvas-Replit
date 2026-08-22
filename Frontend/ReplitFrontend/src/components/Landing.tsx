@@ -8,7 +8,7 @@ import {
   MousePointer2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa6";
+import { FaGithub, FaTwitter } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 
 interface LandingProps {
@@ -371,7 +371,7 @@ export default function Landing({
 
         <div className="flex items-center gap-4 text-zinc-400">
           <a
-            href="https://github.com"
+            href="https://github.com/Brijesh-0106/Kanvas-Replit"
             target="_blank"
             rel="noreferrer"
             className="hover:text-white transition-colors"
@@ -379,20 +379,12 @@ export default function Landing({
             <FaGithub className="w-3.5 h-3.5" />
           </a>
           <a
-            href="https://twitter.com"
+            href="https://x.com/BrijeshShahDev"
             target="_blank"
             rel="noreferrer"
             className="hover:text-white transition-colors"
           >
             <FaTwitter className="w-3.5 h-3.5" />
-          </a>
-          <a
-            href="https://linkedin.com"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            <FaLinkedin className="w-3.5 h-3.5" />
           </a>
         </div>
       </footer>
