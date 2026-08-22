@@ -807,7 +807,7 @@ app.get("/rotate-token", async (req: Request, res: Response) => {
             return res.json({ status: 401, msg: "InValid Token" })
         }
         const payload = jwt.verify(refToken, process.env.SECRET_KEY as string)
-        const newAccessToken = jwt.sign(payload as string, process.env.SECRET_KEY as string, { expiresIn: "15m" })
+        const newAccessToken = jwt.sign(payload as string, process.env.SECRET_KEY as string, { expiresIn: "2m" })
         const newRefToken = jwt.sign(payload as string, process.env.SECRET_KEY as string, { expiresIn: "7d" })
         await prisma.session.update({
             where: { id: currSession.id },
@@ -844,7 +844,7 @@ app.post("/login", async (req, res) => {
                 }
             })
             res.cookie("refToken", refToken, { maxAge: 7 * 60 * 60 * 24 * 1000 })
-            let accessToken = jwt.sign({ id: user.id.toString() }, process.env.SECRET_KEY as string, { expiresIn: "15m" });
+            let accessToken = jwt.sign({ id: user.id.toString() }, process.env.SECRET_KEY as string, { expiresIn: "2m" });
             res.status(200).json({
                 msg: "Login Successfully",
                 token: accessToken,

@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
-import Navbar from "./Navbar";
 import {
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  Zap,
-  Cloud,
-  Activity,
-  Folder,
-  FolderOpen,
-  FileCode,
-  FileText,
-  Home,
-  Search,
-  Maximize2,
-  Minimize2,
-  Settings,
-  User,
-  Info,
-  AlertTriangle,
-  X,
-  CheckCircle,
+  Bot,
+  Network,
+  Server,
+  Zap
 } from "lucide-react";
+import { useState } from "react";
+import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa6";
+import Navbar from "./Navbar";
 import Pricing from "./Pricing";
+
+
 
 export default function Landing({
   setProjectModal,
@@ -33,241 +20,206 @@ export default function Landing({
   setLoginModal: (value: boolean) => void;
   setSignInModal: (value: boolean) => void;
 }) {
-  // Mockup IDE State
-  const [activeTab, setActiveTab] = useState<"dracula" | "index">("index");
-  const [mockupHover, setMockupHover] = useState(false);
-
-  // Auto-typing animation for the preview code
-  const indexJsCode = `// anc/index.js
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.json({
-    status: "online",
-    message: "Welcome to Kanvas Cloud IDE! 🎨",
-    heartbeat: "active"
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});`;
-
-  const packageJsonCode = `{
-  "name": "kanvas-workspace-project",
-  "version": "1.0.0",
-  "description": "Hosted on AWS EC2 ASG Pre-warmed VM Pool",
-  "main": "index.js",
-  "dependencies": {
-    "express": "^4.19.2",
-    "cors": "^2.8.5"
-  }
-}`;
+  const [activeFile, setActiveFile] = useState("index.js");
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#e4e4e7] font-sans overflow-x-hidden selection:bg-amber-600/30 selection:text-amber-200">
-      {/* Background Radial Gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-[600px] bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-purple-900/5 to-transparent blur-[120px] pointer-events-none -z-10" />
+    <div className="min-h-screen bg-[#080809] text-[#e4e4e7] font-sans overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
+      {/* Background Radial Ambient Glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-[700px] bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/15 via-orange-600/5 to-transparent blur-[140px] pointer-events-none -z-10" />
 
+      {/* Navigation Bar */}
       <Navbar
         setProjectModal={setProjectModal}
         setSignInModal={setSignInModal}
         setLoginModal={setLoginModal}
       />
 
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-24 pb-14 max-w-6xl mx-auto">
-
-        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-[#c3c2b7] via-zinc-200 to-zinc-400">
-          Code from <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 drop-shadow-[0_0_30px_rgba(245,158,11,0.15)]">anywhere.</span>
-          <br />
-          Ship from <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-500 drop-shadow-[0_0_30px_rgba(139,92,246,0.15)]">everywhere.</span>
+      {/* HERO SECTION */}
+      <section className="relative flex flex-col items-center justify-center text-center px-4 md:px-6 pt-20 pb-16 max-w-5xl mx-auto">
+        {/* Main Heading */}
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.15] max-w-4xl text-white">
+          Code at the{" "}
+          <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(245,158,11,0.35)]">
+            Speed of Thought.
+          </span>
         </h1>
 
-        <p className="mt-6 text-zinc-400 text-base md:text-lg max-w-2xl leading-relaxed">
-          Kanvas spins up instant, AWS EC2-backed VS Code workspaces in the cloud. No resource drain, no complex setups — just click and build.
+        {/* Subtitle */}
+        <p className="mt-6 text-zinc-400 text-sm md:text-base max-w-2xl leading-relaxed font-normal">
+          Kanvas spins up instant, zero-config cloud environments tailored to your
+          programming framework, dependencies, and sample code — just click and code.
         </p>
 
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 w-full justify-center">
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full justify-center">
           <button
             onClick={() => setSignInModal(true)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold px-8 py-4 rounded-xl text-sm transition-all duration-300 shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_30px_rgba(217,119,6,0.55)] hover:scale-105 cursor-pointer"
+            className="w-full sm:w-auto inline-flex text-white  bg-amber-700 items-center justify-center gap-3  font-bold px-4 py-3.5 rounded-xl text-sm transition-all duration-300 cursor-pointer"
           >
-            <span>Launch Free Workspace</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Search Free Workspace</span>
           </button>
+
           <button
             onClick={() => {
               const el = document.getElementById("features");
               if (el) el.scrollIntoView({ behavior: "smooth" });
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-900/60 text-zinc-300 hover:text-[#c3c2b7] px-8 py-4 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800/80 text-zinc-300 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all cursor-pointer"
           >
             <span>See Architecture</span>
           </button>
         </div>
 
-        {/* Realistic Interactive VS Code Web Workspace Mockup */}
-        <div
-          className="relative mt-14 group w-full max-w-5xl cursor-pointer"
-          onMouseEnter={() => setMockupHover(true)}
-          onMouseLeave={() => setMockupHover(false)}
-        >
-          {/* Ambient Glow behind frame */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-amber-500 via-orange-600 to-purple-600 rounded-2xl blur-3xl opacity-15 group-hover:opacity-30 transition duration-700 pointer-events-none" />
+        {/* IDE Preview / Workspace Window Mockup */}
+        <div className="relative mt-14 w-full max-w-5xl group">
+          {/* Subtle Outer Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-purple-500/20 rounded-2xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 pointer-events-none" />
 
-          {/* Main frame container with 3D Tilt */}
-          <div
-            className="w-full rounded-2xl border border-zinc-800/80 bg-[#1e1e1e] overflow-hidden flex flex-col"
-            style={{
-              transform: mockupHover
-                ? "perspective(1200px) rotateX(0deg) scale(1.01)"
-                : "perspective(1200px) rotateX(4deg) translateY(0)",
-              transformStyle: "preserve-3d",
-              transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease",
-              boxShadow: mockupHover
-                ? "0 35px 80px rgba(0,0,0,0.9), 0 0 40px rgba(245,158,11,0.08)"
-                : "0 25px 60px rgba(0,0,0,0.8), 0 0 25px rgba(245,158,11,0.03)",
-            }}
-          >
-
-            {/* Mockup Image Container */}
+          {/* Window Container */}
             <div className="relative overflow-hidden w-full h-auto">
               <img
-                src="/landing.png"
+                src="/image.png"
                 alt="Kanvas Editor Workspace Mockup"
                 className="w-full h-auto object-contain block"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#c3c2b7]/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-10 transition-opacity duration-700" />
             </div>
-          </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="px-6 py-16 max-w-6xl mx-auto relative border-t border-zinc-900/60">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/5 via-transparent to-transparent blur-[100px] pointer-events-none" />
-
-        <p className="text-center text-amber-500 text-xs uppercase tracking-widest font-semibold mb-3">
-          Platform Architecture
-        </p>
-        <h2 className="text-center text-3xl md:text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-b from-[#c3c2b7] to-zinc-400">
+      {/* FEATURES SECTION HEADER ("Engineered for cloud IDE scale") */}
+      <section id="features" className="px-4 md:px-6 py-20 max-w-6xl mx-auto text-center border-t border-zinc-900/80">
+        <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
           Engineered for cloud IDE scale
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: <Zap className="w-6 h-6 text-amber-500" />,
-              title: "Pre-Warmed Pool Scaling",
-              desc: "AWS Auto Scaling Groups maintain a standby layer of warm EC2 instances, reducing workspace allocation latency down to milliseconds.",
-            },
-            {
-              icon: <Cloud className="w-6 h-6 text-blue-500" />,
-              title: "EC2-Backed Workspaces",
-              desc: "Every workspace runs inside dedicated cloud virtual machines equipped with custom proxy-exposed ports, code-server, and Docker layers.",
-            },
-            {
-              icon: <Activity className="w-6 h-6 text-purple-500" />,
-              title: "Active-Heartbeat Sweep",
-              desc: "Intelligent background daemon monitors user interaction. When you close the browser, our system automatically claims back unused resources.",
-            },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="relative overflow-hidden group bg-zinc-950/40 border border-zinc-900/80 hover:border-amber-500/20 rounded-2xl p-8 hover:bg-zinc-900/10 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.4)]"
-            >
-              <div className="w-12 h-12 rounded-xl bg-zinc-900/80 border border-zinc-800/80 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                {f.icon}
-              </div>
-              <h3 className="text-[#c3c2b7] text-lg font-bold mb-3 group-hover:text-amber-500 transition-colors">
-                {f.title}
-              </h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                {f.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Runtimes Section */}
-      <section className="px-6 py-12 border-t border-zinc-900/60 max-w-6xl mx-auto">
-        <p className="text-center text-zinc-500 text-sm mb-8 uppercase tracking-widest font-mono">
-          Ready-To-Code Runtimes
+        <p className="text-zinc-400 text-xs md:text-sm max-w-2xl mx-auto leading-relaxed mb-16">
+          Our cloud backend dynamically orchestrates complex workspace topologies, ensuring maximum isolation, precise state management, and seamless repository integration for every project and tenant.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { name: "Node.js", desc: "Express, TypeScript, NPM", badge: "v20" },
-            { name: "React", desc: "Vite, Tailwind, Router", badge: "v19" },
-            { name: "Python", desc: "FastAPI, Pipenv, NumPy", badge: "v3.11" },
-            { name: "Java", desc: "Java, SDK", badge: "v17" },
-          ].map((r) => (
-            <div
-              key={r.name}
-              className="bg-zinc-950/30 border border-zinc-900/80 rounded-xl p-5 hover:border-zinc-800 transition-colors text-left"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[#c3c2b7] font-bold">{r.name}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono">
-                  {r.badge}
-                </span>
-              </div>
-              <p className="text-zinc-500 text-xs leading-relaxed">{r.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Key Innovation Panel */}
-      <section className="px-6 py-10 max-w-5xl mx-auto">
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-r from-amber-950/20 via-orange-950/10 to-zinc-950/60 p-8 md:p-12 shadow-[0_10px_40px_rgba(245,158,11,0.05)]">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/5 blur-[80px] rounded-full pointer-events-none" />
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-left space-y-4 max-w-xl">
-              <div className="inline-flex items-center gap-1.5 text-amber-500 text-xs font-mono uppercase tracking-wider">
-                <Activity className="w-3.5 h-3.5 animate-pulse" />
-                <span>Zero Cost Waste</span>
-              </div>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-[#c3c2b7]">
-                Save 90% cloud bill with Active-Heartbeat Hibernation
-              </h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                When you close your workspace tab, our background lifecycle agent detects the connection loss. The system automatically terminates the EC2 instance, preserving project state in EBS snapshots so you pay only for active coding time.
-              </p>
+        {/* 2x2 FEATURES GRID CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-5xl mx-auto">
+          {/* Card 1: AI-Powered Autonomous Agent */}
+          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-amber-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-amber-500/5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 text-amber-400 group-hover:scale-110 transition-transform">
+              <Bot className="w-5 h-5" />
             </div>
-            <div className="flex flex-col gap-2 items-center bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-6 min-w-[240px]">
-              <div className="text-zinc-500 text-xs font-mono mb-2 uppercase">Lifecycle status</div>
-              <div className="flex items-center gap-2 text-emerald-400 font-mono text-sm">
-                <CheckCircle className="w-4 h-4" />
-                <span>Saved to EBS</span>
-              </div>
-              <div className="text-2xl font-black text-[#c3c2b7] mt-1">Idle Sleep</div>
-              <div className="text-[10px] text-zinc-500 mt-1">Automatic ASG scale-down</div>
+            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-amber-400 transition-colors">
+              AI-Powered Agent Integration
+            </h3>
+            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+              Built-in intelligent AI assistant that contextually understands your workspace, executes terminal commands, writes code, and automates debugging in real-time.
+            </p>
+          </div>
+
+          {/* Card 2: Project Isolated Partitions */}
+          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-amber-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-amber-500/5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 text-amber-400 group-hover:scale-110 transition-transform">
+              <Zap className="w-5 h-5" />
             </div>
+            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-amber-400 transition-colors">
+              Project Isolated Partitions
+            </h3>
+            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+              Every project runs in its own secure, sandboxed container with dedicated compute and memory allocation, ensuring performance and stability for all users.
+            </p>
+          </div>
+
+          {/* Card 3: Multi-Region Architecture */}
+          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-purple-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-purple-500/5">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform">
+              <Network className="w-5 h-5" />
+            </div>
+            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-purple-400 transition-colors">
+              Multi-Region Architecture
+            </h3>
+            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+              Seamlessly manage complex multi-page repositories across regions, ensuring optimal latency, distributed workspaces, and instant state replication.
+            </p>
+          </div>
+
+          {/* Card 4: Custom Proxy Layers */}
+          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-blue-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-blue-500/5">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
+              <Server className="w-5 h-5" />
+            </div>
+            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-blue-400 transition-colors">
+              Custom Proxy Layers
+            </h3>
+            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+              Advanced networking with custom exposed ports and webhooks dynamically provisioned for every project environment, routing requests safely over HTTPS.
+            </p>
           </div>
         </div>
+
       </section>
 
+      {/* PRICING SECTION */}
       <Pricing />
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-900/80 px-8 py-8 bg-zinc-950/40">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-zinc-500 text-xs">
-          <div className="flex gap-2 items-center">
-            <div className="w-6 h-6 bg-gradient-to-r from-amber-600 to-orange-600 rounded-md flex items-center justify-center">
-              <span className="text-[#c3c2b7] font-bold text-xs">K</span>
+      {/* ABOUT / FOOTER SECTION */}
+      <footer id="about" className="border-t border-zinc-900 bg-[#060607] p-8">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 text-left mb-2">
+          {/* Brand Col */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-tr from-amber-600 to-orange-500 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                  <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity="0.5" />
+                  <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity="0.5" />
+                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                </svg>
+              </div>
+              <span className="text-lg font-bold tracking-tight text-[#c3c2b7]">KANVAS</span>
             </div>
-            <span className="text-[#c3c2b7] font-bold text-base">Kanvas</span>
+            <p className="text-zinc-400 text-xs leading-relaxed">
+              Next-generation cloud IDE platform built for modern cloud development and instant workspace provisioning.
+            </p>
           </div>
-          <span className="text-zinc-600 font-mono">
-            Designed for developers. Backed by ☁️ AWS ASG & code-server.
-          </span>
+
+          {/* Product Links */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider mb-4 text-[#c3c2b7]">PRODUCT</h4>
+            <ul className="space-y-2 text-xs text-zinc-400">
+              <li><a href="#features" className="hover:text-amber-400 transition-colors">Features</a></li>
+              <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a></li>
+              <li><a href="#features" className="hover:text-amber-400 transition-colors">Workspaces</a></li>
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h4 className="text-[#c3c2b7] text-xs font-bold uppercase tracking-wider mb-4">COMPANY</h4>
+            <ul className="space-y-2 text-xs text-zinc-400">
+              <li><a href="#about" className="hover:text-amber-400 transition-colors">About</a></li>
+              <li><a href="#about" className="hover:text-amber-400 transition-colors">Careers</a></li>
+              <li><a href="#about" className="hover:text-amber-400 transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          {/* Resources Links */}
+          <div>
+            <h4 className="text-[#c3c2b7] text-xs font-bold uppercase tracking-wider mb-4">RESOURCES</h4>
+            <ul className="space-y-2 text-xs text-zinc-400">
+              <li><a href="#features" className="hover:text-amber-400 transition-colors">Documentation</a></li>
+              <li><a href="#features" className="hover:text-amber-400 transition-colors">Guides</a></li>
+              <li><a href="#features" className="hover:text-amber-400 transition-colors">API Reference</a></li>
+            </ul>
+          </div>
         </div>
+
+        {/* Bottom Bar */}
       </footer>
+        <div className="mx-auto p-4 bg-[#2c2c2a] border-t border-zinc-900/80 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-zinc-500">
+          <p>© 2026 Kanvas System Inc. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-zinc-400">
+            <FaGithub className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
+            <FaTwitter className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
+            <FaLinkedin className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
+          </div>
+        </div>
     </div>
   );
 }
+
