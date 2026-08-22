@@ -36,7 +36,7 @@ export const createFolder = async ({ projectId, folderPath, folderName }: { proj
 };
 
 export const deleteItem = async ({ projectId, path }: { projectId: string, path: string }) => {
-    const project = await prisma.project.findFirst({ where: { projectId } });
+    const project = await prisma.project.findFirst({ where: { id: projectId } });
 
     const newFileTree = deleteNode(project?.fileTree || {}, path);
 

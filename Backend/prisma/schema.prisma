@@ -26,13 +26,13 @@ model session {
 }
 
 model User {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  email        String    @unique
-  password     String
-  projects     Project[]
-  maxProject   Int       @default(2)
-  aiProjectCnt Int       @default(0)
-  sessions     session[]
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  email           String    @unique
+  password        String
+  projects        Project[]
+  maxProject      Int       @default(2)
+  maxAiProjectCnt Int       @default(1)
+  sessions        session[]
 }
 
 model File {

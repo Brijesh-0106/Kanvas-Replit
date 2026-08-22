@@ -319,7 +319,7 @@ function DashboardPage({
             setLoginModal={setLoginModal}
           />
         </div>
-        <div className="userProjectsSection flex-1 overflow-y-auto px-4 py-8 md:px-15 md:py-18 bg-[#1e1e1f]">
+        <div className="userProjectsSection flex-1 overflow-y-auto py-8 md:px-10 md:py-18 bg-[#1e1e1f]">
           <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-5 gap-1">
             <GoProjectSymlink /> Projects
           </h1>

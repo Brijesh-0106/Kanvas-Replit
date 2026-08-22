@@ -42,11 +42,13 @@ const middleAuth = async (req: Request, res: Response, next: NextFunction) => {
         }
         const payload = await jwt.verify(token, process.env.SECRET_KEY as string)
         if (payload) {
+            console.log(payload)
             const blackListed = await redis.get(`blackList:${token}`)
             if (blackListed) {
                 return res.status(401).send('Token has expired');
             }
-            req.userId = (payload as { id: string }).id
+            let temp = payload as { id: string }
+            req.userId = temp.id
             next()
         } else {
             console.log(payload, "check middle auth jwt verify failed")
@@ -184,6 +186,7 @@ setInterval(async () => {
         console.log("stale")
         const lastPingTime: number = Date.now() - Number(machine!.lastHeartBeat)
         if (lastPingTime > Number(process.env.GRACE_PERIOD ?? 0)) {
+            console.log("\n\n")
             console.log("**************** DEAD MACHINE INTERVAL **************")
             const proj = await prisma.project.findFirst({
                 where: {
@@ -202,20 +205,6 @@ setInterval(async () => {
                     })
                 }
             }
-            // await prisma.project.create({
-            //     data: {
-            //         ip: machine.ip!,
-            //         projectId: machine.projectId!,
-            //         projectName: machine.projectName!,
-            //         projectType: machine.projectType!,
-            //         instanceId: machine.instanceId!,
-            //         isUsed: true,
-            //         publicDnsName: machine.publicDnsName!,
-            //         userId: machine.userId!,
-            //         s3Key: `projects/ + ${machine.userId} + / + ${machine.projectId}.zip`,
-            //         ...(machine.assignedAt && { assignedAt: new Date(machine.assignedAt) })
-            //     }
-            // })
             fetch(`http://${machine.publicDnsName}:3001/store-project`, {
                 method: "POST",
                 headers: {
@@ -223,24 +212,8 @@ setInterval(async () => {
                 },
                 body: JSON.stringify({ userId: machine.userId, projectId: machine.projectId })
             })
-            // const foundUser = await prisma.user.findFirst({
-            //     where: {
-            //         id: machine.userId! as unknown as string
-            //     }
-            // })
             const cacheKey = `cache:user:${machine.userId!}:projects`;
             await redis.del(cacheKey)
-            // const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
-            // await prisma.user.update({
-            //     where: {
-            //         id: machine.userId! as unknown as string
-            //     },
-            //     data: {
-            //         projects: {
-            //             set: remainingProjects
-            //         }
-            //     }
-            // })
             await redis.del(`ALL_MACHINES:${instanceId!}`)
             await redis.srem(`ALL_INSTANCES`, instanceId!)
             const termiInstancecommand = new TerminateInstanceInAutoScalingGroupCommand({
@@ -257,6 +230,7 @@ setInterval(async () => {
 
 // ===================================== DEV API
 app.get("/test", (req, res) => {
+    console.log("\n\n")
     console.log("**************** TEST ENDPOINT **************")
     res.json({ message: "Healthy" })
 })
@@ -291,6 +265,7 @@ app.get('/chat-history/:projectId', async (req, res) => {
 })
 // ===================================== HEARTBEAT
 app.get("/heartBeat/:instanceId", middleAuth, async (req: Request, res: Response) => {
+    console.log("\n\n")
     console.log("**************** HEARTBEAT ENDPOINT **************")
     const { instanceId } = req.params
     try {
@@ -311,6 +286,7 @@ app.get("/verifyToken", middleAuth, (req, res) => {
     try {
         res.status(200).json({ message: "Token is valid" })
     } catch (err) {
+        console.log("verifyToken:", err)
         res.json({
             status: 401, msg: "Token expired"
         })
@@ -318,6 +294,7 @@ app.get("/verifyToken", middleAuth, (req, res) => {
 })
 // ============================================================== ALL PROJECTS FOR USER
 app.get("/fetchProjects", middleAuth, async (req, res) => {
+    console.log("\n\n")
     console.log("**************** FETCH PROJECTS ENDPOINT **************")
     const cacheKey = `cache:user:${req.userId!}:projects`;
 
@@ -327,48 +304,25 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
             console.log("Cache Hit");
             return res.status(200).json(JSON.parse(cachedProjects));
         }
-
         console.log("Cache Miss - Fetching from DB");
-        // const user = await prisma.user.findFirst({
-        //     where: {
-        //         id: req.userId as unknown as string
-        //     },
-        // })
+        console.log(req.userId)
         const allProjects = await prisma.project.findMany({
             where: {
                 userId: req.userId as unknown as string
             }
         })
-        // let userProjects: any[] = [];
-        // for (const instanceId of user?.projects!) {
-        //     console.log(instanceId)
-        //     const userMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-        //     console.log(userMachine, "userMachine")
-        //     if (Object.keys(userMachine).length > 0) {
-        //         const machine = {
-        //             ...userMachine,
-        //             isUsed: userMachine.isUsed === "true",
-        //             lastHeartBeat: userMachine.lastHeartBeat
-        //                 ? Number(userMachine.lastHeartBeat)
-        //                 : undefined,
-        //         };
-        //         console.log(machine, "machine")
-        //         userProjects.push(machine);
-        //     }
-        // }
-        // userProjects = userProjects.concat(staleProjects)
-        // userProjects = [...userProjects]
         await redis.set(cacheKey, JSON.stringify(allProjects), 'EX', 300);
         res.status(200).json(allProjects)
         return
     } catch (error) {
-        console.error('Google auth error:', error);
+        console.error('fetchProjects:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 })
 // ============================================================== DELETE PROJECT
 app.post("/deleteProject", middleAuth, async (req, res) => {
     try {
+        console.log("\n\n")
         console.log("**************** DELETE ENDPOINT **************")
         const machine: machine = req.body
         const foundProject = await prisma.project.findFirst({
@@ -393,18 +347,6 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
                 })
             }
         }
-        // const remainingProjects = foundUser?.projects.filter((elem) => elem != machine.instanceId) ?? []
-        // const user = await prisma.user.update({
-        //     where: {
-        //         id: req.userId as unknown as string
-        //     },
-        //     data: {
-        //         projects: {
-        //             set: remainingProjects
-        //         }
-        //     }
-        // })
-
         await redis.del(`ALL_MACHINES:${machine.instanceId!}`)
         await redis.srem(`ALL_INSTANCES`, machine.instanceId!)
         const cacheKey = `cache:user:${req.userId!}:projects`;
@@ -417,13 +359,14 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
         res.status(200).json({ msg: "Project Deleted Successfully" })
         return
     } catch (error) {
-        console.error('Google auth error:', error);
+        console.error('deleteProject:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 
 })
 // =========================================================== ASSIGN STALE
 app.post("/assign-stale", middleAuth, async (req, res) => {
+    console.log("\n\n")
     console.log("************** STALE PROJECT ASSIGN *****************")
     try {
         const cacheKey = `cache:user:${req.userId!}:projects`;
@@ -493,16 +436,6 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
                 isStale: false, s3Key: ""
             }
         })
-        // await prisma.user.update({
-        //     where: {
-        //         id: req.userId as unknown as string
-        //     },
-        //     data: {
-        //         projects: {
-        //             push: foundMachine?.instanceId as unknown as string
-        //         }
-        //     }
-        // })
         let usedMachines = 0
         for (const instanceId of ALL_INSTANCES) {
             const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
@@ -516,13 +449,39 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
         res.json(foundMachine)
         return
     } catch (error) {
-        console.error('Google auth error:', error);
+        console.error('assign stale:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 })
+// ============= UPDATE ALL FILES =============
+app.post("/updateFiles", async (req, res) => {
+    try {
+        console.log("\n\n")
+        console.log("**************** SYNC FILETREE ENDPOINT **************")
+        const { fileTree, projectId } = req.body;
+        console.log(fileTree, projectId, "filetree")
+        const project = await prisma.project.update({
+            where: { id: projectId }, data: { fileTree: fileTree }
+        })
+
+        await indexChangedFiles(project, fileTree);
+
+        return res.status(200).json({
+            project,
+        });
+    } catch (error) {
+        console.log("update files:", error);
+        return res.status(500).json({
+            error: error,
+        });
+    }
+})
+
 // ============= NEW FILE FROM PARASITE =============
 app.post("/createFile", async (req, res) => {
     try {
+        console.log("\n\n")
+        console.log("**************** CREATE FILE ENDPOINT **************")
         const { folderPath, projectId, fileName } = req.body;
         console.log(folderPath, projectId, fileName, "create file")
         const fileTree = await projectService.createFile({
@@ -532,13 +491,15 @@ app.post("/createFile", async (req, res) => {
         });
         res.status(200).json({ fileTree });
     } catch (err) {
-        console.error(err); // ← add this to see the REAL error in your logs
+        console.error("createFile", err); // ← add this to see the REAL error in your logs
         res.status(400).json({ error: err });
     }
 })
 // ============= NEW FOLDER FROM PARASITE =============
 app.post("/createFolder", async (req, res) => {
     try {
+        console.log("\n\n")
+        console.log("**************** CREATE FOLDER ENDPOINT **************")
         const { folderPath, projectId, folderName } = req.body;
         console.log(folderPath, projectId, folderName, "create file")
         const fileTree = await projectService.createFolder({
@@ -548,12 +509,15 @@ app.post("/createFolder", async (req, res) => {
         });
         res.status(200).json({ fileTree });
     } catch (err) {
+        console.log("createFolder: ", err)
         res.status(400).json({ error: err });
     }
 })
 // ============= DELETE ITEM FROM PARASITE =============
 app.post("/deleteNode", async (req, res) => {
     try {
+        console.log("\n\n")
+        console.log("**************** DELETE ENDPOINT **************")
         const { folderPath, projectId } = req.body;
         console.log(folderPath, projectId, "create file")
         const fileTree = await projectService.deleteItem({
@@ -562,11 +526,14 @@ app.post("/deleteNode", async (req, res) => {
         });
         res.status(200).json({ fileTree });
     } catch (err) {
+        console.log("deleteNode: ", err)
         res.status(400).json({ error: err });
     }
 })
 // ===================== SEND MSG ====================
 app.post("/send-message", middleAuth, async (req, res) => {
+    console.log("\n\n")
+    console.log("**************** SEND MSG ENDPOINT **************")
     const { msg, projectId }: { msg: string, projectId: string } = req.body
     console.log(msg)
     const usrMsg = await prisma.message.create({
@@ -613,27 +580,39 @@ app.post("/send-message", middleAuth, async (req, res) => {
 app.get("/assign/:projName", middleAuth, async (req, res) => {
     const cacheKey = `cache:user:${req.userId!}:projects`;
     try {
+        console.log("\n\n")
         console.log("******************* ASSIGN METHOD ***************")
 
         await redis.del(cacheKey);
         const { projName } = req.params;
         const { proType } = req.query
+        console.log(proType);
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
+            }, include: {
+                projects: true
             }
         })
+        console.log(user);
+        const existingProjects = user?.projects
         if (user) {
             if (user.id) {
                 const projects = await prisma.project.findMany({ where: { userId: user?.id } })
-
+                console.log(projects, "user projects")
                 if (projects.length! >= user?.maxProject!) {
                     res.status(405).json({
                         message: "Free plan limit reached. Either delete a project or upgrade to premium.",
                     })
                     return
                 }
-                if (proType == 'AI' && user?.aiProjectCnt && user?.aiProjectCnt > 0) {
+                let aiCurrentCount = 0;
+                projects.map((elem) => {
+                    if (elem.projectType == 'AI') {
+                        aiCurrentCount = aiCurrentCount + 1;
+                    }
+                })
+                if (proType == 'AI' && aiCurrentCount >= user.maxAiProjectCnt) {
                     res.status(405).json({
                         message: "Free plan AI Project limit reached. Either delete a AI project or upgrade to premium.",
                     })
@@ -643,7 +622,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                 let machinePublicDNSName;
                 const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
                 console.log(ALL_INSTANCES, "ALL_MACHINES")
-
+                let newProject = null
                 for (const instanceId of ALL_INSTANCES) {
                     const claimed = await redis.hsetnx(`ALL_MACHINES:${instanceId}`, "userId", req.userId!);
                     if (claimed === 1) {
@@ -653,7 +632,8 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                             continue;
                         }
                         machinePublicDNSName = singleMachine.publicDnsName!
-                        const project = await prisma.project.create({
+                        console.log(req.userId, "check")
+                        newProject = await prisma.project.create({
                             data: {
                                 ip: singleMachine.ip!,
                                 publicDnsName: singleMachine.publicDnsName!,
@@ -674,7 +654,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                             userId: req.userId!,
                             lastHeartBeat: Date.now().toString(),
                             projectName: projName as string,
-                            projectId: project.id,
+                            projectId: newProject.id,
                             instanceId: singleMachine.instanceId
                         };
 
@@ -698,16 +678,6 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                     })
                     return
                 }
-                // await prisma.user.update({
-                //     where: {
-                //         id: req.userId as unknown as string
-                //     },
-                //     data: {
-                //         projects: {
-                //             push: machine?.instanceId as unknown as string
-                //         }
-                //     }
-                // })
                 fetch(`http://${machinePublicDNSName}:3001/register-project/${machine?.projectId}`)
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {
@@ -724,13 +694,15 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
             }
         }
     } catch (error) {
-        console.error('Google auth error:', error);
+        console.error('Assign project:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 })
 // ============================================================= GOOGLE AUTH
 app.post("/v0/api/google", async (req: Request, res: Response) => {
     try {
+        console.log("\n\n")
+        console.log("**************** GOOGLE AUTH ENDPOINT **************")
         const { token } = req.body;
 
         if (!token) {
@@ -778,6 +750,8 @@ app.post("/v0/api/google", async (req: Request, res: Response) => {
 // ============================================================== LOGOUT
 app.get("/logout", async (req: Request, res: Response) => {
     try {
+        console.log("\n\n")
+        console.log("**************** LOGOUT ENDPOINT **************")
         const refToken = req.cookies.refToken
         if (!refToken) {
             return res.json({
@@ -815,6 +789,8 @@ app.get("/logout", async (req: Request, res: Response) => {
 // ============================================================== ROTATE TOKEN
 app.get("/rotate-token", async (req: Request, res: Response) => {
     try {
+        console.log("\n\n")
+        console.log("**************** ROTATE TOKEN ENDPOINT **************")
         const refToken = req.cookies.refToken
         if (!refToken) {
             return res.json({
@@ -843,7 +819,7 @@ app.get("/rotate-token", async (req: Request, res: Response) => {
         console.log(refToken)
         res.json({ status: 200, token: newAccessToken })
     } catch (err) {
-        console.log(err);
+        console.log("ROTATE TOKEN:", err);
         res.status(500).json({ err })
         return
     }
@@ -853,6 +829,8 @@ app.get("/rotate-token", async (req: Request, res: Response) => {
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
+        console.log("\n\n")
+        console.log("**************** LOGIN ENDPOINT **************")
         const user = await prisma.user.findFirst({
             where: {
                 email, password
@@ -880,7 +858,7 @@ app.post("/login", async (req, res) => {
             return
         }
     } catch (err) {
-        console.log(err);
+        console.log("login:", err);
         res.status(500).json({ err })
         return
     }
@@ -889,6 +867,8 @@ app.post("/login", async (req, res) => {
 app.post("/signIn", async (req, res) => {
     const { email, password } = req.body;
     try {
+        console.log("\n\n")
+        console.log("**************** SIGNIN ENDPOINT **************")
         const user = await prisma.user.findFirst({
             where: {
                 email: email
@@ -907,7 +887,7 @@ app.post("/signIn", async (req, res) => {
             return
         }
     } catch (err) {
-        console.log(err);
+        console.log("signIn:", err);
         res.status(500).json({ err })
         return
     }

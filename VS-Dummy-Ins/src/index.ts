@@ -13,7 +13,27 @@ const watcher = chokidar.watch('/tmp/project').on('all', (event, path) => {
     console.log(event, path);
 });
 
+function folderToJson(dirPath: any) {
+    const result: any = {};
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
 
+    for (const entry of entries) {
+
+        const fullPath = path.join(dirPath, entry.name);
+
+        if (entry.isDirectory()) {
+            result[entry.name] = folderToJson(fullPath); // directory → recurse
+        } else {
+            result[entry.name] = {
+                file: {
+                    contents: fs.readFileSync(fullPath, 'utf-8') // ✅ WebContainer format
+                }
+            };
+        }
+    }
+
+    return result;
+}
 
 function writeFileTree(tree: any, basePath: any) {
     for (const [name, node] of Object.entries(tree)) {
@@ -50,7 +70,7 @@ app.get("/test", async (req: Request, res: Response) => {
         msg: "Working"
     })
 })
-
+let timeout: any = null
 watcher
     .on('add', (fullPath) => {
         console.log(`File ${fullPath} has been added`)
@@ -68,7 +88,25 @@ watcher
             body: JSON.stringify({ folderPath: dir, projectId: currProjectId, fileName: file })
         })
     })
-    .on('change', (path) => console.log(`File ${path} has been changed`))
+    .on('change', (path) => {
+        console.log(`File ${path} has been changed`)
+        if (timeout)
+            clearTimeout(timeout)
+        timeout = setTimeout(async () => {
+
+            const files = folderToJson("/tmp/project");
+            console.log(files, "files")
+            try {
+                fetch(`http://54.90.126.40:9092/updateFiles`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ fileTree: files, projectId: currProjectId })
+                })
+            } catch (error) {
+                console.error(error);
+            }
+        }, 500);
+    })
     .on('unlink', (fullPath) => {
         console.log(`file ${fullPath} has been removed`)
         const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
@@ -105,7 +143,6 @@ watcher
             body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
         })
     })
-    .on('error', (error) => console.log(`Watcher error: ${error}`))
     .on('ready', () => console.log('Initial scan complete. Ready for changes'))
 
 // ======================== REGISTER PROJECT =====================

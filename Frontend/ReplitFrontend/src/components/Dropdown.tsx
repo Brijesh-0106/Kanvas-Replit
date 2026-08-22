@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaJava, FaNodeJs, FaPython, FaReact } from "react-icons/fa";
 import { LuCheck, LuChevronDown, LuFilter } from "react-icons/lu";
+import { RiAi } from "react-icons/ri";
 
 const options = [
   {
@@ -27,6 +28,11 @@ const options = [
     label: "Java",
     icon: <FaJava className="text-red-500" />,
     value: "Java",
+  },
+  {
+    label: "AI",
+    icon: <RiAi className="text-red-500" />,
+    value: "AI",
   },
 ];
 
