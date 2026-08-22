@@ -101,27 +101,17 @@ export default function Login({
           <span className="text-white font-bold text-lg">K</span>
         </div> */}
         <div className="flex gap-1 mb-4">
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              background: "#f97316",
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+              <rect x="1" y="1" width="5" height="5" rx="1" fill="#e4e4e7" />
               <rect
                 x="8"
                 y="1"
                 width="5"
                 height="5"
                 rx="1"
-                fill="white"
-                opacity="0.5"
+                fill="#e4e4e7"
+                opacity="0.4"
               />
               <rect
                 x="1"
@@ -129,16 +119,16 @@ export default function Login({
                 width="5"
                 height="5"
                 rx="1"
-                fill="white"
-                opacity="0.5"
+                fill="#e4e4e7"
+                opacity="0.4"
               />
-              <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+              <rect x="8" y="8" width="5" height="5" rx="1" fill="#e4e4e7" />
             </svg>
           </div>
-          <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
+          <h1 className="text-amber-700 text-xl  font-bold">Kanvas</h1>
         </div>
 
-        <h2 className="text-white text-2xl font-bold">Welcome back</h2>
+        <h2 className="text-[#c3c2b7] text-2xl font-bold">Welcome back</h2>
         <p className="text-gray-400 text-sm mt-1">
           Log in to your Kanvas account
         </p>
@@ -245,7 +235,7 @@ export default function Login({
             </p>
           )}
         </div>
-        <button className="w-full bg-blue-600 cursor-pointer hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-medium transition-all">
+        <button className="w-full bg-blue-600 cursor-pointer hover:bg-blue-500 text-[#c3c2b7] hover:text-white py-3 rounded-xl text-sm font-medium transition-all">
           Log in
         </button>
       </form>
@@ -256,7 +246,7 @@ export default function Login({
       <p className="text-center text-gray-500 text-xs mt-6">
         Don't have an account?{" "}
         <Link
-          to="/sign-up"
+          to="/"
           onClick={changeModal}
           className="text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
         >

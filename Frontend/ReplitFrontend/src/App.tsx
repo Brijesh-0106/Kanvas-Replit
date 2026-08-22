@@ -104,7 +104,16 @@ function App() {
         {showAlert && <Alert type={alertType} title={alertMsg} />}
         <Routes>
           <Route path="/project" element={<Project />} />
-          <Route path="/pricing" element={<Pricing />} />
+          <Route
+            path="/pricing"
+            element={
+              <Pricing
+                setProjectModal={setProjectModal}
+                setLoginModal={setLoginModal}
+                setSignInModal={setSignInModal}
+              />
+            }
+          />
           <Route
             path="/"
             element={

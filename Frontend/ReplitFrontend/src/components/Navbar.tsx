@@ -27,29 +27,19 @@ export default function Navbar({
 
   return (
     <>
-      <div className="bg-[#2c2c2a] px-3 md:px-8 w-screen h-16 flex items-center justify-between border-b border-[#c3c2b7]/10">
-        <div className="leftSideNav flex gap-1 items-center">
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              background: "#f97316",
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+      <div className="bg-[#0a0a0c] border-b border-zinc-800/80 px-3 md:px-8 w-screen h-16 flex items-center justify-between ">
+        <div className="leftSideNav flex gap-2.5 items-center">
+          <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+              <rect x="1" y="1" width="5" height="5" rx="1" fill="#e4e4e7" />
               <rect
                 x="8"
                 y="1"
                 width="5"
                 height="5"
                 rx="1"
-                fill="white"
-                opacity="0.5"
+                fill="#e4e4e7"
+                opacity="0.4"
               />
               <rect
                 x="1"
@@ -57,20 +47,24 @@ export default function Navbar({
                 width="5"
                 height="5"
                 rx="1"
-                fill="white"
-                opacity="0.5"
+                fill="#e4e4e7"
+                opacity="0.4"
               />
-              <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+              <rect x="8" y="8" width="5" height="5" rx="1" fill="#e4e4e7" />
             </svg>
           </div>
           {(token == "" || token == undefined) && (
             <Link to="/">
-              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
+              <span className="text-base font-semibold tracking-tight text-amber-700">
+                Kanvas
+              </span>
             </Link>
           )}
           {!(token == "" || token == undefined) && (
             <Link to="/dashboard">
-              <h1 className="text-[#c3c2b7] text-xl font-bold">Kanvas</h1>
+              <span className="text-base font-semibold tracking-tight text-amber-700">
+                Kanvas
+              </span>
             </Link>
           )}
         </div>
@@ -78,14 +72,14 @@ export default function Navbar({
           {(token == "" || token == undefined) && (
             <>
               <button
-                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600 px-3 py-2 rounded-xl font-medium transition-all"
                 onClick={() => setLoginModal(true)}
+                className="text-xs border sm:text-sm text-amber-700 hover:border-amber-700 px-3 py-1.5 rounded-md font-medium cursor-pointer transition-colors"
               >
-                Login
+                Log In
               </button>
               <button
-                className="text-[#c3c2b7] font-bold bg-amber-700  hover:border-amber-700 cursor-pointer px-3 py-2 rounded-md transition-all"
                 onClick={() => setSignInModal(true)}
+                className=" hover:bg-white text-zinc-950 bg-amber-700 text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-md transition-all cursor-pointer shadow-sm"
               >
                 Create Account
               </button>
@@ -95,13 +89,13 @@ export default function Navbar({
             <>
               <button
                 onClick={() => setProjectModal(true)}
-                className="border md:border-[#2c2c2a] outline-0 hover:border-amber-600 text-md cursor-pointer text-amber-600  px-3 py-2  rounded-xl font-medium transition-all"
+                className="text-xs border sm:text-sm text-amber-700 hover:border-amber-700 px-3 py-1.5 rounded-md font-medium cursor-pointer transition-colors"
               >
                 New Project
               </button>
               <button
                 onClick={logOut}
-                className="border border-red-800 text-[#c3c2b7] bg-red-700  text-md cursor-pointer  py-2 px-3 rounded-xl font-medium transition-all"
+                className=" hover:bg-white text-zinc-950 bg-amber-700 text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-md transition-all cursor-pointer shadow-sm"
               >
                 Logout
               </button>

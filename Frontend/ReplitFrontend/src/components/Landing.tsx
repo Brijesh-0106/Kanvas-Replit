@@ -1,225 +1,401 @@
 import {
-  Bot,
-  Network,
-  Server,
-  Zap
+  ArrowRight,
+  Cloud,
+  Code2,
+  Cpu,
+  Layers,
+  Lightbulb,
+  MousePointer2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa6";
-import Navbar from "./Navbar";
-import Pricing from "./Pricing";
+import { Link } from "react-router-dom";
 
-
+interface LandingProps {
+  setProjectModal: (value: boolean) => void;
+  setLoginModal: (value: boolean) => void;
+  setSignInModal: (value: boolean) => void;
+}
 
 export default function Landing({
   setProjectModal,
   setLoginModal,
   setSignInModal,
-}: {
-  setProjectModal: (value: boolean) => void;
-  setLoginModal: (value: boolean) => void;
-  setSignInModal: (value: boolean) => void;
-}) {
-  const [activeFile, setActiveFile] = useState("index.js");
+}: LandingProps) {
+  const [stage, setStage] = useState<number>(1);
+  const [isClicking, setIsClicking] = useState<boolean>(false);
+  const [token, setToken] = useState<string>("");
+
+  useEffect(() => {
+    setToken(localStorage.getItem("token") ?? "");
+  }, []);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    if (stage === 1) {
+      setIsClicking(false);
+      timer = setTimeout(() => setStage(2), 2000);
+    } else if (stage === 2) {
+      timer = setTimeout(() => setStage(3), 2000);
+    } else if (stage === 3) {
+      timer = setTimeout(() => setStage(4), 2000);
+    } else if (stage === 4) {
+      timer = setTimeout(() => setStage(5), 2000);
+    } else if (stage === 5) {
+      timer = setTimeout(() => setStage(6), 2000);
+    } else if (stage === 6) {
+      // Stage 6: Cursor moves in, clicks Kanvas logo, then reveals screen
+      const clickTimer = setTimeout(() => {
+        setIsClicking(true);
+      }, 1000);
+
+      const openScreenTimer = setTimeout(() => {
+        setStage(7);
+      }, 1600);
+
+      return () => {
+        clearTimeout(clickTimer);
+        clearTimeout(openScreenTimer);
+      };
+    } else if (stage === 7) {
+      // Stage 7: Show website screen for 4s, then loop back to Stage 1
+      timer = setTimeout(() => {
+        setStage(1);
+        setIsClicking(false);
+      }, 4200);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [stage]);
+
+  const handlePrimaryAction = () => {
+    if (token) {
+      setProjectModal(true);
+    } else {
+      setSignInModal(true);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#080809] text-[#e4e4e7] font-sans overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
-      {/* Background Radial Ambient Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-[700px] bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/15 via-orange-600/5 to-transparent blur-[140px] pointer-events-none -z-10" />
-
-      {/* Navigation Bar */}
-      <Navbar
-        setProjectModal={setProjectModal}
-        setSignInModal={setSignInModal}
-        setLoginModal={setLoginModal}
-      />
-
-      {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center text-center px-4 md:px-6 pt-20 pb-16 max-w-5xl mx-auto">
-        {/* Main Heading */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.15] max-w-4xl text-white">
-          Code at the{" "}
-          <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(245,158,11,0.35)]">
-            Speed of Thought.
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mt-6 text-zinc-400 text-sm md:text-base max-w-2xl leading-relaxed font-normal">
-          Kanvas spins up instant, zero-config cloud environments tailored to your
-          programming framework, dependencies, and sample code — just click and code.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full justify-center">
-          <button
-            onClick={() => setSignInModal(true)}
-            className="w-full sm:w-auto inline-flex text-white  bg-amber-700 items-center justify-center gap-3  font-bold px-4 py-3.5 rounded-xl text-sm transition-all duration-300 cursor-pointer"
-          >
-            <span>Search Free Workspace</span>
-          </button>
-
-          <button
-            onClick={() => {
-              const el = document.getElementById("features");
-              if (el) el.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800/80 text-zinc-300 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all cursor-pointer"
-          >
-            <span>See Architecture</span>
-          </button>
-        </div>
-
-        {/* IDE Preview / Workspace Window Mockup */}
-        <div className="relative mt-14 w-full max-w-5xl group">
-          {/* Subtle Outer Glow */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-purple-500/20 rounded-2xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 pointer-events-none" />
-
-          {/* Window Container */}
-            <div className="relative overflow-hidden w-full h-auto">
-              <img
-                src="/image.png"
-                alt="Kanvas Editor Workspace Mockup"
-                className="w-full h-auto object-contain block"
+    <div className="h-screen w-screen max-h-screen bg-[#0a0a0c] text-zinc-200 flex flex-col justify-between overflow-hidden select-none font-sans">
+      {/* CLEAN MINIMAL HEADER */}
+      <header className="h-14 border-b border-zinc-800/80 bg-[#101014]/90 px-4 sm:px-8 flex items-center justify-between z-20 shrink-0">
+        {/* Brand */}
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="5" rx="1" fill="#e4e4e7" />
+              <rect
+                x="8"
+                y="1"
+                width="5"
+                height="5"
+                rx="1"
+                fill="#e4e4e7"
+                opacity="0.4"
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#c3c2b7]/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-10 transition-opacity duration-700" />
-            </div>
+              <rect
+                x="1"
+                y="8"
+                width="5"
+                height="5"
+                rx="1"
+                fill="#e4e4e7"
+                opacity="0.4"
+              />
+              <rect x="8" y="8" width="5" height="5" rx="1" fill="#e4e4e7" />
+            </svg>
+          </div>
+          <span className="text-base font-semibold tracking-tight text-amber-700">
+            Kanvas
+          </span>
+        </Link>
+
+        {/* Header Actions */}
+        <div className="flex items-center gap-3">
+          <Link
+            to="/pricing"
+            className="text-xs sm:text-sm text-zinc-400 hover:text-white px-3 py-1.5 rounded-md transition-colors"
+          >
+            Pricing
+          </Link>
+
+          {!token ? (
+            <>
+              <button
+                onClick={() => setLoginModal(true)}
+                className="text-xs border sm:text-sm text-amber-700 hover:border-amber-700 px-3 py-1.5 rounded-md font-medium cursor-pointer transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => setSignInModal(true)}
+                className=" hover:bg-white text-zinc-950 bg-amber-700 text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-md transition-all cursor-pointer shadow-sm"
+              >
+                Create Account
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/dashboard"
+                className="text-xs sm:text-sm text-zinc-300 hover:text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => setProjectModal(true)}
+                className="bg-zinc-100 hover:bg-white text-zinc-950 text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-md transition-all cursor-pointer shadow-sm"
+              >
+                New Project
+              </button>
+            </>
+          )}
         </div>
-      </section>
+      </header>
 
-      {/* FEATURES SECTION HEADER ("Engineered for cloud IDE scale") */}
-      <section id="features" className="px-4 md:px-6 py-20 max-w-6xl mx-auto text-center border-t border-zinc-900/80">
-        <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
-          Engineered for cloud IDE scale
-        </h2>
+      {/* CENTRAL MAIN WORKSPACE BOX (Clean frame without terminal look) */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-4 max-w-5xl mx-auto w-full overflow-hidden">
+        <div className="relative w-full h-[66vh] min-h-[420px] max-h-[560px] rounded-2xl bg-[#121216] border border-zinc-800 shadow-2xl flex flex-col justify-center items-center  overflow-hidden">
+          {/* STAGES 1 to 5: Sequential Stacking Clean Popups (No step tags on top right) */}
+          {stage <= 5 && (
+            <div className="relative z-10 w-full max-w-lg flex flex-col gap-2.5 my-auto">
+              {/* Popup 1 */}
+              {stage >= 1 && (
+                <div className="p-3.5 rounded-xl bg-[#18181e] border border-zinc-750/90 shadow-lg flex items-start gap-3 transform transition-all duration-300 animate-fade-in">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center shrink-0 text-zinc-200">
+                    <Lightbulb className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Got a new idea?
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      A new application, SaaS tool, or web platform concept is
+                      ready to build.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-        <p className="text-zinc-400 text-xs md:text-sm max-w-2xl mx-auto leading-relaxed mb-16">
-          Our cloud backend dynamically orchestrates complex workspace topologies, ensuring maximum isolation, precise state management, and seamless repository integration for every project and tenant.
-        </p>
+              {/* Popup 2 (Appears below popup 1) */}
+              {stage >= 2 && (
+                <div className="p-3.5 rounded-xl bg-[#18181e] border border-zinc-750/90 shadow-lg flex items-start gap-3 transform transition-all duration-300 animate-fade-in">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center shrink-0 text-zinc-200">
+                    <Code2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Don't have code writer to write
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      No local IDE configured, missing packages, and zero
+                      boilerplate ready.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-        {/* 2x2 FEATURES GRID CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-5xl mx-auto">
-          {/* Card 1: AI-Powered Autonomous Agent */}
-          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-amber-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-amber-500/5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 text-amber-400 group-hover:scale-110 transition-transform">
-              <Bot className="w-5 h-5" />
+              {/* Popup 3 (Appears below popup 2) */}
+              {stage >= 3 && (
+                <div className="p-3.5 rounded-xl bg-[#18181e] border border-zinc-750/90 shadow-lg flex items-start gap-3 transform transition-all duration-300 animate-fade-in">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center shrink-0 text-zinc-200">
+                    <Cpu className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Use Kanvas
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      Switch to Kanvas for instant, zero-setup cloud development
+                      workspaces.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Popup 4 (Appears below popup 3) */}
+              {stage >= 4 && (
+                <div className="p-3.5 rounded-xl bg-[#18181e] border border-zinc-750/90 shadow-lg flex items-start gap-3 transform transition-all duration-300 animate-fade-in">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center shrink-0 text-zinc-200">
+                    <Cloud className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Get new IDE on cloud
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      Isolated cloud sandbox provisioned in seconds with full
+                      runtime and dependencies.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Popup 5 (Appears below popup 4) */}
+              {stage >= 5 && (
+                <div className="p-3.5 rounded-xl bg-[#18181e] border border-zinc-750/90 shadow-lg flex items-start gap-3 transform transition-all duration-300 animate-fade-in">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center shrink-0 text-zinc-200">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Implement your idea here
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      Write code, run commands, test in real-time, and ship your
+                      project.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-amber-400 transition-colors">
-              AI-Powered Agent Integration
-            </h3>
-            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-              Built-in intelligent AI assistant that contextually understands your workspace, executes terminal commands, writes code, and automates debugging in real-time.
-            </p>
-          </div>
+          )}
 
-          {/* Card 2: Project Isolated Partitions */}
-          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-amber-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-amber-500/5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 text-amber-400 group-hover:scale-110 transition-transform">
-              <Zap className="w-5 h-5" />
-            </div>
-            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-amber-400 transition-colors">
-              Project Isolated Partitions
-            </h3>
-            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-              Every project runs in its own secure, sandboxed container with dedicated compute and memory allocation, ensuring performance and stability for all users.
-            </p>
-          </div>
+          {/* STAGE 6: Solution: Kanvas Logo + Animated Cursor Click */}
+          {stage === 6 && (
+            <div className="relative z-10 w-full max-w-md flex flex-col items-center justify-center text-center animate-fade-in space-y-4">
+              <span className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
+                Solution
+              </span>
 
-          {/* Card 3: Multi-Region Architecture */}
-          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-purple-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-purple-500/5">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform">
-              <Network className="w-5 h-5" />
-            </div>
-            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-purple-400 transition-colors">
-              Multi-Region Architecture
-            </h3>
-            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-              Seamlessly manage complex multi-page repositories across regions, ensuring optimal latency, distributed workspaces, and instant state replication.
-            </p>
-          </div>
+              {/* Kanvas Interactive Button */}
+              <div
+                className={`relative px-6 py-4 rounded-2xl bg-[#18181e] border border-zinc-700/90 shadow-xl flex items-center gap-3.5 transition-all duration-200 ${
+                  isClicking
+                    ? "scale-95 bg-zinc-800 border-zinc-500"
+                    : "scale-100"
+                }`}
+              >
+                {/* Kanvas Logo Icon */}
+                <div className="w-10 h-10 bg-zinc-800 border border-zinc-700 rounded-xl flex items-center justify-center shadow-md">
+                  <svg width="20" height="20" viewBox="0 0 14 14" fill="none">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="#ffffff"
+                    />
+                    <rect
+                      x="8"
+                      y="1"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="#ffffff"
+                      opacity="0.4"
+                    />
+                    <rect
+                      x="1"
+                      y="8"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="#ffffff"
+                      opacity="0.4"
+                    />
+                    <rect
+                      x="8"
+                      y="8"
+                      width="5"
+                      height="5"
+                      rx="1"
+                      fill="#ffffff"
+                    />
+                  </svg>
+                </div>
 
-          {/* Card 4: Custom Proxy Layers */}
-          <div className="group rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-blue-500/30 p-8 transition-all duration-300 shadow-lg hover:shadow-blue-500/5">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
-              <Server className="w-5 h-5" />
-            </div>
-            <h3 className="text-white text-lg font-bold mb-2 group-hover:text-blue-400 transition-colors">
-              Custom Proxy Layers
-            </h3>
-            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-              Advanced networking with custom exposed ports and webhooks dynamically provisioned for every project environment, routing requests safely over HTTPS.
-            </p>
-          </div>
-        </div>
+                <div className="text-left">
+                  <h2 className="text-base font-bold text-amber-700 tracking-tight">
+                    Kanvas
+                  </h2>
+                  <p className="text-xs text-zinc-400">
+                    Click to launch instant IDE
+                  </p>
+                </div>
 
-      </section>
-
-      {/* PRICING SECTION */}
-      <Pricing />
-
-      {/* ABOUT / FOOTER SECTION */}
-      <footer id="about" className="border-t border-zinc-900 bg-[#060607] p-8">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 text-left mb-2">
-          {/* Brand Col */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-tr from-amber-600 to-orange-500 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
-                  <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity="0.5" />
-                  <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity="0.5" />
-                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
-                </svg>
+                {/* Animated Mouse Cursor Moving & Clicking */}
+                <div
+                  className={`absolute -bottom-6 -right-4 transition-all duration-700 transform ${
+                    isClicking
+                      ? "translate-x-[-18px] translate-y-[-16px] scale-90"
+                      : "translate-x-0 translate-y-0"
+                  }`}
+                >
+                  <MousePointer2 className="w-7 h-7 text-white fill-zinc-950 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" />
+                  {isClicking && (
+                    <span className="absolute -top-1 -left-1 w-9 h-9 rounded-full border-2 border-white/60 animate-ping pointer-events-none" />
+                  )}
+                </div>
               </div>
-              <span className="text-lg font-bold tracking-tight text-[#c3c2b7]">KANVAS</span>
             </div>
-            <p className="text-zinc-400 text-xs leading-relaxed">
-              Next-generation cloud IDE platform built for modern cloud development and instant workspace provisioning.
-            </p>
-          </div>
+          )}
 
-          {/* Product Links */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider mb-4 text-[#c3c2b7]">PRODUCT</h4>
-            <ul className="space-y-2 text-xs text-zinc-400">
-              <li><a href="#features" className="hover:text-amber-400 transition-colors">Features</a></li>
-              <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a></li>
-              <li><a href="#features" className="hover:text-amber-400 transition-colors">Workspaces</a></li>
-            </ul>
-          </div>
+          {/* STAGE 7: Screen of Kanvas (Full Website Screen revealed upon click) */}
+          {stage === 7 && (
+            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center animate-fade-in">
+              <div className="w-full h-full rounded-xl overflow-hidden shadow-2xl bg-[#08080a] flex flex-col">
+                {/* Real Website Image Preview */}
+                <div className="flex-1 relative overflow-hidden rounded-2xl bg-black">
+                  <img
+                    src="/image.png"
+                    alt="Screen of Kanvas"
+                    className="w-full h-full object-cover rounded-2xl object-top"
+                  />
+                  <div className="absolute bottom-3 left-3 right-3 bg-[#121215]/95 border border-zinc-700/80 rounded-xl p-3 flex items-center justify-end text-xs backdrop-blur-md">
+                    <button
+                      onClick={handlePrimaryAction}
+                      className="bg-zinc-100 hover:bg-white text-zinc-950 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                    >
+                      <span>Try Kanvas Free</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
 
-          {/* Company Links */}
-          <div>
-            <h4 className="text-[#c3c2b7] text-xs font-bold uppercase tracking-wider mb-4">COMPANY</h4>
-            <ul className="space-y-2 text-xs text-zinc-400">
-              <li><a href="#about" className="hover:text-amber-400 transition-colors">About</a></li>
-              <li><a href="#about" className="hover:text-amber-400 transition-colors">Careers</a></li>
-              <li><a href="#about" className="hover:text-amber-400 transition-colors">Contact</a></li>
-            </ul>
-          </div>
-
-          {/* Resources Links */}
-          <div>
-            <h4 className="text-[#c3c2b7] text-xs font-bold uppercase tracking-wider mb-4">RESOURCES</h4>
-            <ul className="space-y-2 text-xs text-zinc-400">
-              <li><a href="#features" className="hover:text-amber-400 transition-colors">Documentation</a></li>
-              <li><a href="#features" className="hover:text-amber-400 transition-colors">Guides</a></li>
-              <li><a href="#features" className="hover:text-amber-400 transition-colors">API Reference</a></li>
-            </ul>
-          </div>
+      {/* MINIMAL FOOTER */}
+      <footer className="h-12 border-t border-zinc-800/80 bg-[#101014]/90 px-4 sm:px-8 flex items-center justify-between text-xs text-zinc-500 z-20 shrink-0">
+        <div>
+          <span>© 2026 Kanvas</span>
         </div>
 
-        {/* Bottom Bar */}
+        <div className="flex items-center gap-4 text-zinc-400">
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            <FaGithub className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href="https://twitter.com"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            <FaTwitter className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href="https://linkedin.com"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            <FaLinkedin className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </footer>
-        <div className="mx-auto p-4 bg-[#2c2c2a] border-t border-zinc-900/80 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-zinc-500">
-          <p>© 2026 Kanvas System Inc. All rights reserved.</p>
-          <div className="flex items-center gap-4 text-zinc-400">
-            <FaGithub className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
-            <FaTwitter className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
-            <FaLinkedin className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
-          </div>
-        </div>
     </div>
   );
 }
-

@@ -147,28 +147,25 @@ export default function Project() {
             <div className="w-10 h-10 border-2 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
 
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  background: "#f97316",
-                  borderRadius: 6,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                  <rect
+                    x="1"
+                    y="1"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="#e4e4e7"
+                  />
                   <rect
                     x="8"
                     y="1"
                     width="5"
                     height="5"
                     rx="1"
-                    fill="white"
-                    opacity="0.5"
+                    fill="#e4e4e7"
+                    opacity="0.4"
                   />
                   <rect
                     x="1"
@@ -176,13 +173,22 @@ export default function Project() {
                     width="5"
                     height="5"
                     rx="1"
-                    fill="white"
-                    opacity="0.5"
+                    fill="#e4e4e7"
+                    opacity="0.4"
                   />
-                  <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                  <rect
+                    x="8"
+                    y="8"
+                    width="5"
+                    height="5"
+                    rx="1"
+                    fill="#e4e4e7"
+                  />
                 </svg>
               </div>
-              <span className="text-[#c3c2b7] font-bold text-lg">Kanvas</span>
+              <span className="text-base font-semibold tracking-tight text-amber-700">
+                Kanvas
+              </span>
             </div>
 
             <p className="text-gray-400 text-sm">
@@ -196,24 +202,13 @@ export default function Project() {
         {/* {loaded && ( */}
         <div className="flex flex-col h-screen w-screen">
           {/* Topbar — fixed 36px */}
-          <div className="text-[#c3c2b7] h-14 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
+          <div className="text-[#c3c2b7] h-12 px-8 border-[#c3c2b7]/10 border-b bg-[#2c2c2a] flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-4">
               <div
                 onClick={navDashboard}
                 className="flex items-center gap-2 cursor-pointer group/brand"
               >
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    background: "#f97316",
-                    borderRadius: 6,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  className="shadow-sm shadow-orange-500/25 group-hover/brand:scale-105 transition-transform duration-200"
-                >
+                <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <rect
                       x="1"
@@ -221,7 +216,7 @@ export default function Project() {
                       width="5"
                       height="5"
                       rx="1"
-                      fill="white"
+                      fill="#e4e4e7"
                     />
                     <rect
                       x="8"
@@ -229,8 +224,8 @@ export default function Project() {
                       width="5"
                       height="5"
                       rx="1"
-                      fill="white"
-                      opacity="0.5"
+                      fill="#e4e4e7"
+                      opacity="0.4"
                     />
                     <rect
                       x="1"
@@ -238,8 +233,8 @@ export default function Project() {
                       width="5"
                       height="5"
                       rx="1"
-                      fill="white"
-                      opacity="0.5"
+                      fill="#e4e4e7"
+                      opacity="0.4"
                     />
                     <rect
                       x="8"
@@ -247,11 +242,11 @@ export default function Project() {
                       width="5"
                       height="5"
                       rx="1"
-                      fill="white"
+                      fill="#e4e4e7"
                     />
                   </svg>
                 </div>
-                <span className="text-[#c3c2b7] font-extrabold text-[19px] tracking-tight group-hover/brand:text-orange-500 transition-colors duration-200">
+                <span className="text-base font-semibold tracking-tight text-amber-700">
                   Kanvas
                 </span>
               </div>
@@ -304,21 +299,10 @@ export default function Project() {
                 <div className="w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">
                   <div className="topbar justify-center text-[#c3c2b7] border-[#c3c2b7]/10 border-b-2 pb-2">
                     <div className="flex gap-1 justify-center items-center">
-                      <div
-                        style={{
-                          width: 20,
-                          height: 20,
-                          background: "#f97316",
-                          borderRadius: 6,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        className="shadow-sm shadow-orange-500/25 group-hover/brand:scale-105 transition-transform duration-200"
-                      >
+                      <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
                         <svg
-                          width="12"
-                          height="12"
+                          width="14"
+                          height="14"
                           viewBox="0 0 14 14"
                           fill="none"
                         >
@@ -328,7 +312,7 @@ export default function Project() {
                             width="5"
                             height="5"
                             rx="1"
-                            fill="white"
+                            fill="#e4e4e7"
                           />
                           <rect
                             x="8"
@@ -336,8 +320,8 @@ export default function Project() {
                             width="5"
                             height="5"
                             rx="1"
-                            fill="white"
-                            opacity="0.5"
+                            fill="#e4e4e7"
+                            opacity="0.4"
                           />
                           <rect
                             x="1"
@@ -345,8 +329,8 @@ export default function Project() {
                             width="5"
                             height="5"
                             rx="1"
-                            fill="white"
-                            opacity="0.5"
+                            fill="#e4e4e7"
+                            opacity="0.4"
                           />
                           <rect
                             x="8"
@@ -354,11 +338,13 @@ export default function Project() {
                             width="5"
                             height="5"
                             rx="1"
-                            fill="white"
+                            fill="#e4e4e7"
                           />
                         </svg>
                       </div>
-                      <div className="">Kanvas</div>
+                      <span className="text-base font-semibold tracking-tight text-amber-700">
+                        Kanvas
+                      </span>
                     </div>
                   </div>
                   <div
@@ -415,17 +401,7 @@ export default function Project() {
                               <div className="my-12">
                                 <div className="flex items-center ">
                                   <div className="mr-2 flex items-center justify-center">
-                                    <div
-                                      style={{
-                                        width: 24,
-                                        height: 24,
-                                        background: "#f97316",
-                                        borderRadius: 6,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
+                                    <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
                                       <svg
                                         width="14"
                                         height="14"
@@ -438,7 +414,7 @@ export default function Project() {
                                           width="5"
                                           height="5"
                                           rx="1"
-                                          fill="white"
+                                          fill="#e4e4e7"
                                         />
                                         <rect
                                           x="8"
@@ -446,8 +422,8 @@ export default function Project() {
                                           width="5"
                                           height="5"
                                           rx="1"
-                                          fill="white"
-                                          opacity="0.5"
+                                          fill="#e4e4e7"
+                                          opacity="0.4"
                                         />
                                         <rect
                                           x="1"
@@ -455,8 +431,8 @@ export default function Project() {
                                           width="5"
                                           height="5"
                                           rx="1"
-                                          fill="white"
-                                          opacity="0.5"
+                                          fill="#e4e4e7"
+                                          opacity="0.4"
                                         />
                                         <rect
                                           x="8"
@@ -464,7 +440,7 @@ export default function Project() {
                                           width="5"
                                           height="5"
                                           rx="1"
-                                          fill="white"
+                                          fill="#e4e4e7"
                                         />
                                       </svg>
                                     </div>

@@ -270,28 +270,18 @@ function DashboardPage({
           <div className="w-10 h-10 border-2 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
 
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div
-              style={{
-                width: 24,
-                height: 24,
-                background: "#f97316",
-                borderRadius: 6,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="1" width="5" height="5" rx="1" fill="white" />
+                <rect x="1" y="1" width="5" height="5" rx="1" fill="#e4e4e7" />
                 <rect
                   x="8"
                   y="1"
                   width="5"
                   height="5"
                   rx="1"
-                  fill="white"
-                  opacity="0.5"
+                  fill="#e4e4e7"
+                  opacity="0.4"
                 />
                 <rect
                   x="1"
@@ -299,13 +289,15 @@ function DashboardPage({
                   width="5"
                   height="5"
                   rx="1"
-                  fill="white"
-                  opacity="0.5"
+                  fill="#e4e4e7"
+                  opacity="0.4"
                 />
-                <rect x="8" y="8" width="5" height="5" rx="1" fill="white" />
+                <rect x="8" y="8" width="5" height="5" rx="1" fill="#e4e4e7" />
               </svg>
             </div>
-            <span className="text-[#c3c2b7] font-bold text-lg">Kanvas</span>
+            <span className="text-base font-semibold tracking-tight text-amber-700">
+              Kanvas
+            </span>
           </div>
 
           <p className="text-gray-400 text-sm">{loadingMsg}</p>
@@ -319,7 +311,7 @@ function DashboardPage({
             setLoginModal={setLoginModal}
           />
         </div>
-        <div className="userProjectsSection flex-1 overflow-y-auto py-8 md:px-10 md:py-18 bg-[#1e1e1f]">
+        <div className="userProjectsSection flex-1 overflow-y-auto py-8 md:px-10 md:py-18 bg-[#181818]">
           <h1 className="text-3xl text-[#c3c2b7] flex items-center mb-5 gap-1">
             <GoProjectSymlink /> Projects
           </h1>
@@ -327,7 +319,7 @@ function DashboardPage({
           <div className="flex flex-col sm:flex-row gap-4 justify-between mb-10 sm:items-center">
             <div className="flex gap-2 w-full sm:w-auto">
               <input
-                className="flex-1 sm:w-64 rounded-xl bg-[#2c2c2a] max-h-10 border border-[#c3c2b7]/50 px-3 py-2 text-[#c3c2b7] outline-none focus:border-amber-600 transition-colors"
+                className="flex-1 sm:w-64 rounded-xl bg-[#181818] max-h-10 border border-[#c3c2b7]/50 px-3 py-2 text-[#c3c2b7] outline-none focus:border-amber-600 transition-colors"
                 type="search"
                 value={searchInput}
                 placeholder="Search projects..."
