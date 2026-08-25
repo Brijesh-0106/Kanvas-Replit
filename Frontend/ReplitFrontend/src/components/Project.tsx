@@ -449,7 +449,7 @@ export default function Project() {
                                   <div
                                     key={ind}
                                     style={{ maxWidth: "calc(100% - 50px)" }}
-                                    className="rounded-lg text-[#c3c2b7] text-sm w-fit bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
+                                    className="rounded-lg text-[#c3c2b7] text-sm w-full bg-[#1e1e1e] border border-zinc-800 shadow-sm p-4 overflow-x-auto"
                                   >
                                     <MarkdownRenderer content={msg.msg} />
                                   </div>
