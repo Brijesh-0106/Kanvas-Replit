@@ -4,6 +4,7 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaArrowUp } from "react-icons/fa";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { IoHome } from "react-icons/io5";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../App.css";
 
@@ -127,7 +128,7 @@ export default function Project() {
             clearInterval(heartBeat);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, [projectId]);
@@ -279,24 +280,24 @@ export default function Project() {
                   height="100%"
                   onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                   className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                  src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
-                  // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                  // src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
+                  src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
                 />
               </div>
             )}
             {isAI && (
               <div className="flex w-screen gap-3">
-                <div className="w-9/12 h-full shrink-0 bg-[#181818] p-3 rounded-lg">
+                <div className="w-4/6 h-full shrink-0 bg-[#181818] p-3 rounded-lg">
                   <iframe
                     width="100%"
                     height="100%"
                     onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                    src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
-                    // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                    // src={`https://ws-${instanceId}.kanvas.usecerebro.co.in/?folder=/tmp/project`}
+                    src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
                   />
                 </div>
-                <div className="w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">
+                <div className="w-2/6 max-w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">
                   <div className="topbar justify-center text-[#c3c2b7] border-[#c3c2b7]/10 border-b-2 pb-2">
                     <div className="flex gap-1 justify-center items-center">
                       <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
@@ -450,7 +451,7 @@ export default function Project() {
                                     style={{ maxWidth: "calc(100% - 50px)" }}
                                     className="rounded-lg text-[#c3c2b7] text-sm w-fit bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-3"
                                   >
-                                    {msg.msg}
+                                    <MarkdownRenderer content={msg.msg} />
                                   </div>
                                 </div>
                               </div>
