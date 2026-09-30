@@ -24,12 +24,12 @@ jobs:
         run: |
           ls
           echo "HI"
-          cd Backend
+          cd ./Backend
           echo "HI 2"
           ls
           docker build --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -t brijesh-408/kanvas-be:v${{github.run_number}} .
           docker push brijesh-408/kanvas-be:v${{github.run_number}}
-          cd VS-Dummy-Ins
+          cd ../VS-Dummy-Ins
           docker build --build-arg AUTO_SCALING_GROUP_NAME=${secrets.AUTO_SCALING_GROUP_NAME} --build-arg ACC_KEY_ID=${secrets.ACC_KEY_ID} --build-arg SECRET_ACC_KEY=${secrets.SECRET_ACC_KEY} --build-arg=${secrets.BUCKET_NAME} -t brijesh-408/kanvas-agent:v${{github.run_number}} .
           docker push -t brijesh-408/kanvas-agent:v${{github.run_number}} .
           cd ../Frontend/ReplitFrontend
