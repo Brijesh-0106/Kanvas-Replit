@@ -28,6 +28,13 @@ input[type="search"]::-webkit-search-cancel-button {
   background-size: contain;
 }
 
+.bg-grid-canvas {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.095), transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.095), transparent 1px);
+  background-size: 28px 28px;
+}
+
 /* Webkit browsers (Chrome, Edge, Safari) */
 #message-container::-webkit-scrollbar {
   width: 6px;

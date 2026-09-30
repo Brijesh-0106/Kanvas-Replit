@@ -8,8 +8,8 @@ import fs from "fs";
 import path from 'path';
 
 console.log("check")
-const watcher = chokidar.watch('/tmp/project').on('all', (event, path) => {
-    if (event === 'addDir' && path === '/tmp/project') return;
+const watcher = chokidar.watch('/tmp/kanvas').on('all', (event, path) => {
+    if (event === 'addDir' && path === '/tmp/kanvas') return;
     console.log(event, path);
 });
 
@@ -74,7 +74,7 @@ let timeout: any = null
 watcher
     .on('add', (fullPath) => {
         console.log(`File ${fullPath} has been added`)
-        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
         // const dirPath = trimmedPath.split('/')
         const dir = path.dirname(trimmedPath);   // "/src/comp1"
@@ -94,7 +94,7 @@ watcher
             clearTimeout(timeout)
         timeout = setTimeout(async () => {
 
-            const files = folderToJson("/tmp/project");
+            const files = folderToJson("/tmp/kanvas");
             console.log(files, "files")
             try {
                 fetch(`http://54.90.126.40:9092/updateFiles`, {
@@ -109,7 +109,7 @@ watcher
     })
     .on('unlink', (fullPath) => {
         console.log(`file ${fullPath} has been removed`)
-        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
         fetch(`http://54.90.126.40:9092/deleteNode`, {
             method: "POST",
@@ -119,7 +119,7 @@ watcher
     })
     .on('addDir', (fullPath) => {
         console.log(`Directory ${fullPath} has been added`)
-        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
         // const dirPath = trimmedPath.split('/')
         const dir = path.dirname(trimmedPath);   // "/src/comp1"
@@ -135,7 +135,7 @@ watcher
     })
     .on('unlinkDir', (fullPath) => {
         console.log(`folder ${fullPath} has been removed`)
-        const trimmedPath = fullPath.replace(/\/tmp\/project\//gi, "").trim();
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
         fetch(`http://54.90.126.40:9092/deleteNode`, {
             method: "POST",
@@ -158,7 +158,7 @@ app.post("/update-files", async (req: Request, res: Response) => {
     console.log("***************** AMI STORE PROJECT *************************")
     try {
         const { mergedFileTree } = req.body
-        const PROJECT_ROOT = '/tmp/project'; // → /tmp/project ✅
+        const PROJECT_ROOT = '/tmp/kanvas'; // → /tmp/kanvas ✅
         console.log(mergedFileTree, "check mergedFileTree");
         writeFileTree(mergedFileTree, PROJECT_ROOT)
         res.json({ success: true });
@@ -172,9 +172,9 @@ app.post("/store-project", async (req: Request, res: Response) => {
     const { userId, projectId } = req.body
     console.log(userId, projectId, "check projectId in parasite")
     // zip the project
-    execSync("cd /tmp && zip -r /tmp/project-backup.zip project")
+    execSync("cd /tmp && zip -r /tmp/kanvas-backup.zip kanvas")
     // read zip file
-    const fileBuffer = fs.readFileSync("/tmp/project-backup.zip")
+    const fileBuffer = fs.readFileSync("/tmp/kanvas-backup.zip")
 
     const saveCmd = new PutObjectCommand(
         {
@@ -202,10 +202,10 @@ app.post("/restore-project", async (req: Request, res: Response) => {
 
     console.log(response, "res")
     // write zip to disk
-    fs.writeFileSync("/tmp/project-backup.zip", await response.Body!.transformToByteArray())
+    fs.writeFileSync("/tmp/kanvas-backup.zip", await response.Body!.transformToByteArray())
 
     // unzip
-    execSync("unzip -o /tmp/project-backup.zip -d /tmp")
+    execSync("unzip -o /tmp/kanvas-backup.zip -d /tmp")
 
     res.json({ msg: "restored" })
 })

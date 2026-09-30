@@ -158,8 +158,8 @@ export default function Landing({
       </header>
 
       {/* CENTRAL MAIN WORKSPACE BOX (Clean frame without terminal look) */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-4 max-w-5xl mx-auto w-full overflow-hidden">
-        <div className="relative w-full h-[66vh] min-h-[420px] max-h-[560px] rounded-2xl bg-[#121216] border border-zinc-800 shadow-2xl flex flex-col justify-center items-center  overflow-hidden">
+      <main className="flex-1 flex flex-col items-center bg-grid-canvas justify-center  py-4  mx-auto w-full overflow-hidden">
+        <div className="relative w-full h-[66vh] min-h-105 max-h-140 rounded-2xl bg-[#121216] border border-zinc-800 shadow-2xl flex flex-col justify-center items-center  overflow-hidden max-w-5xl">
           {/* STAGES 1 to 5: Sequential Stacking Clean Popups (No step tags on top right) */}
           {stage <= 5 && (
             <div className="relative z-10 w-full max-w-lg flex flex-col gap-2.5 my-auto">
@@ -364,7 +364,7 @@ export default function Landing({
       </main>
 
       {/* MINIMAL FOOTER */}
-      <footer className="h-12 border-t border-zinc-800/80 bg-[#101014]/90 px-4 sm:px-8 flex items-center justify-between text-xs text-zinc-500 z-20 shrink-0">
+      <footer className="h-12 border-t border-zinc-800/80 bg-[#101014]/90 px-4 sm:px-8 flex  items-center justify-between text-xs text-zinc-500 z-20 shrink-0">
         <div>
           <span>© 2026 Kanvas</span>
         </div>

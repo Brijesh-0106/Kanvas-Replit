@@ -16,11 +16,11 @@ import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
 import * as projectService from "./services/project.service.js";
 import { findRelevantFiles } from "./services/similarity.service.js";
 const prisma = new PrismaClient()
-// const redis = new Redis({
-//     host: 'redis',  // container name, not localhost
-//     port: 6379
-// })
-const redis = new Redis()
+const redis = new Redis({
+    host: 'redis',  // container name, not localhost
+    port: 6379
+})
+// const redis = new Redis()
 const app = express();
 
 declare global {
@@ -205,7 +205,7 @@ setInterval(async () => {
                     })
                 }
             }
-            fetch(`http://${machine.publicDnsName}:3001/store-project`, {
+            fetch(`http://${machine.publicDnsName}:9093/store-project`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -422,7 +422,7 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
             })
             return
         }
-        fetch(`http://${foundMachine.publicDnsName}:3001/restore-project`, {
+        fetch(`http://${foundMachine.publicDnsName}:9093/restore-project`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -561,7 +561,7 @@ app.post("/send-message", middleAuth, async (req, res) => {
         }
     })
     console.log(JSON.stringify({ mergedFileTree: mergedFileTree }), "send file")
-    fetch(`http://${project?.publicDnsName}:3001/update-files`, {
+    fetch(`http://${project?.publicDnsName}:9093/update-files`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -678,7 +678,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                     })
                     return
                 }
-                fetch(`http://${machinePublicDNSName}:3001/register-project/${machine?.projectId}`)
+                fetch(`http://${machinePublicDNSName}:9093/register-project/${machine?.projectId}`)
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {
                     const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)

@@ -255,11 +255,15 @@ In Workspace Generation Mode:
 - Preserve the existing project structure.
 - Do not regenerate the entire project unless explicitly requested.
 - Fix existing bugs
+- In the "text" field, provide a clear, well-structured, formatted Markdown response explaining:
+  * A summary of what was implemented or fixed
+  * A list of key files created or modified with short descriptions
+  * How to run, test, or use the changes (e.g. required environment variables or terminal commands)
 
 Use this JSON structure:
 
 {
-  "text": "Short explanation.",
+  "text": "Detailed Markdown explanation of the changes, files touched, and next steps.",
   "fileTree": {},
   "buildCommand": {
     "mainItem": "",
