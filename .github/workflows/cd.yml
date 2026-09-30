@@ -22,7 +22,9 @@ jobs:
           password: ${{secrets.DOCKER_PASSWORD}}
       - name: docker push
         run: |
+          ls
           cd Backend
+          ls
           docker build --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -t brijesh-408/kanvas-be:v${{github.run_number}} .
           docker push brijesh-408/kanvas-be:v${{github.run_number}}
           cd VS-Dummy-Ins
