@@ -12,7 +12,7 @@ ENV DATABASE_URL=$DATABASE_URL
 RUN ls
 COPY ./package*.json ./
 RUN ls
-RUN npm ci
+RUN npm install
 COPY prisma ./prisma
 RUN npx prisma generate
 
