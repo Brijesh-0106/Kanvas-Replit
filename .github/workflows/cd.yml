@@ -24,17 +24,18 @@ jobs:
         run: |
           ls
           echo "HI"
-          cd ./Backend
+          cd ./Backend  
           echo "HI 2"
-          ls
+          ls -la
+          cat .dockerignore
           docker build --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -t brijesh-408/kanvas-be:v${{github.run_number}} .
           docker push brijesh-408/kanvas-be:v${{github.run_number}}
           cd ../VS-Dummy-Ins
-          docker build --build-arg AUTO_SCALING_GROUP_NAME=${secrets.AUTO_SCALING_GROUP_NAME} --build-arg ACC_KEY_ID=${secrets.ACC_KEY_ID} --build-arg SECRET_ACC_KEY=${secrets.SECRET_ACC_KEY} --build-arg=${secrets.BUCKET_NAME} -t brijesh-408/kanvas-agent:v${{github.run_number}} .
-          docker push -t brijesh-408/kanvas-agent:v${{github.run_number}}
+          docker build --build-arg AUTO_SCALING_GROUP_NAME=${secrets.AUTO_SCALING_GROUP_NAME} --build-arg ACC_KEY_ID=${secrets.ACC_KEY_ID} --build-arg SECRET_ACC_KEY=${secrets.SECRET_ACC_KEY} --build-arg BUCKET_NAME=${secrets.BUCKET_NAME} -t brijesh-408/kanvas-agent:v${{github.run_number}} .
+          docker push brijesh-408/kanvas-agent:v${{github.run_number}}
           cd ../Frontend/ReplitFrontend
           docker build --build-arg VITE_GOOGLE_CLIENT_ID=${{secrets.VITE_GOOGLE_CLIENT_ID}} --build-arg VITE_GOOGLE_SECRET=${{secrets.VITE_GOOGLE_SECRET}} --build-arg VITE_BACKEND_URL=${{secrets.VITE_BACKEND_URL}} -t brijesh-408/kanvas-fe:v${{github.run_number}} .
-          docker push brijesh-408/kanvas-be:v${{github.run_number}}
+          docker push brijesh-408/kanvas-fe:v${{github.run_number}}
 
   deploy:
     runs-on: ubuntu-latest
@@ -49,11 +50,11 @@ jobs:
           script: |
             sudo docker pull brijesh-408/kanvas-be:v${{github.run_number}}
             sudo docker pull brijesh-408/kanvas-fe:v${{github.run_number}}
-            sudo docker stop kanvas-ve || true
+            sudo docker stop kanvas-be || true
             sudo docker stop kanvas-fe || true
-            sudo docker rm kanvas-ve || true
+            sudo docker rm kanvas-be || true
             sudo docker rm kanvas-fe || true
-            sudo docker run -p 9093:9093 --name=kanvas-be -e AUTO_SCALING_GROUP_NAME=${{secrets.AUTO_SCALING_GROUP_NAME}} -e ACC_KEY_ID=${{secrets.ACC_KEY_ID}} -e SECRET_ACC_KEY=${{secrets.SECRET_ACC_KEY}} -e PORT=${{secrets.PORT}} -e DATABASE_URL=${{secrets.DATABASE_URL}} -e SECRET_KEY=${{secrets.SECRET_KEY}} -e GOOGLE_SECRET=${{secrets.GOOGLE_SECRET}} -e GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}} -e GRACE_PERIOD=${{secrets.GRACE_PERIOD}} -e GROQ_KEY=${{secrets.GROQ_KEY}} brijesh-408/kanvas-be:v${{github.run_number}}
-            sudo docker run -p 5174:5174 --name=kanvas-fe brijesh-408/kanvas-fe:v${{github.run_number}}
+            sudo docker run -d -p 9093:9093 --name=kanvas-be -e AUTO_SCALING_GROUP_NAME=${{secrets.AUTO_SCALING_GROUP_NAME}} -e ACC_KEY_ID=${{secrets.ACC_KEY_ID}} -e SECRET_ACC_KEY=${{secrets.SECRET_ACC_KEY}} -e PORT=${{secrets.PORT}} -e DATABASE_URL=${{secrets.DATABASE_URL}} -e SECRET_KEY=${{secrets.SECRET_KEY}} -e GOOGLE_SECRET=${{secrets.GOOGLE_SECRET}} -e GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}} -e GRACE_PERIOD=${{secrets.GRACE_PERIOD}} -e GROQ_KEY=${{secrets.GROQ_KEY}} brijesh-408/kanvas-be:v${{github.run_number}}
+            sudo docker run -d -p 5174:5174 --name=kanvas-fe brijesh-408/kanvas-fe:v${{github.run_number}}
             sleep 5
             sudo docker ps
