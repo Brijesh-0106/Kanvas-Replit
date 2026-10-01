@@ -5,10 +5,10 @@ import DashboardPage from "./components/DashboardPage";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Modal from "./components/Modal";
+import Pricing from "./components/Pricing";
 import Project from "./components/Project";
 import ProjectSelector from "./components/ProjectSelector";
 import SignIn from "./components/SignIn";
-import Pricing from "./components/Pricing";
 export type alertType = "success" | "error" | "warning" | "info";
 
 function App() {
@@ -96,7 +96,6 @@ function App() {
               setShowAlert={setShowAlert}
               setAlertMsg={setAlertMsg}
               setAlertType={setAlertType}
-              setProjectModal={setProjectModal}
               onClose={() => setLoginModal(false)}
             />
           </Modal>

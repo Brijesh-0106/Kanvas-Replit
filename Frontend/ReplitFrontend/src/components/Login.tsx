@@ -9,14 +9,12 @@ export default function Login({
   setShowAlert,
   setAlertMsg,
   setAlertType,
-  setProjectModal,
   setSignInModal,
   onClose,
 }: {
   setShowAlert: (value: boolean) => void;
   setAlertMsg: (value: string) => void;
   setAlertType: (value: alertType) => void;
-  setProjectModal: (value: boolean) => void;
   setSignInModal: (value: boolean) => void;
   onClose: () => void;
 }) {
@@ -37,7 +35,7 @@ export default function Login({
     setErrorGoogle(error);
   };
 
-  const handleGoogleSuccess = (user: Record<string, unknown>) => {
+  const handleGoogleSuccess = () => {
     onClose();
     nav("/dashboard");
     // setProjectModal(true);

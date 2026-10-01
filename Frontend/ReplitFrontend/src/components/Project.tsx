@@ -40,8 +40,8 @@ export default function Project() {
   };
 
   const stateVal = uri.state;
-  const publicDnsName =
-    typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
+  // const publicDnsName =
+  //   typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
   const projectName =
     typeof stateVal === "string" ? "" : (stateVal?.projectName ?? "");
   const isAI = typeof stateVal === "boolean" ? false : (stateVal?.isAI ?? "");
@@ -451,7 +451,7 @@ export default function Project() {
                                     style={{ maxWidth: "calc(100% - 50px)" }}
                                     className="rounded-lg text-[#c3c2b7] text-sm w-full bg-[#1e1e1e] border border-zinc-800 shadow-sm p-4 overflow-x-auto"
                                   >
-                                    <MarkdownRenderer content={msg.msg} />
+                                    <MarkdownRenderer content={msg.msg!} />
                                   </div>
                                 </div>
                               </div>

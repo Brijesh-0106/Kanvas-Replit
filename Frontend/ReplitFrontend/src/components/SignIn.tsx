@@ -35,7 +35,7 @@ export default function SignIn({
     setErrorGoogle(error);
   };
 
-  const handleGoogleSuccess = (user: Record<string, unknown>) => {
+  const handleGoogleSuccess = () => {
     onClose();
     nav("/dashboard");
     setProjectModal(true);
@@ -75,7 +75,6 @@ export default function SignIn({
         setShowAlert(false);
       }, 2500);
     }
-    const res = await unfilteredRes.json();
     changeModal();
   };
 
