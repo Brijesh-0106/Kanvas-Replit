@@ -31,7 +31,7 @@ jobs:
           docker build --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -t brijesh408/kanvas-be:v${{github.run_number}} .
           docker push brijesh408/kanvas-be:v${{github.run_number}}
           cd ../VS-Dummy-Ins
-          docker build --build-arg AUTO_SCALING_GROUP_NAME=${secrets.AUTO_SCALING_GROUP_NAME} --build-arg ACC_KEY_ID=${secrets.ACC_KEY_ID} --build-arg SECRET_ACC_KEY=${secrets.SECRET_ACC_KEY} --build-arg BUCKET_NAME=${secrets.BUCKET_NAME} -t brijesh408/kanvas-agent:v${{github.run_number}} .
+          docker build --build-arg AUTO_SCALING_GROUP_NAME=${{secrets.AUTO_SCALING_GROUP_NAME}} --build-arg ACC_KEY_ID=${{secrets.ACC_KEY_ID}} --build-arg SECRET_ACC_KEY=${{secrets.SECRET_ACC_KEY}} --build-arg BUCKET_NAME=${{secrets.BUCKET_NAME}} -t brijesh408/kanvas-agent:v${{github.run_number}} .
           docker push brijesh408/kanvas-agent:v${{github.run_number}}
           cd ../Frontend/ReplitFrontend
           docker build --build-arg VITE_GOOGLE_CLIENT_ID=${{secrets.VITE_GOOGLE_CLIENT_ID}} --build-arg VITE_GOOGLE_SECRET=${{secrets.VITE_GOOGLE_SECRET}} --build-arg VITE_BACKEND_URL=${{secrets.VITE_BACKEND_URL}} -t brijesh408/kanvas-fe:v${{github.run_number}} .
