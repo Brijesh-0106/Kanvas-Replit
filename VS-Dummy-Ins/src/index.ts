@@ -82,7 +82,7 @@ watcher
 
         console.log(`dirPath`, dir)
         console.log(`file`, file)
-        fetch(`http://54.90.126.40:9092/createFile`, {
+        fetch(`http://32.199.250.58:9093/createFile`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ folderPath: dir, projectId: currProjectId, fileName: file })
@@ -97,7 +97,7 @@ watcher
             const files = folderToJson("/tmp/kanvas");
             console.log(files, "files")
             try {
-                fetch(`http://54.90.126.40:9092/updateFiles`, {
+                fetch(`http://32.199.250.58:9093/updateFiles`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ fileTree: files, projectId: currProjectId })
@@ -111,7 +111,7 @@ watcher
         console.log(`file ${fullPath} has been removed`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
-        fetch(`http://54.90.126.40:9092/deleteNode`, {
+        fetch(`http://32.199.250.58:9093/deleteNode`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
@@ -127,7 +127,7 @@ watcher
 
         console.log(`dirPath`, dir)
         console.log(`file`, file)
-        fetch(`http://54.90.126.40:9092/createFolder`, {
+        fetch(`http://32.199.250.58:9093/createFolder`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ folderPath: dir, projectId: currProjectId, folderName: file })
@@ -137,7 +137,7 @@ watcher
         console.log(`folder ${fullPath} has been removed`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
-        fetch(`http://54.90.126.40:9092/deleteNode`, {
+        fetch(`http://32.199.250.58:9093/deleteNode`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
