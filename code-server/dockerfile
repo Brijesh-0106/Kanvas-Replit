@@ -14,4 +14,4 @@ RUN apt-get update \
 USER coder
 EXPOSE 8080
 RUN mkdir -p /tmp/kanvas
-CMD ["code-server","--auth","none","--bind-addr","0.0.0.0:8080","/tmp/project"]
+CMD ["code-server","--auth","none","--bind-addr","0.0.0.0:8080","/tmp/kanvas"]

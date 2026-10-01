@@ -280,8 +280,8 @@ export default function Project() {
                   height="100%"
                   onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                   className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                  src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/project`}
-                  // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                  src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
+                  // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                 />
               </div>
             )}
@@ -293,8 +293,8 @@ export default function Project() {
                     height="100%"
                     onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                    src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/project`}
-                    // src={`http://${publicDnsName}:8080/?folder=/tmp/project`}
+                    src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
+                    // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                   />
                 </div>
                 <div className="w-2/6 max-w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">
