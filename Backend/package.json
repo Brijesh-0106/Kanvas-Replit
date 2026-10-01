@@ -1,0 +1,46 @@
+{
+  "name": "asg-backend-route",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsc -b && node dist/index.js",
+    "prebuild": "prisma generate && tsc -b",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-auto-scaling": "^3.1070.0",
+    "@aws-sdk/client-ec2": "^3.1075.0",
+    "@prisma/config": "^6.19.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/morgan": "^1.9.10",
+    "@xenova/transformers": "^2.17.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.9.0",
+    "groq-sdk": "^1.5.0",
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.3",
+    "morgan": "^1.11.0",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/node": "^25.9.4",
+    "prisma": "^6.19.0"
+  }
+}

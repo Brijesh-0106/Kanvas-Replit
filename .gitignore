@@ -2,8 +2,6 @@
 **/node_modules/
 **/.env
 /Backend/dist
-**/package-lock.json
-**/package.json
 /generated/prisma
 copy-og-image.ps1
 *.tsbuildinfo
