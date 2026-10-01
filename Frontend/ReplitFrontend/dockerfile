@@ -22,4 +22,4 @@ ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_SECRET=$VITE_GOOGLE_SECRET
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 5174
-CMD ["npm","run","dev"]
+CMD ["nginx","-g","daemon off;"]
