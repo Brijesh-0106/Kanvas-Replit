@@ -1,16 +1,16 @@
 # Kanvas 🎨
 
-[![Live Site](https://img.shields.io/badge/Live%20Demo-kanvas.usecerebro.co.in-orange?style=for-the-badge&logo=google-chrome&logoColor=white)](https://kanvas.usecerebro.co.in)
+[![Live Site](https://img.shields.io/badge/Live%20Demo-kanvas.advertises.co.in-orange?style=for-the-badge&logo=google-chrome&logoColor=white)](https://kanvas.advertises.co.in)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Nod e.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/)
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Prisma](https://img.shields.io/badge/Prisma-39827F?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-🔗 **Live Application URL**: [https://kanvas.usecerebro.co.in](https://kanvas.usecerebro.co.in)
+🔗 **Live Application URL**: [https://kanvas.advertises.co.in](https://kanvas.advertises.co.in)
 
 **Kanvas** is a high-performance, cost-optimized cloud development environment platform (similar to Replit, Gitpod, and GitHub Codespaces). It provisions, lifecycle-manages, and orchestrates full browser-based VS Code environments on-demand in AWS EC2, complete with multi-language runtimes, automated idle auto-scaling, S3-backed workspace persistence, and an AI coding assistant.
 
@@ -68,7 +68,7 @@ flowchart TD
     AWS_ASG -->|6. Provision EC2| EC2[EC2 VM: VS Code Server + Sidecar Daemon]
     User <-->|7. Direct Web IDE Access :8080| EC2
     EC2 -->|8. Periodic Heartbeats| BE
-    EC2 <-->|9. Real-Time File Sync & AI Patching :3001| BE
+    EC2 <-->|9. Real-Time File Sync & AI Patching :9093| BE
     BE -.->|10. Idle Detected -> Trigger S3 Backup| EC2
     EC2 -.->|11. Archive Project Zip| S3[(AWS S3 Cold Storage)]
     AWS_ASG -.->|12. Terminate Idle Instance| EC2
@@ -78,22 +78,22 @@ flowchart TD
 
 1. **Frontend Dashboard (`/Frontend/ReplitFrontend`)**: React 18, Vite, TailwindCSS, Lucide/React-Icons, React Hook Form, Google OAuth2.
 2. **Orchestration Backend (`/Backend`)**: Express.js, TypeScript, AWS SDK v3 (EC2 & Auto-Scaling), Prisma ORM with MongoDB, Redis, Groq SDK.
-3. **In-VM Sidecar Daemon (`/VS-Dummy-Ins`)**: Node.js/Express service running inside each EC2 instance on port `3001` with Chokidar file-watcher and AWS S3 integration.
+3. **In-VM Sidecar Daemon (`/VS-Dummy-Ins`)**: Node.js/Express service running inside each EC2 instance on port `9093` with Chokidar file-watcher and AWS S3 integration.
 4. **Cloud IDE AMI**: Dockerized `codercom/code-server` with pre-installed Node.js 22, Python 3, Java 17, and development tooling.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Domain | Technologies |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, TypeScript, TailwindCSS, React Router DOM, React Hook Form |
-| **Backend** | Node.js, Express, TypeScript, Prisma ORM, MongoDB |
-| **Cloud & DevOps** | AWS Auto Scaling Groups, AWS EC2, AWS S3, AWS SDK v3, Docker |
-| **Caching & State** | Redis (ioredis) |
-| **AI & Search** | Groq SDK (`openai/gpt-oss-120b`), Vector Embeddings & Cosine Similarity |
-| **Authentication** | JWT, Refresh Token rotation, Redis Blacklisting, Google OAuth 2.0 |
-| **Core IDE Engine** | `code-server` (VS Code in the browser), Chokidar |
+| Domain              | Technologies                                                               |
+| :------------------ | :------------------------------------------------------------------------- |
+| **Frontend**        | React 18, Vite, TypeScript, TailwindCSS, React Router DOM, React Hook Form |
+| **Backend**         | Node.js, Express, TypeScript, Prisma ORM, MongoDB                          |
+| **Cloud & DevOps**  | AWS Auto Scaling Groups, AWS EC2, AWS S3, AWS SDK v3, Docker               |
+| **Caching & State** | Redis (ioredis)                                                            |
+| **AI & Search**     | Groq SDK (`openai/gpt-oss-120b`), Vector Embeddings & Cosine Similarity    |
+| **Authentication**  | JWT, Refresh Token rotation, Redis Blacklisting, Google OAuth 2.0          |
+| **Core IDE Engine** | `code-server` (VS Code in the browser), Chokidar                           |
 
 ---
 
@@ -129,7 +129,7 @@ GOOGLE_SECRET=your_google_oauth_client_secret
 ### Frontend Configurations (`Frontend/ReplitFrontend/.env`)
 
 ```env
-VITE_BACKEND_URL=https://kanvas.usecerebro.co.in/api
+VITE_BACKEND_URL=https://kanvas.advertises.co.in/api
 VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 VITE_GOOGLE_SECRET=your_google_oauth_client_secret
 ```
@@ -137,7 +137,7 @@ VITE_GOOGLE_SECRET=your_google_oauth_client_secret
 ### VM Sidecar Daemon Configurations (`VS-Dummy-Ins/.env`)
 
 ```env
-PORT=3001
+PORT=9093
 BUCKET_NAME=kanvas-staleproject-data
 ACC_KEY_ID=your_aws_access_key_id
 SECRET_ACC_KEY=your_aws_secret_access_key
@@ -185,13 +185,14 @@ npm install
 npm run dev
 ```
 
-Open your browser to `http://localhost:5173`.
+Open your browser to `http://localhost:5174`.
 
 ---
 
 ## 📦 Containerization & Deployment
 
 ### 1. Build & Run Backend
+
 ```bash
 cd Backend
 docker build -t kanvas-backend .
@@ -199,6 +200,7 @@ docker run -p 9092:9092 --env-file .env kanvas-backend
 ```
 
 ### 2. Build & Run Frontend
+
 ```bash
 cd Frontend/ReplitFrontend
 docker build -t kanvas-frontend .
@@ -206,10 +208,11 @@ docker run -p 80:80 kanvas-frontend
 ```
 
 ### 3. Build & Run VM Sidecar Agent
+
 ```bash
 cd VS-Dummy-Ins
 docker build -t kanvas-agent .
-docker run -p 3001:3001 --env-file .env kanvas-agent
+docker run -p 9093:9093 --env-file .env kanvas-agent
 ```
 
 ---

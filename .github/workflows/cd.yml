@@ -23,9 +23,7 @@ jobs:
       - name: docker push
         run: |
           ls
-          echo "HI"
           cd ./Backend  
-          echo "HI 2"
           ls -la
           cat .dockerignore
           docker build --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -t brijesh408/kanvas-be:v${{github.run_number}} .
