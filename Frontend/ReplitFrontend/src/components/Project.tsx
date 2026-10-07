@@ -4,6 +4,7 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaArrowUp } from "react-icons/fa";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { IoHome } from "react-icons/io5";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../App.css";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -40,14 +41,14 @@ export default function Project() {
   };
 
   const stateVal = uri.state;
-  // const publicDnsName =
-  //   typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
+  const publicDnsName =
+    typeof stateVal === "string" ? stateVal : (stateVal?.publicDnsName ?? "");
   const projectName =
     typeof stateVal === "string" ? "" : (stateVal?.projectName ?? "");
   const isAI = typeof stateVal === "boolean" ? false : (stateVal?.isAI ?? "");
   const instanceId =
     typeof stateVal === "string" ? "" : (stateVal?.instanceId ?? "");
-
+  console.log(publicDnsName)
   useEffect(() => {
     console.log("entered");
     const fetchChatHistory = async () => {
@@ -128,7 +129,7 @@ export default function Project() {
             clearInterval(heartBeat);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, [projectId]);
@@ -138,6 +139,7 @@ export default function Project() {
   }
 
   const [loaded, setLoaded] = useState(false);
+  const [showAISidebar, setShowAISidebar] = useState(true);
   return (
     <>
       <div className="h-screen w-screen bg-gray-950 relative">
@@ -263,7 +265,22 @@ export default function Project() {
                 </div>
               </div>
             </div>
-            <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer">
+            <div className="rightSideNav text-[#c3c2b7] text-xl flex gap-4 cursor-pointer items-center">
+              {isAI && (
+                <button
+                  id="toggle-ai-sidebar"
+                  onClick={() => setShowAISidebar((prev) => !prev)}
+                  title={showAISidebar ? "Hide AI Sidebar" : "Show AI Sidebar"}
+                  className="flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[#c3c2b7] transition-all duration-200"
+                >
+                  {showAISidebar ? (
+                    <PanelRightClose size={16} />
+                  ) : (
+                    <PanelRightOpen size={16} />
+                  )}
+                  <span className="text-xs font-medium">{showAISidebar ? "Hide AI" : "Show AI"}</span>
+                </button>
+              )}
               <IoHome onClick={navDashboard} />
             </div>
           </div>
@@ -281,249 +298,251 @@ export default function Project() {
                   onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                   className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                   src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
-                  // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
+                // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                 />
               </div>
             )}
             {isAI && (
-              <div className="flex w-screen gap-3">
-                <div className="w-4/6 h-full shrink-0 bg-[#181818] p-3 rounded-lg">
+              <div className="flex w-full gap-3 transition-all duration-300">
+                <div className={`h-full shrink-0 bg-[#181818] p-3 rounded-lg transition-all duration-300 ${showAISidebar ? "w-4/6" : "w-full"}`}>
                   <iframe
                     width="100%"
                     height="100%"
                     onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                     src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
-                    // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
+                  // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                   />
                 </div>
-                <div className="w-2/6 max-w-2/6 relative h-full p-2 border  bg-[#181818] rounded-lg">
-                  <div className="topbar justify-center text-[#c3c2b7] border-[#c3c2b7]/10 border-b-2 pb-2">
-                    <div className="flex gap-1 justify-center items-center">
-                      <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                        >
-                          <rect
-                            x="1"
-                            y="1"
-                            width="5"
-                            height="5"
-                            rx="1"
-                            fill="#e4e4e7"
-                          />
-                          <rect
-                            x="8"
-                            y="1"
-                            width="5"
-                            height="5"
-                            rx="1"
-                            fill="#e4e4e7"
-                            opacity="0.4"
-                          />
-                          <rect
-                            x="1"
-                            y="8"
-                            width="5"
-                            height="5"
-                            rx="1"
-                            fill="#e4e4e7"
-                            opacity="0.4"
-                          />
-                          <rect
-                            x="8"
-                            y="8"
-                            width="5"
-                            height="5"
-                            rx="1"
-                            fill="#e4e4e7"
-                          />
-                        </svg>
+                {showAISidebar && (
+                  <div className="w-2/6 max-w-2/6 relative h-full p-2 border bg-[#181818] rounded-lg animate-in slide-in-from-right-4 duration-300">
+                    <div className="topbar justify-center text-[#c3c2b7] border-[#c3c2b7]/10 border-b-2 pb-2">
+                      <div className="flex gap-1 justify-center items-center">
+                        <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                          >
+                            <rect
+                              x="1"
+                              y="1"
+                              width="5"
+                              height="5"
+                              rx="1"
+                              fill="#e4e4e7"
+                            />
+                            <rect
+                              x="8"
+                              y="1"
+                              width="5"
+                              height="5"
+                              rx="1"
+                              fill="#e4e4e7"
+                              opacity="0.4"
+                            />
+                            <rect
+                              x="1"
+                              y="8"
+                              width="5"
+                              height="5"
+                              rx="1"
+                              fill="#e4e4e7"
+                              opacity="0.4"
+                            />
+                            <rect
+                              x="8"
+                              y="8"
+                              width="5"
+                              height="5"
+                              rx="1"
+                              fill="#e4e4e7"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-base font-semibold tracking-tight text-amber-700">
+                          Kanvas
+                        </span>
                       </div>
-                      <span className="text-base font-semibold tracking-tight text-amber-700">
-                        Kanvas
-                      </span>
                     </div>
-                  </div>
-                  <div
-                    id="message-container"
-                    style={{ height: "calc(100vh - 250px)" }}
-                    className="w-full h-sceen overflow-y-auto  max-md:px-2 mb-28"
-                  >
-                    {!msgList.length && nochat && (
-                      <div className="flex mt-42 gap-4 flex-col justify-center items-center">
-                        <div className="empty-cards-desc text-zinc-900 dark:text-white">
-                          <div className="text-amber-700 text-md text-center">
-                            Welcome to Kanvas
+                    <div
+                      id="message-container"
+                      style={{ height: "calc(100vh - 250px)" }}
+                      className="w-full h-sceen overflow-y-auto  max-md:px-2 mb-28"
+                    >
+                      {!msgList.length && nochat && (
+                        <div className="flex mt-42 gap-4 flex-col justify-center items-center">
+                          <div className="empty-cards-desc text-zinc-900 dark:text-white">
+                            <div className="text-amber-700 text-md text-center">
+                              Welcome to Kanvas
+                            </div>
+                            <div className="text-center mt-3 text-zinc-600 text-sm dark:text-[#a9a9a9] max-md:text-sm">
+                              Chat with Your personal coding Agent
+                            </div>
                           </div>
-                          <div className="text-center mt-3 text-zinc-600 text-sm dark:text-[#a9a9a9] max-md:text-sm">
-                            Chat with Your personal coding Agent
+                          <div className="empty-cards-boxes">
+                            <button className="px-3 py-1 bg-primary/20 text-primary text-sm bg-amber-700  rounded flex items-center gap-1 text-white transition-colors">
+                              <HiOutlineChatBubbleLeftRight size={16} />
+                              Start Chatting
+                            </button>
                           </div>
                         </div>
-                        <div className="empty-cards-boxes">
-                          <button className="px-3 py-1 bg-primary/20 text-primary text-sm bg-amber-700  rounded flex items-center gap-1 text-white transition-colors">
-                            <HiOutlineChatBubbleLeftRight size={16} />
-                            Start Chatting
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {msgList.length > 0 &&
-                      msgList.map((msg: ConversationProps, ind) => (
-                        <>
-                          {msg.isAi == false ? (
-                            // FOR USER MESSAGE
-                            <>
-                              <div
-                                key={ind}
-                                className="mt-6 w-fit flex items-center ml-auto"
-                              >
-                                <div className="rounded-lg max-w-lg p-2 w-fit bg-[#212121] text-[#c3c2b7] text-sm bg-primary shadow-md">
-                                  {msg.msg}
-                                </div>
-                                {/* <div className="text-zinc-900 dark:text-white ml-2">
+                      )}
+                      {msgList.length > 0 &&
+                        msgList.map((msg: ConversationProps, ind) => (
+                          <>
+                            {msg.isAi == false ? (
+                              // FOR USER MESSAGE
+                              <>
+                                <div
+                                  key={ind}
+                                  className="mt-6 w-fit flex items-center ml-auto"
+                                >
+                                  <div className="rounded-lg max-w-lg p-2 w-fit bg-[#212121] text-[#c3c2b7] text-sm bg-primary shadow-md">
+                                    {msg.msg}
+                                  </div>
+                                  {/* <div className="text-zinc-900 dark:text-white ml-2">
                                   <img
                                     src={userPicture}
                                     alt="User Profile"
                                     className="w-8 h-8 rounded-full"
                                   />
                                 </div> */}
-                              </div>
-                              <div className="text-zinc-500 dark:text-[#a9a9a9] ml-auto  text-[10px] mb-6 text-right">
-                                {msg.createdAt}
-                              </div>
-                            </>
-                          ) : (
-                            // FOR AI MESSAGE
-                            <>
-                              <div className="my-12">
-                                <div className="flex items-center ">
-                                  <div className="mr-2 flex items-center justify-center">
-                                    <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
-                                      <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 14 14"
-                                        fill="none"
-                                      >
-                                        <rect
-                                          x="1"
-                                          y="1"
-                                          width="5"
-                                          height="5"
-                                          rx="1"
-                                          fill="#e4e4e7"
-                                        />
-                                        <rect
-                                          x="8"
-                                          y="1"
-                                          width="5"
-                                          height="5"
-                                          rx="1"
-                                          fill="#e4e4e7"
-                                          opacity="0.4"
-                                        />
-                                        <rect
-                                          x="1"
-                                          y="8"
-                                          width="5"
-                                          height="5"
-                                          rx="1"
-                                          fill="#e4e4e7"
-                                          opacity="0.4"
-                                        />
-                                        <rect
-                                          x="8"
-                                          y="8"
-                                          width="5"
-                                          height="5"
-                                          rx="1"
-                                          fill="#e4e4e7"
-                                        />
-                                      </svg>
+                                </div>
+                                <div className="text-zinc-500 dark:text-[#a9a9a9] ml-auto  text-[10px] mb-6 text-right">
+                                  {msg.createdAt}
+                                </div>
+                              </>
+                            ) : (
+                              // FOR AI MESSAGE
+                              <>
+                                <div className="my-12">
+                                  <div className="flex items-center ">
+                                    <div className="mr-2 flex items-center justify-center">
+                                      <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-md flex items-center justify-center">
+                                        <svg
+                                          width="14"
+                                          height="14"
+                                          viewBox="0 0 14 14"
+                                          fill="none"
+                                        >
+                                          <rect
+                                            x="1"
+                                            y="1"
+                                            width="5"
+                                            height="5"
+                                            rx="1"
+                                            fill="#e4e4e7"
+                                          />
+                                          <rect
+                                            x="8"
+                                            y="1"
+                                            width="5"
+                                            height="5"
+                                            rx="1"
+                                            fill="#e4e4e7"
+                                            opacity="0.4"
+                                          />
+                                          <rect
+                                            x="1"
+                                            y="8"
+                                            width="5"
+                                            height="5"
+                                            rx="1"
+                                            fill="#e4e4e7"
+                                            opacity="0.4"
+                                          />
+                                          <rect
+                                            x="8"
+                                            y="8"
+                                            width="5"
+                                            height="5"
+                                            rx="1"
+                                            fill="#e4e4e7"
+                                          />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                    <div
+                                      key={ind}
+                                      style={{ maxWidth: "calc(100% - 50px)" }}
+                                      className="rounded-lg text-[#c3c2b7] text-sm w-full bg-[#1e1e1e] border border-zinc-800 shadow-sm p-4 overflow-x-auto"
+                                    >
+                                      <MarkdownRenderer content={msg.msg!} />
                                     </div>
                                   </div>
-                                  <div
-                                    key={ind}
-                                    style={{ maxWidth: "calc(100% - 50px)" }}
-                                    className="rounded-lg text-[#c3c2b7] text-sm w-full bg-[#1e1e1e] border border-zinc-800 shadow-sm p-4 overflow-x-auto"
-                                  >
-                                    <MarkdownRenderer content={msg.msg!} />
-                                  </div>
                                 </div>
-                              </div>
-                              {/* {JSON.stringify(msg.sourceIds)} */}
-                            </>
-                          )}
-                        </>
-                      ))}
-                    {!isAIResReady && (
-                      <>
-                        <div className="flex gap-1 px-2 py-1  border border-zinc-200 dark:border-transparent rounded-lg w-fit items-center shadow-sm">
-                          <div
-                            className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
-                            style={{ animationDelay: "0ms" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
-                            style={{ animationDelay: "150ms" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
-                            style={{ animationDelay: "300ms" }}
-                          ></div>
-                        </div>
-                      </>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                  <form onSubmit={handleSubmit(sendChat)} className="flex">
-                    <div className="bottom-chat-box absolute w-full bottom-0 right-0">
-                      <div className="relative p-2">
-                        <div className="flex rounded-lg text-[#c3c2b7] p-1 bottom-1 min-h-20 gap-1 justify-between border-[#c3c2b7]/10 border-2">
-                          <textarea
-                            rows={3}
-                            {...register("userInput", {})}
-                            placeholder={`${isLoading ? "Processing..." : "@kanvas to talk AI..."}`}
-                            className="focus:outline-none focus:ring-0 w-9/10 text-sm p-2"
-                          />
-                          <div className="relative w-1/10">
-                            {isLoading && (
-                              <button
-                                type="submit"
-                                disabled={true}
-                                className="cursor-pointer mt-2 bg-zinc-200 dark:bg-zinc-700 right-4 top-2 rounded-lg p-1"
-                              >
-                                <AiOutlineLoading3Quarters
-                                  size={20}
-                                  className="text-zinc-400 dark:text-zinc-500 animate-spin"
-                                />
-                              </button>
+                                {/* {JSON.stringify(msg.sourceIds)} */}
+                              </>
                             )}
-                            {!isLoading &&
-                              (userChat !== "" ? (
-                                <button className="">
-                                  <span className="absolute bottom-1 bg-amber-700 hover:bg-amber-800 rounded-lg p-1.5 cursor-pointer left-1">
-                                    <FaArrowUp className="text-white" />
-                                  </span>
-                                </button>
-                              ) : (
-                                <button className="">
-                                  <span className="absolute bottom-1 bg-zinc-200 dark:bg-zinc-700 rounded-lg p-1.5 cursor-pointer left-1">
-                                    <FaArrowUp className="text-white dark:text-zinc-500" />
-                                  </span>
-                                </button>
-                              ))}
+                          </>
+                        ))}
+                      {!isAIResReady && (
+                        <>
+                          <div className="flex gap-1 px-2 py-1  border border-zinc-200 dark:border-transparent rounded-lg w-fit items-center shadow-sm">
+                            <div
+                              className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
+                              style={{ animationDelay: "0ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
+                              style={{ animationDelay: "150ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 mt-1 bg-amber-700 rounded-full animate-bounce"
+                              style={{ animationDelay: "300ms" }}
+                            ></div>
                           </div>
-                        </div>
-                        {/* <input type="text"></input> */}
-                      </div>
+                        </>
+                      )}
+                      <div ref={messagesEndRef} />
                     </div>
-                  </form>
-                </div>
+                    <form onSubmit={handleSubmit(sendChat)} className="flex">
+                      <div className="bottom-chat-box absolute w-full bottom-0 right-0">
+                        <div className="relative p-2">
+                          <div className="flex rounded-lg text-[#c3c2b7] p-1 bottom-1 min-h-20 gap-1 justify-between border-[#c3c2b7]/10 border-2">
+                            <textarea
+                              rows={3}
+                              {...register("userInput", {})}
+                              placeholder={`${isLoading ? "Processing..." : "@kanvas to talk AI..."}`}
+                              className="focus:outline-none focus:ring-0 w-9/10 text-sm p-2"
+                            />
+                            <div className="relative w-1/10">
+                              {isLoading && (
+                                <button
+                                  type="submit"
+                                  disabled={true}
+                                  className="cursor-pointer mt-2 bg-zinc-200 dark:bg-zinc-700 right-4 top-2 rounded-lg p-1"
+                                >
+                                  <AiOutlineLoading3Quarters
+                                    size={20}
+                                    className="text-zinc-400 dark:text-zinc-500 animate-spin"
+                                  />
+                                </button>
+                              )}
+                              {!isLoading &&
+                                (userChat !== "" ? (
+                                  <button className="">
+                                    <span className="absolute bottom-1 bg-amber-700 hover:bg-amber-800 rounded-lg p-1.5 cursor-pointer left-1">
+                                      <FaArrowUp className="text-white" />
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <button className="">
+                                    <span className="absolute bottom-1 bg-zinc-200 dark:bg-zinc-700 rounded-lg p-1.5 cursor-pointer left-1">
+                                      <FaArrowUp className="text-white dark:text-zinc-500" />
+                                    </span>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                          {/* <input type="text"></input> */}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             )}
           </div>
