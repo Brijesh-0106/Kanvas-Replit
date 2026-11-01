@@ -1,10 +1,10 @@
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaArrowUp } from "react-icons/fa";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { IoHome } from "react-icons/io5";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../App.css";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -48,7 +48,7 @@ export default function Project() {
   const isAI = typeof stateVal === "boolean" ? false : (stateVal?.isAI ?? "");
   const instanceId =
     typeof stateVal === "string" ? "" : (stateVal?.instanceId ?? "");
-  console.log(publicDnsName)
+  console.log(publicDnsName);
   useEffect(() => {
     console.log("entered");
     const fetchChatHistory = async () => {
@@ -129,7 +129,7 @@ export default function Project() {
             clearInterval(heartBeat);
           }
         })
-        .catch(() => { });
+        .catch(() => {});
     }, 1000 * 30);
     return () => clearInterval(heartBeat);
   }, [projectId]);
@@ -278,7 +278,9 @@ export default function Project() {
                   ) : (
                     <PanelRightOpen size={16} />
                   )}
-                  <span className="text-xs font-medium">{showAISidebar ? "Hide AI" : "Show AI"}</span>
+                  <span className="text-xs font-medium">
+                    {showAISidebar ? "Hide AI" : "Show AI"}
+                  </span>
                 </button>
               )}
               <IoHome onClick={navDashboard} />
@@ -298,20 +300,22 @@ export default function Project() {
                   onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                   className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                   src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
-                // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
+                  // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                 />
               </div>
             )}
             {isAI && (
               <div className="flex w-full gap-3 transition-all duration-300">
-                <div className={`h-full shrink-0 bg-[#181818] p-3 rounded-lg transition-all duration-300 ${showAISidebar ? "w-4/6" : "w-full"}`}>
+                <div
+                  className={`h-full shrink-0 bg-[#181818] p-3 rounded-lg transition-all duration-300 ${showAISidebar ? "w-4/6" : "w-full"}`}
+                >
                   <iframe
                     width="100%"
                     height="100%"
                     onLoad={() => setTimeout(() => setLoaded(true), 3500)}
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                     src={`https://ws-${instanceId}.kanvas.advertises.co.in/?folder=/tmp/kanvas`}
-                  // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
+                    // src={`http://${publicDnsName}:8080/?folder=/tmp/kanvas`}
                   />
                 </div>
                 {showAISidebar && (

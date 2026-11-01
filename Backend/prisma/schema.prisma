@@ -78,3 +78,15 @@ model Project {
   files         File[]
   messages      Message[]
 }
+
+model GithubConnection {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String    @unique // match the type of your User.id
+  githubLogin      String
+  accessTokenEnc   String
+  refreshTokenEnc  String?
+  accessExpiresAt  DateTime?
+  refreshExpiresAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}

@@ -11,16 +11,17 @@ import jwt from 'jsonwebtoken';
 import morgan from 'morgan';
 import { machine } from "node:os";
 import { PrismaClient } from "./generated/prisma/client.js";
+import githubAuth from "./githubAuth.js";
 import { generateResult } from "./services/ai.service.js";
 import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
 import * as projectService from "./services/project.service.js";
 import { findRelevantFiles } from "./services/similarity.service.js";
 const prisma = new PrismaClient()
-const redis = new Redis({
+export const redis = new Redis({
     host: 'redis',  // container name, not localhost
     port: 6379
 })
-// const redis = new Redis()
+// export const redis = new Redis()
 const app = express();
 
 declare global {
@@ -42,7 +43,6 @@ const middleAuth = async (req: Request, res: Response, next: NextFunction) => {
         }
         const payload = await jwt.verify(token, process.env.SECRET_KEY as string)
         if (payload) {
-            console.log(payload)
             const blackListed = await redis.get(`blackList:${token}`)
             if (blackListed) {
                 return res.status(401).send('Token has expired');
@@ -51,7 +51,6 @@ const middleAuth = async (req: Request, res: Response, next: NextFunction) => {
             req.userId = temp.id
             next()
         } else {
-            console.log(payload, "check middle auth jwt verify failed")
             if (payload === 'TokenExpiredError') {
                 return res.status(401).send('Token has expired');
             }
@@ -69,10 +68,12 @@ const middleAuth = async (req: Request, res: Response, next: NextFunction) => {
 }
 // ----------------------------------------- 
 
-app.use(cors());
+// app.use(cors());
+app.use(cors({ origin: ['http://localhost:5174', 'https://kanvas.advertises.co.in'], credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'))
 app.use(cookieParser())
+app.use(githubAuth);
 
 // --------------------------------------------OAUTH2 CONFIG
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -110,7 +111,7 @@ const ec2Client = new EC2Client({
     }
 });
 
-function increaseDesiredCapacity(num: number) {
+export function increaseDesiredCapacity(num: number) {
     const setDesiredCapCommand = new SetDesiredCapacityCommand({
         AutoScalingGroupName: process.env.AUTO_SCALING_GROUP_NAME as string ?? "",
         DesiredCapacity: num
@@ -137,7 +138,6 @@ const refreshedInstances = async () => {
 
     for (const instanceId of ALL_INSTANCES) {
         if (!activeInstanceIds.includes(instanceId)) {
-            console.log(`Removing terminated instance: ${instanceId}`)
             await redis.del(`ALL_MACHINES:${instanceId!}`)
             await redis.srem(`ALL_INSTANCES`, instanceId!)
         }
@@ -176,14 +176,13 @@ setInterval(async () => {
     const ALL_INSTANCES = await redis.smembers('ALL_INSTANCES')
     for (const instanceId of ALL_INSTANCES) {
         const machine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
-        console.log(machine, "check")
+        // console.log(machine, "check")
         if (Object.keys(machine).length === 0)
             continue;
-        console.log(machine, "time check")
+        // console.log(machine, "time check")
         const isUsed = machine.isUsed === "true";
         if (!isUsed) continue;
         if (machine.lastHeartBeat === undefined) continue;
-        console.log("stale")
         const lastPingTime: number = Date.now() - Number(machine!.lastHeartBeat)
         if (lastPingTime > Number(process.env.GRACE_PERIOD ?? 0)) {
             console.log("\n\n")
@@ -586,7 +585,6 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
         await redis.del(cacheKey);
         const { projName } = req.params;
         const { proType } = req.query
-        console.log(proType);
         const user = await prisma.user.findFirst({
             where: {
                 id: req.userId as unknown as string
@@ -594,8 +592,6 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                 projects: true
             }
         })
-        console.log(user);
-        const existingProjects = user?.projects
         if (user) {
             if (user.id) {
                 const projects = await prisma.project.findMany({ where: { userId: user?.id } })

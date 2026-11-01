@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { Alert } from "./components/Alert";
 import DashboardPage from "./components/DashboardPage";
+import GithubOptions from "./components/GithubOptions";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Modal from "./components/Modal";
@@ -34,7 +35,7 @@ function App() {
       );
       if (res.status == 200) {
         setLoaded(true);
-        nav("/dashboard");
+        // nav("/dashboard");
       } else {
         localStorage.removeItem("token");
         setLoaded(true);
@@ -134,6 +135,19 @@ function App() {
                 setLoginModal={setLoginModal}
                 setSignInModal={setSignInModal}
               />
+            }
+          />
+
+          <Route
+            path="/github"
+            element={
+              <Modal>
+                <GithubOptions
+                  setShowAlert={setShowAlert}
+                  setAlertMsg={setAlertMsg}
+                  setAlertType={setAlertType}
+                />
+              </Modal>
             }
           />
         </Routes>

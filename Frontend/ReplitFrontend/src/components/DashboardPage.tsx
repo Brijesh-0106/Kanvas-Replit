@@ -8,12 +8,12 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { GoProjectSymlink } from "react-icons/go";
+import { PiFinnTheHumanFill } from "react-icons/pi";
 import { RiAi } from "react-icons/ri";
-export type alertType = "success" | "error" | "warning" | "info";
-
 import { useNavigate } from "react-router-dom";
 import Dropdown from "./Dropdown";
 import Navbar from "./Navbar";
+export type alertType = "success" | "error" | "warning" | "info";
 const icons = [
   {
     icon: <FaNodeJs height={30} width={30} className="text-green-500" />,
@@ -34,6 +34,12 @@ const icons = [
   {
     label: "AI",
     icon: <RiAi className="text-red-500" height={30} width={30} />,
+  },
+  {
+    label: "AI Agent",
+    icon: (
+      <PiFinnTheHumanFill className="text-amber-700" height={30} width={30} />
+    ),
   },
 ];
 type machine = {
@@ -363,7 +369,7 @@ function DashboardPage({
                       >
                         <FaTrash className="text-white text-sm" />
                       </button>
-                      <div className="projectTypeImage h-3/4 flex flex-col items-center justify-center border-b border-gray-400">
+                      <div className="projectTypeImage h-3/4 flex flex-col bg-[#181818] rounded-t-xl items-center justify-center border-b border-gray-400">
                         {elem.projectType == "Node" && (
                           <>
                             <span className="text-7xl">{icons[0].icon}</span>
@@ -399,9 +405,14 @@ function DashboardPage({
                         {elem.projectType == "AI" && (
                           <>
                             <span className="text-7xl">{icons[4].icon}</span>
-                            {/* <span className="text-lg font-bold text-[#c3c2b7]">
-                              {icons[4].label}
-                            </span> */}
+                          </>
+                        )}
+                        {elem.projectType == "AI Agent" && (
+                          <>
+                            <span className="text-7xl">{icons[5].icon}</span>
+                            <span className="text-sm font-bold text-[#c3c2b7]">
+                              {icons[5].label}
+                            </span>
                           </>
                         )}
                       </div>
