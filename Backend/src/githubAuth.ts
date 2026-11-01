@@ -17,7 +17,7 @@ const prisma = new PrismaClient()
 
 
 // ── ADAPT these three lines to your project ─────────────────────────────────
-const getUserId = (req: Request): string =>
+export const getUserId = (req: Request): string =>
     (req as Request & { userId: string }).userId;
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -362,14 +362,12 @@ async function assignMachine(userId: string, projName: string, proType: string, 
                     return
                 }
                 const token = await getGithubToken(userId);
-                const row = await prisma.githubConnection.findUnique({ where: { userId: getUserId(req) } });
-                // fetch(`http://${machinePublicDNSName}:9095/register-project/${machine?.projectId}`)
                 fetch(`http://${machinePublicDNSName}:9095/git-clone`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ token, fullName: row?.githubLogin + '/' + projName, userId: machine.userId, projectId: machine.projectId })
+                    body: JSON.stringify({ token, fullName: projName, userId: machine.userId, projectId: machine.projectId })
                 })
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {

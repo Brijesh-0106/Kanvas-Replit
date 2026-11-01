@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import morgan from 'morgan';
 import { machine } from "node:os";
 import { PrismaClient } from "./generated/prisma/client.js";
-import githubAuth from "./githubAuth.js";
+import githubAuth, { getGithubToken, getUserId } from "./githubAuth.js";
 import { generateResult } from "./services/ai.service.js";
 import { indexChangedFiles, mergeFileTrees } from "./services/file.service.js";
 import * as projectService from "./services/project.service.js";
@@ -674,7 +674,23 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                     })
                     return
                 }
-                fetch(`http://${machinePublicDNSName}:9095/register-project/${machine?.projectId}`)
+                console.log(proType, "proType-----1")
+                if (proType == 'AI Agent') {
+                    const token = await getGithubToken(machine.userId);
+                    console.log(token, "token-----1")
+                    console.log(machinePublicDNSName, "machinePublicDNSName-----1")
+                    const row = await prisma.githubConnection.findUnique({ where: { userId: getUserId(req) } });
+
+                    fetch(`http://${machinePublicDNSName}:9095/git-clone`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ token, fullName: row?.githubLogin + '/' + projName, userId: machine.userId, projectId: machine.projectId })
+                    })
+                } else {
+                    fetch(`http://${machinePublicDNSName}:9095/register-project/${machine?.projectId}`)
+                }
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {
                     const singleMachine = await redis.hgetall(`ALL_MACHINES:${instanceId}`)
