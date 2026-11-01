@@ -1,5 +1,5 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { execSync } from "child_process";
+import { execFileSync, execSync } from "child_process";
 import chokidar from 'chokidar';
 import cors from 'cors';
 import "dotenv/config";
@@ -12,6 +12,8 @@ const watcher = chokidar.watch('/tmp/kanvas').on('all', (event, path) => {
     if (event === 'addDir' && path === '/tmp/kanvas') return;
     console.log(event, path);
 });
+
+const PROJECT_ROOT = '/tmp/kanvas';
 
 function folderToJson(dirPath: any) {
     const result: any = {};
@@ -152,7 +154,25 @@ app.get(`/register-project/:projectId`, (req, res) => {
     currProjectId = projectId;
     res.json({ msg: "project registered" })
 })
-
+// ========================= CREATE REPO & REGISTER PROJECT ============
+app.post("/git-clone", async (req: Request, res: Response) => {
+    console.log("==================== Clone & Register ==============")
+    try {
+        const { token, fullName, userId, projectId } = req.body
+        console.log(token, fullName, userId, projectId)
+        currProjectId = projectId;
+        console.log("======== PROJECT REGISTERED SUCCESSFULLY =========");
+        const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
+        execFileSync('git', [
+            '-c', `http.extraheader=Authorization: Basic ${basic}`,
+            '-c', `safe.directory=${PROJECT_ROOT}`,
+            'clone', `https://github.com/${fullName}.git`, '.',
+        ], { cwd: PROJECT_ROOT, stdio: 'pipe' });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err });
+    }
+})
 // ======================== UPDATE FILES =====================
 app.post("/update-files", async (req: Request, res: Response) => {
     console.log("***************** AMI STORE PROJECT *************************")
