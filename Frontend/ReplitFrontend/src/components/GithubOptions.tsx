@@ -237,12 +237,22 @@ export default function GithubOptions({
 
   const canSubmit = !busy && (mode === "new" || !!selected);
 
+  const onClose = () => {
+    nav("/dashboard");
+  };
+
   return (
     <form
       onSubmit={mode === "existing" ? onOpenExisting : handleSubmit(onCreate)}
       className="flex flex-col justify-between min-h-72"
       noValidate
     >
+      <button
+        onClick={onClose}
+        className="text-gray-400 cursor-pointer hover:text-[#c3c2b7] transition-colors text-xl leading-none"
+      >
+        ✕
+      </button>
       <div>
         {/* Mode switch */}
         <div

@@ -13,6 +13,7 @@ const watcher = chokidar.watch('/tmp/kanvas').on('all', (event, path) => {
     console.log(event, path);
 });
 
+let clearing = false; // mutes the watcher while we wipe
 const PROJECT_ROOT = '/tmp/kanvas';
 
 function folderToJson(dirPath: any) {
@@ -75,6 +76,7 @@ app.get("/test", async (req: Request, res: Response) => {
 let timeout: any = null
 watcher
     .on('add', (fullPath) => {
+        if (clearing) return;
         console.log(`File ${fullPath} has been added`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
@@ -91,6 +93,7 @@ watcher
         })
     })
     .on('change', (path) => {
+        if (clearing) return;
         console.log(`File ${path} has been changed`)
         if (timeout)
             clearTimeout(timeout)
@@ -110,6 +113,7 @@ watcher
         }, 500);
     })
     .on('unlink', (fullPath) => {
+        if (clearing) return;
         console.log(`file ${fullPath} has been removed`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
@@ -120,6 +124,7 @@ watcher
         })
     })
     .on('addDir', (fullPath) => {
+        if (clearing) return;
         console.log(`Directory ${fullPath} has been added`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
@@ -136,6 +141,7 @@ watcher
         })
     })
     .on('unlinkDir', (fullPath) => {
+        if (clearing) return;
         console.log(`folder ${fullPath} has been removed`)
         const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
         console.log(`trimmedPath`, trimmedPath)
@@ -154,6 +160,23 @@ app.get(`/register-project/:projectId`, (req, res) => {
     currProjectId = projectId;
     res.json({ msg: "project registered" })
 })
+
+app.get(`/clean-machine`, (req, res) => {
+    clearing = true;
+    try {
+        for (const entry of fs.readdirSync(PROJECT_ROOT)) {   // includes dotfiles like .git
+            fs.rmSync(path.join(PROJECT_ROOT, entry), { recursive: true, force: true });
+        }
+        currProjectId = '';
+        res.json({ success: true });
+    } catch (e) {
+        console.error('clear failed:', e);
+        res.status(500).json({ success: false });
+    } finally {
+        setTimeout(() => { clearing = false; }, 1000); // let chokidar drain its unlink events
+    }
+    res.json({ msg: "Machine Cleaned" })
+})
 // ========================= CREATE REPO & REGISTER PROJECT ============
 app.post("/git-clone", async (req: Request, res: Response) => {
     console.log("==================== Clone & Register ==============")
@@ -161,7 +184,6 @@ app.post("/git-clone", async (req: Request, res: Response) => {
         const { token, fullName, userId, projectId } = req.body
         console.log(token, fullName, userId, projectId)
         currProjectId = projectId;
-        console.log("======== PROJECT REGISTERED SUCCESSFULLY =========");
         const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
         execFileSync('git', [
             '-c', `http.extraheader=Authorization: Basic ${basic}`,

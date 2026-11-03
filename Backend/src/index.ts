@@ -320,6 +320,7 @@ app.get("/fetchProjects", middleAuth, async (req, res) => {
 })
 // ============================================================== DELETE PROJECT
 app.post("/deleteProject", middleAuth, async (req, res) => {
+    // ???? USER MAX AND/OR AI PROJECT SHOULD BE DECREASED AS WELL
     try {
         console.log("\n\n")
         console.log("**************** DELETE ENDPOINT **************")
@@ -330,6 +331,8 @@ app.post("/deleteProject", middleAuth, async (req, res) => {
             }
         })
         if (foundProject) {
+            // ====== FOR PRODUCTION BRING THIS BACK=====
+            await fetch(`http://${machine.publicDnsName}:9095/clean-machine`)
             if (foundProject.id) {
                 await prisma.file.deleteMany({
                     where: { projectId: foundProject.id }
@@ -611,6 +614,12 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                 if (proType == 'AI' && aiCurrentCount >= user.maxAiProjectCnt) {
                     res.status(405).json({
                         message: "Free plan AI Project limit reached. Either delete a AI project or upgrade to premium.",
+                    })
+                    return
+                }
+                if (proType == 'AI Agent' && aiCurrentCount >= user.maxAIAgentProjectCnt) {
+                    res.status(405).json({
+                        message: "Free plan AI Agent Project limit reached. Either delete a AI Agent project or upgrade to premium.",
                     })
                     return
                 }
