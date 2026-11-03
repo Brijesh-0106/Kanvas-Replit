@@ -245,7 +245,7 @@ router.get('/auth/github/callback', async (req, res) => {
         }
         res.clearCookie('gh_oauth');
 
-        const tokens = await tokenRequest({ code, redirect_uri: env('GITHUB_CALLBACK_URL') });
+        const tokens = await tokenRequest({ code, redirect_uri: env('AGENT_GITHUB_CALLBACK_URL') });
 
         const me = await fetch('https://api.github.com/user', { headers: ghHeaders(tokens.access_token) });
         const profile = (await me.json()) as { login?: string };
