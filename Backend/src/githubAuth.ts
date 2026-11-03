@@ -217,8 +217,8 @@ router.get('/auth/github/url', middleAuth, (req, res) => {
         });
         const url = new URL('https://github.com/login/oauth/authorize');
         url.search = new URLSearchParams({
-            client_id: env('GITHUB_CLIENT_ID'),
-            redirect_uri: env('GITHUB_CALLBACK_URL'),
+            client_id: env('AGENT_GITHUB_CLIENT_ID'),
+            redirect_uri: env('AGENT_GITHUB_CALLBACK_URL'),
             scope: 'repo', // use 'public_repo' if you only support public repos
             state: makeState(getUserId(req), nonce),
         }).toString();
