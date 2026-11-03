@@ -132,8 +132,8 @@ async function tokenRequest(params: Record<string, string>): Promise<TokenRespon
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            client_id: env('GITHUB_CLIENT_ID'),
-            client_secret: env('GITHUB_CLIENT_SECRET'),
+            client_id: env('AGENT_GITHUB_CLIENT_ID'),
+            client_secret: env('AGENT_GITHUB_CLIENT_SECRET'),
             ...params,
         }),
     });
