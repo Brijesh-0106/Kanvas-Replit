@@ -147,13 +147,15 @@ async function tokenRequest(params: Record<string, string>): Promise<TokenRespon
 const secondsFromNow = (s?: number | string): Date | null =>
     s ? new Date(Date.now() + Number(s) * 1000) : null;
 
-async function saveTokens(userId: string, githubLogin: string, t: TokenResponse) {
+async function saveTokens(userId: string, githubLogin: string, t: TokenResponse, userName: string, userEmail: string) {
     const data = {
         githubLogin,
         accessTokenEnc: encrypt(t.access_token),
         refreshTokenEnc: t.refresh_token ? encrypt(t.refresh_token) : null,
         accessExpiresAt: secondsFromNow(t.expires_in),
         refreshExpiresAt: secondsFromNow(t.refresh_token_expires_in),
+        githubName: userName,
+        githubEmail: userEmail
     };
     await prisma.githubConnection.upsert({
         where: { userId },
@@ -180,7 +182,7 @@ async function loadOrRefresh(userId: string): Promise<string> {
             grant_type: 'refresh_token',
             refresh_token: decrypt(row.refreshTokenEnc),
         });
-        await saveTokens(userId, row.githubLogin, t); // saves the NEW refresh token too
+        await saveTokens(userId, row.githubLogin, t, row.githubName!, row.githubEmail!); // saves the NEW refresh token too
         return t.access_token;
     } catch (e) {
         if (e instanceof Error && e.message === 'bad_refresh_token') {
@@ -248,10 +250,11 @@ router.get('/auth/github/callback', async (req, res) => {
         const tokens = await tokenRequest({ code, redirect_uri: env('AGENT_GITHUB_CALLBACK_URL') });
 
         const me = await fetch('https://api.github.com/user', { headers: ghHeaders(tokens.access_token) });
-        const profile = (await me.json()) as { login?: string };
+        const profile = (await me.json()) as { login?: string, id?: number; name?: string; email?: string };
         if (!me.ok || !profile.login) throw new Error('Could not read GitHub profile');
-
-        await saveTokens(s.u, profile.login, tokens);
+        const name = profile.name ?? profile.login!;
+        const email = profile.email ?? `${profile.id}+${profile.login}@users.noreply.github.com`;
+        await saveTokens(s.u, profile.login, tokens, name, email);
         back(res, 'connected');
 
         // AI Agent
@@ -362,12 +365,18 @@ async function assignMachine(userId: string, projName: string, proType: string, 
                     return
                 }
                 const token = await getGithubToken(userId);
+                const row = await prisma.githubConnection.findUnique({ where: { userId } });
                 fetch(`http://${machinePublicDNSName}:9095/git-clone`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ token, fullName: projName, userId: machine.userId, projectId: machine.projectId })
+                    body: JSON.stringify({
+                        token, fullName: projName,
+                        projectId: machine.projectId,
+                        userName: row!.githubName,
+                        userEmail: row!.githubEmail,
+                    })
                 })
                 let usedMachines = 0
                 for (const instanceId of ALL_INSTANCES) {

@@ -23,9 +23,9 @@ export const findRelevantFiles = async (projectId: any, prompt: any) => {
   const promptEmbedding = await generateEmbedding(prompt);
 
   const files = await prisma.file.findMany({ where: { projectId: projectId } });
+  console.log(files, "--files")
   const rankedFiles = files!
     .map((file: any) => {
-      console.log(file, "check file")
       return ({
         ...file,
         score: cosineSimilarity(promptEmbedding, file.embedding),

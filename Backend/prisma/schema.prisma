@@ -90,4 +90,6 @@ model GithubConnection {
   refreshExpiresAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  githubName       String?
+  githubEmail      String?
 }

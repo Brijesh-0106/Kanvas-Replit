@@ -2,12 +2,28 @@ import Groq from "groq-sdk";
 import systemInstruction from "../config/systemInstruction.js";
 
 const PRIMARY_MODEL = "openai/gpt-oss-120b";
-const FALLBACK_MODEL = "openai/gpt-oss-120b";
+const FALLBACK_MODEL = "openai/gpt-oss-20b";
 
 export const ai = new Groq({
   apiKey: process.env.GROQ_KEY,
 });
 
+const tools = [{
+  type: 'function' as const,
+  function: {
+    name: 'git_push',
+    description: 'Commit current workspace changes and push them to a GitHub branch. Use only when the user asks to push, commit, save to GitHub, or open a PR.',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'Short commit message summarizing the changes' },
+        branch: { type: 'string', description: 'Branch name, kebab-case. Default: kanvas/<short-topic>' },
+        openPr: { type: 'boolean', description: 'Also open a pull request' },
+      },
+      required: ['message'],
+    },
+  },
+}];
 /**
  * Extracts the first complete JSON object from a response.
  * Handles nested braces and braces inside strings safely.
@@ -55,7 +71,7 @@ interface genResultProps {
   contextFiles: any[];
 }
 export const generateResult = async ({ prompt, projectName, contextFiles = [] }: genResultProps) => {
-  console.log(process.env.GROQ_KEY, "groq key")
+  console.log(contextFiles, "--contextFiles")
   const workspaceContext = `
 Current Project:
 ${projectName}
@@ -93,6 +109,7 @@ ${file.content}
         try {
           response = await ai.chat.completions.create({
             model,
+            tools,
             messages: [{
               role: "system",
               content: `${systemInstruction}`
@@ -101,7 +118,6 @@ ${file.content}
               content: `${workspaceContext} User: ${prompt}`
             }]
           });
-          console.log(response, "AI 1")
           break;
         } catch (error: any) {
           console.log(error, "error")
@@ -164,7 +180,23 @@ Please try again in a few moments.`,
       startCommand: null,
     };
   }
+  console.log("------------" + JSON.stringify(response.choices[0]?.message))
+  console.log("------------" + JSON.stringify(response.choices[0]?.message.tool_calls))
 
+  const pushCall = response.choices[0]?.message.tool_calls?.find(
+    (c) => c.function.name === "git_push"
+  );
+  if (pushCall) {
+    let args: any = {};
+    try { args = JSON.parse(pushCall.function.arguments || "{}"); } catch { }
+    return {
+      text: "",
+      fileTree: {},
+      buildCommand: null,
+      startCommand: null,
+      gitPush: { message: args.message, branch: args.branch, openPr: args.openPr },
+    };
+  }
   const rawText = (response.choices[0]!.message.content || "").trim();
   const finishReason = response.choices[0]?.finish_reason
 
@@ -191,7 +223,6 @@ Please try again in a few moments.`,
       finishReason
     );
 
-    console.log("Raw AI Response:", rawText);
 
     return {
       text:
@@ -208,7 +239,6 @@ Please try again in a few moments.`,
     return JSON.parse(jsonString);
   } catch (error) {
     console.error("AI Response Parse Error:", error);
-    console.log("Raw AI Response:", rawText);
 
     return {
       text:

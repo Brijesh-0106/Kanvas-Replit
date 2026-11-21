@@ -458,10 +458,8 @@ app.post("/assign-stale", middleAuth, async (req, res) => {
 // ============= UPDATE ALL FILES =============
 app.post("/updateFiles", async (req, res) => {
     try {
-        console.log("\n\n")
-        console.log("**************** SYNC FILETREE ENDPOINT **************")
+        console.log("\n\n**************** SYNC FILETREE ENDPOINT **************")
         const { fileTree, projectId } = req.body;
-        console.log(fileTree, projectId, "filetree")
         const project = await prisma.project.update({
             where: { id: projectId }, data: { fileTree: fileTree }
         })
@@ -485,7 +483,6 @@ app.post("/createFile", async (req, res) => {
         console.log("\n\n")
         console.log("**************** CREATE FILE ENDPOINT **************")
         const { folderPath, projectId, fileName } = req.body;
-        console.log(folderPath, projectId, fileName, "create file")
         const fileTree = await projectService.createFile({
             projectId,
             folderPath,
@@ -503,7 +500,6 @@ app.post("/createFolder", async (req, res) => {
         console.log("\n\n")
         console.log("**************** CREATE FOLDER ENDPOINT **************")
         const { folderPath, projectId, folderName } = req.body;
-        console.log(folderPath, projectId, folderName, "create file")
         const fileTree = await projectService.createFolder({
             projectId,
             folderPath,
@@ -521,8 +517,7 @@ app.post("/deleteNode", async (req, res) => {
         console.log("\n\n")
         console.log("**************** DELETE ENDPOINT **************")
         const { folderPath, projectId } = req.body;
-        console.log(folderPath, projectId, "create file")
-        const fileTree = await projectService.deleteItem({
+        const fileTree = await projectService.deleteItem({  // == AI NEED UPDATE ?? ==
             projectId,
             path: folderPath
         });
@@ -532,6 +527,43 @@ app.post("/deleteNode", async (req, res) => {
         res.status(400).json({ error: err });
     }
 })
+
+function sanitizeBranch(raw?: string): string {
+    const topic = String(raw ?? "")
+        .toLowerCase()
+        .replace(/^kanvas\//, "")
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 50);
+    return `kanvas/${topic || Date.now()}`;
+}
+
+async function saveAiMsg(projectId: string, msg: string, replyTo: string) {
+    return prisma.message.create({
+        data: {
+            isAi: true,
+            replyTo: replyTo,
+            msg,
+            projectId,
+        },
+    });
+}
+function buildPushResult(result: any, plan: { branch: string }) {
+    switch (result?.status) {
+        case "pushed":
+            return `Pushed${result.commit ? ` \`${result.commit}\`` : ""} to \`${plan.branch}\`.`;
+        case "up_to_date":
+            return `\`${plan.branch}\` on GitHub already has everything in your workspace, so there was nothing new to push.`;
+        case "behind":
+            return "GitHub has newer changes on that branch than your workspace, so I didn't push. Want me to pull first?";
+        case "auth_failed":
+            return "GitHub access expired. Please reconnect GitHub and try again.";
+        case "no_remote":
+            return "This project isn't linked to a GitHub repository yet. Connect a repo first, then try again.";
+        default:
+            return "I couldn't push your changes. Please try again in a moment.";
+    }
+}
 // ===================== SEND MSG ====================
 app.post("/send-message", middleAuth, async (req, res) => {
     console.log("\n\n")
@@ -549,11 +581,53 @@ app.post("/send-message", middleAuth, async (req, res) => {
             id: projectId
         }
     })
+    const pendingKey = `pendingPush:${req.userId}:${projectId}`;
+    const pending = await redis.getdel(pendingKey);
+    if (pending) {
+        const isYes = /^\s*(yes|y|yep|yeah|confirm|go ahead|do it)\s*[.!]*\s*$/i.test(msg);
+        const isNo = /^\s*(no|n|nope|cancel|stop)\s*[.!]*\s*$/i.test(msg);
+
+        if (isYes) {
+            const plan = JSON.parse(pending);
+            const token = await getGithubToken(req.userId!);
+            if (!token) {
+                return res.json({ aiMsg: await saveAiMsg(projectId, "Connect your GitHub account first, then ask me to push again.", usrMsg.id) });
+            }
+            const result = await fetch(`http://${project?.publicDnsName}:9095/git-push`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ token, ...plan })
+            })
+            return res.json({ aiMsg: await saveAiMsg(projectId, buildPushResult(result, plan), usrMsg.id) });
+        }
+        if (isNo) {
+            return res.json({ aiMsg: await saveAiMsg(projectId, "Okay, cancelled. Nothing was pushed.", usrMsg.id) });
+        }
+        // anything else is a new request; the old plan is already dropped, carry on below
+    }
+
 
     const prompt = msg.replace(/@kanvas/gi, "").trim();
     const relevantFiles = await findRelevantFiles(projectId, prompt)
-
+    console.log(relevantFiles, "--relevantFiles")
     const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles })
+    if (aiResult.gitPush) {
+        const plan = {
+            message: String(aiResult.gitPush.message || "Update from Kanvas").replace(/\s+/g, " ").trim().slice(0, 100),
+            branch: sanitizeBranch(aiResult.gitPush.branch),
+            openPr: aiResult.gitPush.openPr === true,
+        };
+        await redis.set(pendingKey, JSON.stringify(plan), "EX", 600);
+        return res.json({
+            aiMsg: await saveAiMsg(
+                projectId,
+                `I'll commit your changes ("${plan.message}") and push to branch \`${plan.branch}\`${plan.openPr ? ", then open a pull request" : ""}. Reply **yes** to confirm or **no** to cancel.`,
+                usrMsg.id
+            ),
+        });
+    }
     const mergedFileTree = mergeFileTrees(project?.fileTree!, aiResult.fileTree || {})
     await prisma.project.update({
         where: {
@@ -695,7 +769,7 @@ app.get("/assign/:projName", middleAuth, async (req, res) => {
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ token, fullName: row?.githubLogin + '/' + projName, userId: machine.userId, projectId: machine.projectId })
+                        body: JSON.stringify({ token, fullName: row?.githubLogin + '/' + projName, projectId: machine.projectId, userName: row?.githubName, userEmail: row?.githubEmail })
                     })
                 } else {
                     fetch(`http://${machinePublicDNSName}:9095/register-project/${machine?.projectId}`)

@@ -116,13 +116,13 @@ function DashboardPage({
           publicDnsName: machine.publicDnsName,
           projectName: elem.projectName,
           instanceId: machine.instanceId,
-          isAI: elem.projectType == "AI",
+          isAI: elem.projectType == "AI" || elem.projectType == "AI Agent",
         },
       });
     } else {
       nav(`/project?projectId=${elem.id!}`, {
         state: {
-          isAI: elem.projectType == "AI",
+          isAI: elem.projectType == "AI" || elem.projectType == "AI Agent",
           publicDnsName: elem.publicDnsName,
           projectName: elem.projectName,
           instanceId: elem.instanceId,

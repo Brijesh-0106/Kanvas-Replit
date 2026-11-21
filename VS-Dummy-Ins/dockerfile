@@ -21,6 +21,10 @@ ENV SECRET_ACC_KEY=$SECRET_ACC_KEY
 ENV BUCKET_NAME=$BUCKET_NAME
 COPY ./package*.json ./
 RUN npm install
+RUN git config --system user.name "Kanvas" \
+    && git config --system user.email "bot@kanvas.dev" \
+    && git config --system --add safe.directory /tmp/kanvas \
+    && git config --system init.defaultBranch main
 COPY --from=builder /app/dist ./dist
 EXPOSE 9095
 CMD ["node","dist/index.js"]

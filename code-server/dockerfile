@@ -14,4 +14,8 @@ RUN apt-get update \
 USER coder
 EXPOSE 8080
 RUN mkdir -p /tmp/kanvas
+RUN git config --system user.name "Kanvas" \
+    && git config --system user.email "bot@kanvas.dev" \
+    && git config --system --add safe.directory /tmp/kanvas \
+    && git config --system init.defaultBranch main
 CMD ["code-server","--auth","none","--bind-addr","0.0.0.0:8080","/tmp/kanvas"]

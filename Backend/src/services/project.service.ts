@@ -6,8 +6,6 @@ export const createFile = async ({ projectId, folderPath, fileName }: { projectI
     const project = await prisma.project.findFirst({ where: { id: projectId } });
 
     const newFileTree = addFile(project?.fileTree || {}, folderPath, fileName);
-    console.log(project?.id)
-    console.log(newFileTree)
     if (project?.id) {
         await prisma.project.update({
             where: { id: project?.id },

@@ -9,8 +9,6 @@ export const getNode = (tree: any, path: any) => {
 export const addFile = (tree: any, folderPath: any, fileName: any) => {
   const updatedTree = cloneTree(tree);
   const target = getNode(updatedTree, folderPath);
-  console.log(updatedTree)
-  console.log(target)
   if (!target) throw new Error("Folder not found");
 
   if (target[fileName]) throw new Error("File already exists");

@@ -2,19 +2,23 @@ import { PrismaClient } from "../generated/prisma/client.js";
 import { generateEmbedding } from "./embedding.service.js";
 const prisma = new PrismaClient()
 
+const IGNORED_DIRS = new Set([".git", "node_modules", "dist", "build", ".next"]);
+const IGNORED_FILES = new Set(["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]);
+
 function extractFiles(node: any, currentPath = "", files: any[] = []): any[] {
   for (let [name, value] of Object.entries(node)) {
-    const path = currentPath ? `${currentPath}/${name}` : name;
-
     if (!value) continue;
+    const path = currentPath ? `${currentPath}/${name}` : name;
     let temp: { file: any } = value as unknown as any
     temp = temp as unknown as any
     if (temp.file) {
+      if (IGNORED_FILES.has(name)) continue;
       files.push({
         path,
         content: temp.file.contents || "",
       });
     } else {
+      if (IGNORED_DIRS.has(name)) continue;
       extractFiles(value, path, files);
     }
   }

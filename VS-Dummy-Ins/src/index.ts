@@ -1,27 +1,93 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { execFileSync, execSync } from "child_process";
+import { execFile, execFileSync, execSync } from "child_process";
 import chokidar from 'chokidar';
 import cors from 'cors';
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from 'path';
-
-console.log("check")
-const watcher = chokidar.watch('/tmp/kanvas').on('all', (event, path) => {
-    if (event === 'addDir' && path === '/tmp/kanvas') return;
-    console.log(event, path);
-});
+import { promisify } from "util";
 
 let clearing = false; // mutes the watcher while we wipe
+let cloning = false; // mutes the watcher while we wipe
 const PROJECT_ROOT = '/tmp/kanvas';
+
+const watcher = chokidar.watch('/tmp/kanvas').on('all', (event, path) => {
+    if (event === 'addDir' && path === '/tmp/kanvas') return;
+});
+
+let timeout: any = null
+watcher
+    .on('add', (fullPath) => {          // == NEW FILE ==
+        if (clearing || cloning) return;
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
+        const dir = path.dirname(trimmedPath);   // "/src/comp1"
+        const file = path.basename(trimmedPath);  // "index.js"
+
+        fetch(`https://kanvas.advertises.co.in/api/createFile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, fileName: file })
+        })
+    })
+    .on('change', (path) => {       // -- FILE CHANGE ==
+        if (clearing || cloning) return;
+        if (timeout)
+            clearTimeout(timeout)
+        timeout = setTimeout(async () => {
+
+            const files = folderToJson("/tmp/kanvas");
+            try {
+                fetch(`https://kanvas.advertises.co.in/api/updateFiles`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ fileTree: files, projectId: currProjectId })
+                })
+            } catch (error) {
+                console.error(error);
+            }
+        }, 500);
+    })
+    .on('unlink', (fullPath) => {       // -- FILE DELETE ==
+        if (clearing || cloning) return;
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
+        fetch(`https://kanvas.advertises.co.in/api/deleteNode`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
+        })
+    })
+    .on('addDir', (fullPath) => {       // -- NEW FOLDER ==
+        if (clearing || cloning) return;
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
+        const dir = path.dirname(trimmedPath);   // "/src/comp1"
+        const newFolder = path.basename(trimmedPath);  // "index.js"
+        fetch(`https://kanvas.advertises.co.in/api/createFolder`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, folderName: newFolder })
+        })
+    })
+    .on('unlinkDir', (fullPath) => {
+        if (clearing || cloning) return;
+        console.log(`folder ${fullPath} has been removed`)
+        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
+        console.log(`trimmedPath`, trimmedPath)
+        fetch(`https://kanvas.advertises.co.in/api/deleteNode`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
+        })
+    })
+    .on('ready', () => console.log('Initial scan complete. Ready for changes'))
 
 function folderToJson(dirPath: any) {
     const result: any = {};
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    const IGNORE = new Set(['.git', 'node_modules', 'dist']);
 
     for (const entry of entries) {
-
+        if (IGNORE.has(entry.name)) continue;
         const fullPath = path.join(dirPath, entry.name);
 
         if (entry.isDirectory()) {
@@ -57,9 +123,34 @@ function writeFileTree(tree: any, basePath: any) {
 
 let currProjectId: String
 const app = express();
+const run = promisify(execFile);
 
 app.use(express.json())
 app.use(cors())
+// ============================================================== HELPER ====================================
+const AUTHOR_NAME = process.env.GIT_AUTHOR_NAME ?? "Kanvas";
+const WORKSPACE = process.env.WORKSPACE_DIR ?? "/tmp/kanvas";   // ← set to your real project dir
+const AUTHOR_EMAIL = process.env.GIT_AUTHOR_EMAIL ?? "noreply@kanvas.advertises.co.in";
+run("git", ["config", "--global", "--replace-all", "safe.directory", WORKSPACE]).catch(() => { });
+
+function git(args: string[], token?: string) {
+    const env: NodeJS.ProcessEnv = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: "0",                       // never hang waiting for a password
+        GIT_AUTHOR_NAME: AUTHOR_NAME,
+        GIT_AUTHOR_EMAIL: AUTHOR_EMAIL,
+        GIT_COMMITTER_NAME: AUTHOR_NAME,
+        GIT_COMMITTER_EMAIL: AUTHOR_EMAIL,
+    };
+    if (token) {
+        // the token lives only in the child's environment, so it never appears in `ps` or error messages
+        const basic = Buffer.from(`x-access-token:${token}`).toString("base64");
+        env.GIT_CONFIG_COUNT = "1";
+        env.GIT_CONFIG_KEY_0 = "http.extraheader";
+        env.GIT_CONFIG_VALUE_0 = `Authorization: Basic ${basic}`;
+    }
+    return run("git", args, { cwd: WORKSPACE, env, timeout: 60_000, maxBuffer: 10 * 1024 * 1024 });
+}
 
 const client = new S3Client({
     region: "us-east-1", credentials: {
@@ -68,100 +159,19 @@ const client = new S3Client({
     }
 });
 
+// =========================== HEALTH TEST =======================
 app.get("/test", async (req: Request, res: Response) => {
-    res.json({
-        msg: "Working"
-    })
+    res.json({ msg: "Working" })
 })
-let timeout: any = null
-watcher
-    .on('add', (fullPath) => {
-        if (clearing) return;
-        console.log(`File ${fullPath} has been added`)
-        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
-        console.log(`trimmedPath`, trimmedPath)
-        // const dirPath = trimmedPath.split('/')
-        const dir = path.dirname(trimmedPath);   // "/src/comp1"
-        const file = path.basename(trimmedPath);  // "index.js"
-
-        console.log(`dirPath`, dir)
-        console.log(`file`, file)
-        fetch(`https://kanvas.advertises.co.in/api/createFile`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, fileName: file })
-        })
-    })
-    .on('change', (path) => {
-        if (clearing) return;
-        console.log(`File ${path} has been changed`)
-        if (timeout)
-            clearTimeout(timeout)
-        timeout = setTimeout(async () => {
-
-            const files = folderToJson("/tmp/kanvas");
-            console.log(files, "files")
-            try {
-                fetch(`https://kanvas.advertises.co.in/api/updateFiles`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ fileTree: files, projectId: currProjectId })
-                })
-            } catch (error) {
-                console.error(error);
-            }
-        }, 500);
-    })
-    .on('unlink', (fullPath) => {
-        if (clearing) return;
-        console.log(`file ${fullPath} has been removed`)
-        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
-        console.log(`trimmedPath`, trimmedPath)
-        fetch(`https://kanvas.advertises.co.in/api/deleteNode`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
-        })
-    })
-    .on('addDir', (fullPath) => {
-        if (clearing) return;
-        console.log(`Directory ${fullPath} has been added`)
-        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
-        console.log(`trimmedPath`, trimmedPath)
-        // const dirPath = trimmedPath.split('/')
-        const dir = path.dirname(trimmedPath);   // "/src/comp1"
-        const file = path.basename(trimmedPath);  // "index.js"
-
-        console.log(`dirPath`, dir)
-        console.log(`file`, file)
-        fetch(`https://kanvas.advertises.co.in/api/createFolder`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folderPath: dir, projectId: currProjectId, folderName: file })
-        })
-    })
-    .on('unlinkDir', (fullPath) => {
-        if (clearing) return;
-        console.log(`folder ${fullPath} has been removed`)
-        const trimmedPath = fullPath.replace(/\/tmp\/kanvas\//gi, "").trim();
-        console.log(`trimmedPath`, trimmedPath)
-        fetch(`https://kanvas.advertises.co.in/api/deleteNode`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folderPath: trimmedPath, projectId: currProjectId })
-        })
-    })
-    .on('ready', () => console.log('Initial scan complete. Ready for changes'))
 
 // ======================== REGISTER PROJECT =====================
 app.get(`/register-project/:projectId`, (req, res) => {
-    const projectId = req.params.projectId
-    console.log(projectId, "projectdId");
-    currProjectId = projectId;
+    currProjectId = req.params.projectId
     res.json({ msg: "project registered" })
 })
 
 app.get(`/clean-machine`, (req, res) => {
+    console.log("\n\n===================== CLEAN MACHINE ======================")
     clearing = true;
     try {
         for (const entry of fs.readdirSync(PROJECT_ROOT)) {   // includes dotfiles like .git
@@ -177,40 +187,59 @@ app.get(`/clean-machine`, (req, res) => {
     }
     res.json({ msg: "Machine Cleaned" })
 })
+
+// =========================== PUSH CODE ===============================
+app.post("/git-push", async (req: Request, res: Response) => {
+    console.log("\n\n====================== PUSH  CODE ========================")
+})
 // ========================= CREATE REPO & REGISTER PROJECT ============
 app.post("/git-clone", async (req: Request, res: Response) => {
-    console.log("==================== Clone & Register ==============")
+    console.log("\n\n==================== Clone & Register ====================")
+    cloning = true;
     try {
-        const { token, fullName, userId, projectId } = req.body
-        console.log(token, fullName, userId, projectId)
+        const { token, fullName, projectId, userName, userEmail } = req.body
         currProjectId = projectId;
+        for (const e of fs.readdirSync(PROJECT_ROOT)) {
+            fs.rmSync(path.join(PROJECT_ROOT, e), { recursive: true, force: true });
+        }
         const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
         execFileSync('git', [
             '-c', `http.extraheader=Authorization: Basic ${basic}`,
             '-c', `safe.directory=${PROJECT_ROOT}`,
             'clone', `https://github.com/${fullName}.git`, '.',
         ], { cwd: PROJECT_ROOT, stdio: 'pipe' });
+        git(["config", "user.name", userName]);
+        git(["config", "user.email", userEmail]);
+        const files = folderToJson("/tmp/kanvas");
+        await fetch(`https://kanvas.advertises.co.in/api/updateFiles`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileTree: files, projectId: currProjectId })
+        })
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: err });
+    } finally {
+        setTimeout(() => { cloning = false; }, 800);
     }
 })
+
 // ======================== UPDATE FILES =====================
 app.post("/update-files", async (req: Request, res: Response) => {
-    console.log("***************** AMI STORE PROJECT *************************")
+    console.log("***************** UPDATE ACC TO AI *************************")
     try {
         const { mergedFileTree } = req.body
-        const PROJECT_ROOT = '/tmp/kanvas'; // → /tmp/kanvas ✅
-        console.log(mergedFileTree, "check mergedFileTree");
+        const PROJECT_ROOT = '/tmp/kanvas';
         writeFileTree(mergedFileTree, PROJECT_ROOT)
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: err });
     }
 })
+
 // ======================== STORE ZIP =====================
 app.post("/store-project", async (req: Request, res: Response) => {
-    console.log("***************** AMI STORE PROJECT *************************")
+    console.log("***************** S3 STORE PROJECT *************************")
     const { userId, projectId } = req.body
     console.log(userId, projectId, "check projectId in parasite")
     // zip the project
@@ -232,6 +261,7 @@ app.post("/store-project", async (req: Request, res: Response) => {
 
 // ======================== RESTORE ZIP => NEW MACHINE =====================
 app.post("/restore-project", async (req: Request, res: Response) => {
+    console.log("***************** RESTORE PROJECT *************************")
     const { userId, projectId } = req.body
     console.log(userId, projectId, "check projectId in parasite")
 
@@ -241,8 +271,6 @@ app.post("/restore-project", async (req: Request, res: Response) => {
         Bucket: process.env.BUCKET_NAME,
         Key: `projects/ + ${userId} + / + ${projectId}.zip`
     }))
-
-    console.log(response, "res")
     // write zip to disk
     fs.writeFileSync("/tmp/kanvas-backup.zip", await response.Body!.transformToByteArray())
 
