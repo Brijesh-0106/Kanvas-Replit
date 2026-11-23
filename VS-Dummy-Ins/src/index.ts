@@ -191,6 +191,34 @@ app.get(`/clean-machine`, (req, res) => {
 // =========================== PUSH CODE ===============================
 app.post("/git-push", async (req: Request, res: Response) => {
     console.log("\n\n====================== PUSH  CODE ========================")
+    try {
+        const { token, branch, message, openPr } = req.body;
+        const targetBranch = branch || "kanvas/update";
+        const commitMsg = message || "Update from Kanvas";
+        // 1. Check if git status has any changes
+        const status = await git(["status", "--porcelain"]);
+        if (!status.stdout.trim()) {
+            return res.json({ status: "up_to_date" });
+        }
+        // 2. Switch to / create branch
+        await git(["checkout", "-B", targetBranch]);
+        // 3. Stage & Commit
+        await git(["add", "-A"]);
+        await git(["commit", "-m", commitMsg]);
+        // 4. Push to remote with token in header
+        await git(["push", "-u", "origin", targetBranch, "--force"], token);
+        // 5. Get latest commit hash
+        const rev = await git(["rev-parse", "--short", "HEAD"]);
+        const commitHash = rev.stdout.trim();
+        res.json({
+            status: "pushed",
+            commit: commitHash,
+            branch: targetBranch
+        });
+    } catch (err: any) {
+        console.error("git-push error:", err);
+        res.status(500).json({ status: "error", message: err.message });
+    }
 })
 // ========================= CREATE REPO & REGISTER PROJECT ============
 app.post("/git-clone", async (req: Request, res: Response) => {

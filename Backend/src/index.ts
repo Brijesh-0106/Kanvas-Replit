@@ -593,13 +593,14 @@ app.post("/send-message", middleAuth, async (req, res) => {
             if (!token) {
                 return res.json({ aiMsg: await saveAiMsg(projectId, "Connect your GitHub account first, then ask me to push again.", usrMsg.id) });
             }
-            const result = await fetch(`http://${project?.publicDnsName}:9095/git-push`, {
+            const apiRes = await fetch(`http://${project?.publicDnsName}:9095/git-push`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ token, ...plan })
             })
+            const result = await apiRes.json();
             return res.json({ aiMsg: await saveAiMsg(projectId, buildPushResult(result, plan), usrMsg.id) });
         }
         if (isNo) {
