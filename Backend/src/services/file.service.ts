@@ -54,7 +54,6 @@ export const indexChangedFiles = async (project: any, changedFiles: any) => {
     if (typeof embedding === 'string') {
       return
     }
-    console.log(embedding)
     await prisma.file.upsert({
       where: {
         projectId_path: {

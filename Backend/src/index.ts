@@ -612,8 +612,15 @@ app.post("/send-message", middleAuth, async (req, res) => {
 
     const prompt = msg.replace(/@kanvas/gi, "").trim();
     const relevantFiles = await findRelevantFiles(projectId, prompt)
-    console.log(relevantFiles, "--relevantFiles")
-    const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles })
+
+    // Fetch all past messages for this project (excluding the one just saved)
+    const pastMessages = await prisma.message.findMany({
+        where: { projectId, id: { not: usrMsg.id } },
+        orderBy: { createdAt: "asc" },
+        select: { isAi: true, msg: true },
+    });
+
+    const aiResult = await generateResult({ prompt, projectName: project?.projectName!, contextFiles: relevantFiles, messages: pastMessages })
     if (aiResult.gitPush) {
         const plan = {
             message: String(aiResult.gitPush.message || "Update from Kanvas").replace(/\s+/g, " ").trim().slice(0, 100),
@@ -637,7 +644,6 @@ app.post("/send-message", middleAuth, async (req, res) => {
             fileTree: mergedFileTree
         }
     })
-    console.log(JSON.stringify({ mergedFileTree: mergedFileTree }), "send file")
     fetch(`http://${project?.publicDnsName}:9095/update-files`, {
         method: "POST",
         headers: {

@@ -246,7 +246,8 @@ Use Workspace Generation Mode ONLY when the user explicitly asks to:
 
 In Workspace Generation Mode:
 
-- Return ONLY valid JSON.
+- Return ONLY valid JSON as normal message content—NEVER invoke a tool/function call (such as a tool named "json") to return the JSON.
+- The ONLY valid tool is \`git_push\`. Use \`git_push\` only when the user explicitly asks to commit, push to GitHub, or open a pull request.
 - Never wrap JSON inside markdown.
 - The response must be directly parseable using JSON.parse().
 - Generate only the new or modified files.
@@ -257,8 +258,9 @@ In Workspace Generation Mode:
 - Fix existing bugs
 - In the "text" field, provide a clear, well-structured, formatted Markdown response explaining:
   * A summary of what was implemented or fixed
-  * A list of key files created or modified with short descriptions
+  * A list of key files created or modified with short 1-line descriptions
   * How to run, test, or use the changes (e.g. required environment variables or terminal commands)
+- Do NOT include full file contents, large code blocks, or a JSON fileTree inside the "text" field.
 
 Use this JSON structure:
 

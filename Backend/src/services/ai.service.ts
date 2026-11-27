@@ -65,17 +65,76 @@ function extractBalancedJson(text: string) {
 
   return null;
 }
+interface ChatMessage {
+  isAi: boolean;
+  msg: string;
+}
+
 interface genResultProps {
   prompt: string;
   projectName: string;
   contextFiles: any[];
+  messages?: ChatMessage[];
 }
-export const generateResult = async ({ prompt, projectName, contextFiles = [] }: genResultProps) => {
-  console.log(contextFiles, "--contextFiles")
+
+/**
+ * Summarizes chat history into a concise engineering context string.
+ * Called only when messages.length > 4.
+ */
+async function summarizeChatHistory(messages: ChatMessage[], projectName: string): Promise<string> {
+  const historyText = messages
+    .map((m) => `${m.isAi ? "AI" : "User"}: ${m.msg}`)
+    .join("\n");
+
+  const summaryPrompt = `You are summarizing a software engineering chat history for a project called "${projectName}".
+
+Produce a concise technical summary covering:
+- What was built or scaffolded
+- Key files created or modified (list them)
+- Current state of the project
+- Any bugs fixed or issues resolved
+- Anything left unresolved or mentioned as a next step
+
+Be brief, factual, and technical. No fluff.
+
+Chat history: ${historyText}`;
+
+  let summaryResponse;
+
+  for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+    try {
+      summaryResponse = await ai.chat.completions.create({
+        model,
+        messages: [
+          { role: "user", content: summaryPrompt }
+        ],
+      });
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  return summaryResponse?.choices[0]?.message?.content?.trim() || "";
+}
+export const generateResult = async ({ prompt, projectName, contextFiles = [], messages = [] }: genResultProps) => {
+  // Build conversation context: summarize if > 4 messages, otherwise pass raw
+  let conversationContext = "";
+  if (messages.length > 4) {
+    console.log(`[AI] ${messages.length} messages found — summarizing chat history...`);
+    const summary = await summarizeChatHistory(messages, projectName);
+    console.log("\n\n", summary, "````````````````````summary")
+    if (summary) {
+      conversationContext = `\nPrevious Conversation Summary:\n${summary}\n`;
+    }
+  } else if (messages.length > 0) {
+    conversationContext = `\nPrevious Conversation:\n${messages.map((m) => `${m.isAi ? "AI" : "User"}: ${m.msg}`).join("\n")}\n`;
+  }
+
   const workspaceContext = `
 Current Project:
 ${projectName}
-
+${conversationContext}
 The following files were retrieved using semantic search because they are the most relevant to the user's request.
 
 Treat these files as the primary source of truth.
@@ -100,6 +159,7 @@ ${file.content}
 `;
 
   let response;
+  const needsGitTool = /\b(git|push|commit|pr|pull request|github|branch)\b/i.test(prompt);
 
   try {
     const models = [PRIMARY_MODEL, FALLBACK_MODEL];
@@ -109,7 +169,9 @@ ${file.content}
         try {
           response = await ai.chat.completions.create({
             model,
-            tools,
+            ...(needsGitTool ? { tools } : {}),
+            max_completion_tokens: 8192,
+            reasoning_effort: "low",
             messages: [{
               role: "system",
               content: `${systemInstruction}`
@@ -120,6 +182,24 @@ ${file.content}
           });
           break;
         } catch (error: any) {
+          // Recover if Groq rejected a "json" tool call that actually contains valid workspace JSON
+          const apiErr = error?.error?.error;
+          if (apiErr?.code === "tool_use_failed" && typeof apiErr?.failed_generation === "string") {
+            try {
+              const failed = JSON.parse(apiErr.failed_generation);
+              if (failed?.name === "json" && failed?.arguments) {
+                const parsedArgs = typeof failed.arguments === "string"
+                  ? JSON.parse(failed.arguments)
+                  : failed.arguments;
+                if (parsedArgs && typeof parsedArgs === "object") {
+                  return parsedArgs;
+                }
+              }
+            } catch {
+              // Fall through to normal retry/fallback
+            }
+          }
+
           console.log(error, "error")
           const retryable =
             error.status === 429 ||
@@ -200,8 +280,8 @@ Please try again in a few moments.`,
   const rawText = (response.choices[0]!.message.content || "").trim();
   const finishReason = response.choices[0]?.finish_reason
 
-  // Conversation Mode
-  if (!rawText.startsWith("{") && !rawText.startsWith("```")) {
+  // Conversation Mode: only treat as Workspace JSON if it starts with '{' or '```json'
+  if (!rawText.startsWith("{") && !/^```json\b/i.test(rawText)) {
     return {
       text: rawText,
       fileTree: {},
@@ -210,9 +290,10 @@ Please try again in a few moments.`,
     };
   }
 
+  // Strip only outer markdown code fences so code blocks inside "text" stay intact
   const cleaned = rawText
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
     .trim();
 
   const jsonString = extractBalancedJson(cleaned);
@@ -220,7 +301,9 @@ Please try again in a few moments.`,
   if (!jsonString) {
     console.error(
       "AI Response Parse Error: No balanced JSON found. Finish reason:",
-      finishReason
+      finishReason,
+      "Raw preview:",
+      rawText.slice(0, 300)
     );
 
 
