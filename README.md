@@ -12,7 +12,7 @@
 
 🔗 **Live Application URL**: [https://kanvas.advertises.co.in](https://kanvas.advertises.co.in)
 
-**Kanvas** is a high-performance, cost-optimized cloud development environment and AI coding platform (similar to Replit, GitHub Codespaces, and Cursor/Bolt). It provisions, lifecycle-manages, and orchestrates full browser-based VS Code environments on-demand in AWS EC2—complete with an **AI Agent** that connects to your GitHub repositories, edits code via semantic RAG search and rolling conversation memory, and commits & pushes changes with confirmation.
+**Kanvas** is a cloud IDE and AI coding platform (similar to Replit, GitHub Codespaces, and Cursor). It runs full browser-based VS Code environments on **AWS EC2 and ASG (Auto Scaling Group)**—complete with an AI Agent that connects to your GitHub repositories, edits code using semantic file search and chat history summarization, and commits & pushes changes after your confirmation.
 
 ---
 
@@ -24,44 +24,44 @@
 
 ## ✨ Key Features
 
-- 🤖 **AI Agent & GitHub Integration**: Connect your GitHub account via OAuth, clone existing repositories or create new public/private repos directly from Kanvas, and let the AI Agent build, refactor, commit, and push changes to branches.
-- 🔐 **Safe Human-in-the-Loop Git Push**: When the AI invokes the `git_push` tool, Kanvas stages a pending push plan in Redis and asks for explicit confirmation (`yes` / `no`) before committing and pushing to GitHub.
-- 🧠 **Context-Aware AI Assistant with RAG & Rolling Memory**: Combines Groq LLM (`openai/gpt-oss-120b` with `openai/gpt-oss-20b` fallback), local vector embeddings (`Xenova/bge-small-en-v1.5`) for semantic code search, and automatic rolling chat summarization (after 4+ messages) to patch workspace file trees accurately.
-- ⚡ **Instant Workspace Provisioning**: Pre-warmed AWS Auto Scaling instances allow developers to jump into full browser-based VS Code environments in seconds.
-- 💰 **Active-Heartbeat Auto-Scaling**: Background monitors detect idle workspaces and terminate underlying EC2 instances to cut cloud compute waste by up to 90%.
-- 💾 **S3 State Persistence & Cold Storage**: Workspace files are automatically zipped and archived to AWS S3 upon idle shutdown and rehydrated seamlessly when a developer returns.
-- 📁 **In-VM Real-Time Sync Sidecar**: Lightweight agent inside every EC2 instance (port `9095`) uses Chokidar to watch filesystem events, sync file trees, execute Git operations, and handle S3 backup/restore.
-- 🚀 **Multi-Runtime Environments**: Out-of-the-box support for **AI Agent (GitHub)**, **AI Projects**, **Node.js**, **React (Vite + TypeScript)**, **Python 3**, and **Java 17 (OpenJDK)**.
-- 🔒 **Enterprise-Grade Auth & Encrypted Tokens**: Google OAuth 2.0, JWT with refresh-token rotation and Redis blacklisting, plus **AES-256-GCM** encryption and auto-refresh for stored GitHub OAuth tokens.
+- 🤖 **AI Agent & GitHub Integration**: Connect your GitHub account via OAuth, pick an existing repo or create a new public/private repo from Kanvas, and let the AI Agent write code, commit, and push to branches.
+- 🔐 **Confirmed Git Push**: When the AI wants to push code (`git_push` tool), Kanvas saves the push plan in Redis and asks you to reply `yes` or `no` before committing and pushing to GitHub.
+- 🧠 **AI Assistant with File Search & Chat Summary**: Uses Groq LLM (`openai/gpt-oss-120b` with `openai/gpt-oss-20b` fallback), local embeddings (`Xenova/bge-small-en-v1.5`) to find relevant files, and summarizes older chat messages (when > 4 messages) so the AI remembers what was already built.
+- ⚡ **Fast Workspace Startup**: Keeps pre-warmed EC2 instances ready in an AWS ASG so you get a working VS Code environment in seconds.
+- 💰 **Auto-Shutdown for Idle Workspaces**: A background job checks heartbeats in Redis; if a workspace is idle, it backs up the files and terminates the EC2 instance to save AWS costs.
+- 💾 **S3 Backup & Restore**: Idle workspaces are zipped and uploaded to AWS S3, then downloaded and unzipped onto a new EC2 instance when you reopen the project.
+- 📁 **In-VM File Sync Agent**: A small Node.js service inside each EC2 instance (port `9095`) uses Chokidar to watch file changes, sync them to MongoDB, run Git commands, and handle S3 backup/restore.
+- 🚀 **Multiple Environments**: Supports **AI Agent (GitHub)**, **AI Projects**, **Node.js**, **React (Vite + TypeScript)**, **Python 3**, and **Java 17 (OpenJDK)**.
+- 🔒 **Auth & Encrypted Tokens**: Google OAuth 2.0, JWT with refresh-token rotation and Redis blacklisting, plus AES-256-GCM encryption for stored GitHub OAuth tokens.
 
 ---
 
-## 🚀 Unique Selling Proposition (USP)
+## 🚀 Why Kanvas Stands Out
 
-### 1. 💡 Auto-Scaling with Active-Heartbeat Lifecycling & S3 Cold Storage
+### 1. 💡 Auto-Scaling with Heartbeats & S3 Backup
 
-The biggest challenge with self-hosted cloud IDE platforms is **cloud compute waste**. Developers frequently leave workspaces open, forgetting to terminate them, which results in massive, unnecessary cloud bills.
+Running cloud IDEs on AWS gets expensive fast if users leave tabs open or forget to shut down their machines.
 
-Kanvas solves this with an **end-to-end Heartbeat Lifecycling & Cold Storage Engine**:
+Kanvas handles this automatically:
 
-1. **Active Heartbeats**: While a developer is active in their cloud workspace, the frontend periodically pings `/heartBeat/:instanceId`.
-2. **Idle Detection**: A background monitor continuously scans active machines (`ALL_MACHINES`) in Redis.
-3. **Automated S3 Archival**: If a machine misses heartbeats past `GRACE_PERIOD`, the backend triggers `/store-project` on the in-VM agent to zip `/tmp/kanvas` and upload it to AWS S3.
-4. **AWS Auto-Scaling Scale-In**: The backend terminates the idle EC2 instance via the AWS Auto Scaling SDK and decrements the Auto Scaling Group (ASG) desired capacity.
-5. **Seamless Rehydration**: When the user reopens a stale project, Kanvas claims a pre-warmed instance and triggers `/restore-project` to unpack the archive from S3 in seconds.
-
-### 2. 🤖 GitHub-Connected AI Agent with Semantic RAG + Rolling Memory
-
-Unlike stateless code generators, Kanvas indexes every project file locally using `Xenova/bge-small-en-v1.5` embeddings, retrieves only the top-K relevant files via cosine similarity, maintains per-project conversation history with automatic rolling summarization, syncs AI-generated changes directly into the live EC2 VS Code workspace, and lets you push changes to GitHub branches via natural language.
+1. **Heartbeats**: While your workspace is open, the browser pings `/heartBeat/:instanceId`.
+2. **Idle Check**: A background job checks active instances (`ALL_MACHINES`) in Redis.
+3. **S3 Backup**: If no heartbeat arrives within `GRACE_PERIOD`, the backend calls `/store-project` on the VM agent to zip `/tmp/kanvas` and upload it to AWS S3.
+4. **ASG Scale-In**: The backend terminates the idle EC2 instance and lowers the ASG desired capacity.
+5. **Restore**: When you reopen the project later, Kanvas grabs a warm instance from the pool and calls `/restore-project` to unzip your files from S3.
 
 > [!IMPORTANT]
-> **Cost Optimization**: You only pay for active development compute. If a developer walks away or closes their browser, the server is archived and terminated automatically.
+> **Cost Saving**: You only pay for EC2 while you're actually using it. Idle workspaces are backed up to S3 and shut down automatically.
+
+### 2. 🤖 GitHub-Connected AI Agent
+
+Instead of starting from scratch on every prompt, Kanvas indexes your project files locally with `Xenova/bge-small-en-v1.5` embeddings, sends only the most relevant files to the LLM, summarizes older chat messages after 4 turns, writes AI changes straight to your live EC2 VS Code folder, and pushes to GitHub branches when you confirm.
 
 ---
 
-## 🏗️ Architecture & System Design
+## 🏗️ Architecture
 
-Kanvas consists of four core components working together:
+Kanvas has four main parts:
 
 ```mermaid
 flowchart TD
@@ -69,25 +69,25 @@ flowchart TD
     FE -->|2. REST / JWT| BE[Node.js / Express Backend]
     BE <-->|3. Pool, Cache & Pending Git Plans| Redis[(Redis)]
     BE <-->|4. Users, Projects, Files, Embeddings & Chat| DB[(MongoDB via Prisma)]
-    BE <-->|5. LLM Reasoning & Tool Calls| AI[Groq LLM + Local RAG]
+    BE <-->|5. LLM Calls & Tool Use| AI[Groq LLM + Local File Search]
     BE <-->|6. OAuth, Repos & Encrypted Tokens| GH[(GitHub)]
     BE -->|7. Manage Capacity & Pools| AWS_ASG[AWS Auto Scaling Group]
-    AWS_ASG -->|8. Provision EC2| EC2[EC2 VM: code-server + Sidecar Agent]
+    AWS_ASG -->|8. Provision EC2| EC2[EC2 VM: code-server + VM Agent]
     User <-->|9. Browser VS Code :8080| EC2
     EC2 -->|10. Periodic Heartbeats| BE
     EC2 <-->|11. File Sync, AI Patch & Git Ops :9095| BE
     EC2 -.->|12. Git Clone / Push| GH
     BE -.->|13. Idle Detected -> S3 Backup| EC2
-    EC2 -.->|14. Archive / Restore Zip| S3[(AWS S3 Cold Storage)]
+    EC2 -.->|14. Archive / Restore Zip| S3[(AWS S3 Storage)]
     AWS_ASG -.->|15. Terminate Idle Instance| EC2
 ```
 
 ### Component Breakdown
 
-1. **Frontend Dashboard (`/Frontend/ReplitFrontend`)**: React 19, Vite, TypeScript, TailwindCSS, React Router DOM, React Hook Form, React Markdown + Syntax Highlighter, Google OAuth2, and GitHub Repo Selector.
-2. **Orchestration Backend (`/Backend`)**: Express 5, TypeScript, AWS SDK v3 (EC2 & Auto Scaling), Prisma ORM with MongoDB, Redis (`ioredis`), Groq SDK, `@xenova/transformers` (local embeddings), and GitHub OAuth + AES-256-GCM token vault.
-3. **In-VM Sidecar Agent (`/VS-Dummy-Ins`)**: Node.js/Express service running inside each EC2 instance on port `9095` with Chokidar file-watcher, Git CLI automation (`/git-clone`, `/git-push`), AI file-tree patching (`/update-files`), and AWS S3 backup/restore (`/store-project`, `/restore-project`).
-4. **Cloud IDE AMI (`/code-server`)**: Dockerized `codercom/code-server:4.96.4` with pre-installed Node.js 22, Python 3, Java 17 (OpenJDK), and Git configured for `/tmp/kanvas`.
+1. **Frontend (`/Frontend/ReplitFrontend`)**: React 19, Vite, TypeScript, TailwindCSS, React Router DOM, React Hook Form, React Markdown + Syntax Highlighter, Google OAuth2, and GitHub Repo Selector.
+2. **Backend (`/Backend`)**: Express 5, TypeScript, AWS SDK v3 (EC2 & Auto Scaling), Prisma ORM with MongoDB, Redis (`ioredis`), Groq SDK, `@xenova/transformers` (local embeddings), and GitHub OAuth + AES-256-GCM token encryption.
+3. **In-VM Agent (`/VS-Dummy-Ins`)**: Node.js/Express service running inside each EC2 instance on port `9095` with Chokidar file-watcher, Git CLI routes (`/git-clone`, `/git-push`), AI file writer (`/update-files`), and AWS S3 backup/restore (`/store-project`, `/restore-project`).
+4. **Cloud IDE Image (`/code-server`)**: Dockerized `codercom/code-server:4.96.4` with Node.js 22, Python 3, Java 17 (OpenJDK), and Git configured for `/tmp/kanvas`.
 
 ---
 
@@ -97,12 +97,12 @@ flowchart TD
 | :------------------ | :--------------------------------------------------------------------------- |
 | **Frontend**        | React 19, Vite, TypeScript, TailwindCSS, React Router DOM, React Hook Form   |
 | **Backend**         | Node.js, Express 5, TypeScript, Prisma ORM, MongoDB                          |
-| **Cloud & DevOps**  | AWS Auto Scaling Groups, AWS EC2, AWS S3, AWS SDK v3, Docker                 |
+| **Cloud & DevOps**  | AWS EC2, AWS ASG, AWS S3, AWS SDK v3, Docker                                 |
 | **Caching & State** | Redis (`ioredis`)                                                            |
-| **AI & RAG Search** | Groq SDK (`openai/gpt-oss-120b` / `20b`), `@xenova/transformers`, Cosine Sim |
-| **GitHub & Agent**  | GitHub OAuth, AES-256-GCM Token Vault, Git CLI Automation, `git_push` Tool   |
+| **AI & File Search**| Groq SDK (`openai/gpt-oss-120b` / `20b`), `@xenova/transformers`, Cosine Sim |
+| **GitHub & Agent**  | GitHub OAuth, AES-256-GCM Token Encryption, Git CLI, `git_push` Tool         |
 | **Authentication**  | JWT, Refresh Token Rotation, Redis Blacklisting, Google OAuth 2.0            |
-| **Core IDE Engine** | `code-server` (VS Code in the browser), Chokidar                             |
+| **IDE**             | `code-server` (VS Code in the browser), Chokidar                             |
 
 ---
 
@@ -125,7 +125,7 @@ AUTO_SCALING_GROUP_NAME=your_aws_asg_name
 REDIS_HOST=redis
 REDIS_PORT=6379
 
-# Heartbeat & Lifecycling
+# Heartbeat Timeout
 GRACE_PERIOD=300000             # Milliseconds before terminating idle VMs (e.g. 5 minutes)
 
 # AI Engine
@@ -150,7 +150,7 @@ VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 VITE_GOOGLE_SECRET=your_google_oauth_client_secret
 ```
 
-### VM Sidecar Agent Configurations (`VS-Dummy-Ins/.env`)
+### VM Agent Configurations (`VS-Dummy-Ins/.env`)
 
 ```env
 PORT=9095
@@ -227,7 +227,7 @@ docker build -t kanvas-frontend .
 docker run -p 80:80 kanvas-frontend
 ```
 
-### 3. Build & Run VM Sidecar Agent
+### 3. Build & Run VM Agent
 
 ```bash
 cd VS-Dummy-Ins
